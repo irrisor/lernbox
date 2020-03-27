@@ -1,2 +1,0 @@
-# lernbox
-Created with CodeSandbox
