@@ -90,3 +90,4 @@ typings/
 .dynamodb/
 
 /src/react-app-env.d.ts
+/build/
