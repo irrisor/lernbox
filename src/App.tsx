@@ -1,58 +1,124 @@
 import * as React from "react";
 import "./styles.css";
-import { reactContext, Context } from "./Context";
-import { Bar } from "./Bar";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import { Question } from "./Question";
-import { Front } from "./Front";
-import { PupilList } from "./PupilList";
-import { Overview } from "./Overview";
-import { Box } from "@material-ui/core";
+import {Context, reactContext} from "./Context";
+import {Bar} from "./Bar";
+import {Route, Switch, useHistory, useRouteMatch, useParams} from "react-router-dom";
+import {Question} from "./Question";
+import {Front} from "./Front";
+import {PupilList} from "./PupilList";
+import {Overview} from "./Overview";
+import {Box} from "@material-ui/core";
+import {positiveSVGs, randomPositiveSVG} from "./svgs";
+import {SnapSVG} from "./SnapSVG";
+import Snap, {sin} from "snapsvg-cjs";
+import {Right} from "./Right";
+import {Wrong} from "./Wrong";
+
+function PupilRoute() {
+    const context = React.useContext(reactContext);
+    const { path } = useRouteMatch();
+    const {pupilIndex} = useParams();
+    context.pupilIndex = Number(pupilIndex);
+    return (
+        <Switch>
+            <Route path={`${path}/right`}>
+                <Right/>
+            </Route>
+            <Route path={`${path}/wrong`}>
+                <Wrong/>
+            </Route>
+            <Route path={`${path}/question`}>
+                <Front/>
+                <Question/>
+            </Route>
+            <Route path={`${path}/`}>
+                <Overview/>
+            </Route>
+        </Switch>
+    );
+}
 
 export default function App() {
-  const ContextProvider = reactContext.Provider;
-  const [context, setContext] = React.useState(new Context());
-  context.setContext = setContext;
+    const ContextProvider = reactContext.Provider;
+    const history = useHistory();
+    const [context, setContext] = React.useState(() => {
+        const newContext = new Context(history);
+        const storedPupils = localStorage.getItem("pupils");
+        if (storedPupils) {
+            try {
+                newContext.pupils = JSON.parse(storedPupils);
+            } catch (e) {
+                console.error("Error reading local storage", e);
+            }
+        }
+        return newContext;
+    });
+    context.setContext = setContext;
 
-  return (
-    <ContextProvider value={context}>
-      <Router>
-        <Box
-          display="flex"
-          flexDirection="column"
-          height="100%"
-          bgcolor="background.default"
-          maxHeight={750}
-        >
-          <Bar />
-          <Box
-            display="flex"
-            p={1}
-            flexGrow={1}
-            flexDirection="column"
-            maxWidth="600px"
-            mx="auto"
-          >
-            <Switch>
-              <Route path="/right">
-                <Front />
-                <p>Yes</p>
-              </Route>
-              <Route path="/wrong">
-                <Front />
-                <p>No</p>
-              </Route>
-              <Route path="/question">
-                <Front />
-                <Question />
-              </Route>
-              <Route path="/">
-                {context.pupilName ? <Overview /> : <PupilList />}
-              </Route>
-            </Switch>
-          </Box>
-        </Box>
-      </Router>
-    </ContextProvider>
-  );
+    return (
+        <ContextProvider value={context}>
+            <Box
+                height="100%"
+                bgcolor="background.default"
+            >
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    height="100%"
+                    bgcolor="background.default"
+                    maxHeight={750}
+                >
+                    <Bar/>
+                    <Box
+                        display="flex"
+                        p={1}
+                        flexGrow={1}
+                        flexDirection="column"
+                        maxWidth="600px"
+                        mx="auto"
+                    >
+                        <Switch>
+                            <Route path="/pupil/:pupilIndex">
+                                <PupilRoute/>
+                            </Route>
+                            <Route path="/svg">
+                                <div className="everywhere">
+                                    <SnapSVG width="100%" height="100%">
+                                        {(s, svgElement) => {
+                                            Snap.load(positiveSVGs[0], data => {
+                                                const w = svgElement.clientWidth;
+                                                const h = svgElement.clientHeight;
+                                                const group = s.g();
+                                                group.append(data as Snap.Element);
+                                                group.select("svg").attr({"overflow": "visible"});
+                                                // let group = s.g(s.selectAll("*"));
+                                                group.transform(`s0,${w / 2},${h / 2}`).animate(
+                                                    {transform: `s2,${w / 2},${h / 2}`, opacity: 0}, 300,
+                                                    undefined, () => group.remove());
+
+                                                Snap.load(randomPositiveSVG(), data => {
+                                                    const w = svgElement.clientWidth;
+                                                    const h = svgElement.clientHeight;
+                                                    const group = s.g();
+                                                    group.append(data as Snap.Element);
+                                                    group.select("svg").attr({"overflow": "visible"});
+                                                    // let group = s.g(s.selectAll("*"));
+                                                    group.transform(`s0,${w / 2},${h / 2}`).animate({transform: `s0.8,${w / 2},${h / 2}`}, 100, undefined, () => group.selectAll("path, circle").forEach(element => {
+                                                        element.animate({transform: `s1.1`}, 700, a => sin(a * 500 * Math.PI), () => element.animate({transform: `s1`}, 400, mina.bounce))
+                                                    }));
+                                                });
+                                            });
+                                        }}
+                                    </SnapSVG>
+                                </div>
+                            </Route>
+                            <Route path="/">
+                                <PupilList/>
+                            </Route>
+                        </Switch>
+                    </Box>
+                </Box>
+            </Box>
+        </ContextProvider>
+    );
 }

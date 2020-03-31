@@ -6,7 +6,7 @@
     "strict": true,
     "lib": [
       "dom",
-      "es2015"
+      "es2019"
     ],
     "jsx": "react",
     "resolveJsonModule": true,
@@ -19,6 +19,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": "./src"
   }
 }
