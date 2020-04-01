@@ -5,6 +5,7 @@ export interface IndexCard {
     time_s: number;
     groups: string[];
     slot?: number;
+    previousSlot?: number;
     slotChanged?: number;
     restrictedToPupils?: string[];
 }
@@ -40,7 +41,7 @@ for (let x = 1; x <= 10; x++) {
     for (let y = 1; y <= 10; y++) {
         cards.push({
             question: `${x} • ${y}`,
-            description: "Was kommt raus bei der Rechnung?",
+            description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 6,
             groups: ["1x1"].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1-Kern"] : []),
@@ -77,7 +78,11 @@ for (let x = 1; x <= 10; x++) {
         "der Kater",
         "der Hund",
         "die Maus",
-        "das Meerschweinchen",
+        "das Schwein",
+        "der Junge",
+        "die Pizza",
+        "der Luftballon",
+        "die Fraktur",
     ]
 },
 ]).forEach(({words, pupil, group}) => {

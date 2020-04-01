@@ -1,26 +1,55 @@
 import * as React from "react";
 import {reactContext} from "./Context";
-import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {createStyles, makeStyles, Theme, useTheme} from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
 import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import MenuIcon from "@material-ui/icons/Menu";
-import {Badge} from "@material-ui/core";
+import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
-import {useHistory} from "react-router-dom";
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Divider from '@material-ui/core/Divider';
+import Drawer from '@material-ui/core/Drawer';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+
+const drawerWidth = 220;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
-        root: {
-            flexGrow: 1,
-        },
         menuButton: {
             marginRight: theme.spacing(2),
         },
         title: {
             flexGrow: 1,
+        },
+        drawer: {
+            width: 0,
+            transition: "width 0.2s ease-out",
+        },
+        drawerOpen: {
+            [theme.breakpoints.up('sm')]: {
+                width: drawerWidth,
+                flexShrink: 0,
+            },
+            transition: "width 0.2s ease-out",
+        },
+        appBar: {
+            zIndex: 5000,
+        },
+        // necessary for content to be below app bar
+        toolbar: theme.mixins.toolbar,
+        drawerPaper: {
+            width: drawerWidth,
+        },
+        content: {
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
         },
     }),
 );
@@ -58,23 +87,58 @@ function toggleFullScreen() {
     }
 }
 
-export function Bar() {
-    const context = React.useContext(reactContext);
-    const history = useHistory();
+
+const Menu = () => {
     const classes = useStyles();
+    const context = React.useContext(reactContext);
+    return (
+        <div>
+            <div className={classes.toolbar}/>
+            <Divider/>
+            <List>
+                <ListItem button onClick={() => context.back()}>
+                    <ListItemIcon><AccountCircle/></ListItemIcon>
+                    <ListItemText primary="Übersicht"/>
+                </ListItem>
+                <ListItem button onClick={toggleFullScreen}>
+                    <ListItemIcon><FullscreenIcon/></ListItemIcon>
+                    <ListItemText primary="Vollbild"/>
+                </ListItem>
+                <ListItem button onClick={() => context.history.push("/")}>
+                    <ListItemIcon>{}</ListItemIcon>
+                    <ListItemText primary="Abmelden"/>
+                </ListItem>
+            </List>
+        </div>
+    );
+};
+
+export function Bar(props: { children: React.ReactNode }) {
+    const context = React.useContext(reactContext);
+    const classes = useStyles();
+    const theme = useTheme();
+    const isWideScreen = useMediaQuery(theme.breakpoints.up('sm'));
+    const [menuOpen, setMenuOpen] = React.useState(localStorage.getItem("menuOpen") === "true");
+
+    const handleDrawerToggle = () => {
+        localStorage.setItem("menuOpen", "" + !menuOpen);
+        setMenuOpen(!menuOpen);
+    };
+    console.log("up: ", theme.breakpoints.up('sm'));
     return (
         <>
-            <AppBar position="static">
+            <CssBaseline/>
+            <AppBar position="fixed" className={classes.appBar}>
                 <Toolbar>
-                  <IconButton
-                      edge="start"
-                      className={classes.menuButton}
-                      color="inherit"
-                      aria-label="menu"
-                      onClick={toggleFullScreen}
-                  >
-                    <MenuIcon />
-                  </IconButton>
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        className={classes.menuButton}
+                    >
+                        <MenuIcon/>
+                    </IconButton>
                     <Typography variant="h6" className={classes.title}>
                         Lernbox{context.pupil && ` von ${context.pupil.name}`}
                     </Typography>
@@ -98,6 +162,40 @@ export function Bar() {
                     </IconButton>
                 </Toolbar>
             </AppBar>
+            <nav className={menuOpen ? classes.drawerOpen : classes.drawer} aria-label="mailbox folders">
+                {!isWideScreen &&
+                <Drawer
+                    variant="temporary"
+                    anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+                    open={menuOpen}
+                    onClose={handleDrawerToggle}
+                    classes={{
+                        paper: classes.drawerPaper,
+                    }}
+                    ModalProps={{
+                        keepMounted: true, // Better open performance on mobile.
+                    }}
+                >
+                    <Menu/>
+                </Drawer>
+                }
+                {isWideScreen && menuOpen &&
+                <Drawer
+                    classes={{
+                        paper: classes.drawerPaper,
+                    }}
+                    variant="permanent"
+                    open
+                >
+                    <Menu/>
+                </Drawer>
+                }
+            </nav>
+
+            <main className={classes.content}>
+                <div className={classes.toolbar}/>
+                {props.children}
+            </main>
         </>
     );
 }

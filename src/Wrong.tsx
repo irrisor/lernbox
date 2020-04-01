@@ -1,10 +1,10 @@
 import * as React from "react";
 import {useEffect} from "react";
-import {Box, Button} from "@material-ui/core";
+import {Box, Button, Grid} from "@material-ui/core";
 import {Back} from "./Back";
 import {randomNegativeSVG} from "./svgs";
 import {Main} from "./layout/Main";
-import {Bottom} from "./layout/Bottom";
+import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {reactContext} from "./Context";
 
 export function Wrong() {
@@ -35,15 +35,17 @@ export function Wrong() {
                 }}/>
             </Box>
         </Main>
-        <Bottom>
-            <Button variant="contained" color="primary" onClick={()=>context.next()}
-                    fullWidth
-                    autoFocus={waiting === 0}
-                    disabled={waiting > 0}
-                    ref={buttonRef}
-            >
-                {waiting || "Weiter"}
-            </Button>
-        </Bottom>
+        <BottomGridContainer>
+            <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={() => context.next()}
+                        fullWidth
+                        autoFocus={waiting === 0}
+                        disabled={waiting > 0}
+                        ref={buttonRef}
+                >
+                    {waiting || "Weiter"}
+                </Button>
+            </Grid>
+        </BottomGridContainer>
     </>);
 }

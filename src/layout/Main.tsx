@@ -8,8 +8,8 @@ export function Main(props: { children: React.ReactNode }) {
             flexDirection="column"
             textAlign="center"
             flexGrow={1}
-            m={1}
-            style={{width: "350px"}}
+            m={0}
+            style={{width: "350px", marginTop: 16}}
         >
             {props.children}
         </Box>

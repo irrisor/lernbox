@@ -3,7 +3,7 @@ import {Button, Grid} from "@material-ui/core";
 import {Back} from "./Back";
 import {randomPositiveSVG} from "./svgs";
 import {Main} from "./layout/Main";
-import {Bottom} from "./layout/Bottom";
+import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {reactContext} from "./Context";
 
 export function Right() {
@@ -26,10 +26,12 @@ export function Right() {
                 </Grid>
             </Grid>
         </Main>
-        <Bottom>
-            <Button variant="contained" color="primary" onClick={()=>context.next()} fullWidth autoFocus>
-                Weiter
-            </Button>
-        </Bottom>
+        <BottomGridContainer>
+            <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={() => context.next()} fullWidth autoFocus>
+                    Weiter
+                </Button>
+            </Grid>
+        </BottomGridContainer>
     </>);
 }

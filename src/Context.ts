@@ -4,6 +4,17 @@ import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 
 export class Context {
+    createPupil(newName: string) {
+        this.update(context => {
+            context._pupils = this.pupils.concat({
+                name: newName,
+                cards: JSON.parse(JSON.stringify(cards)),
+            });
+            context._pupilIndex = context._pupils.length - 1;
+            context.back();
+        });
+    }
+
     back() {
         this.currentCards = [];
         this.history.push(this.pupilIndex !== undefined ? `/pupil/${this.pupilIndex}/` : "/");
@@ -12,21 +23,12 @@ export class Context {
     private _pupilIndex?: number = 0;
     private _currentGroup?: string;
     private _currentCards: IndexCard[] = [];
-    private _pupils: readonly Pupil[] = [
-        {
-            name: "Sonja",
-            cards,
-        },
-        {
-            name: "Christian",
-            cards,
-        },
-    ];
+    private _pupils: readonly Pupil[] = [];
     readonly next = (group?: string) => {
         const oldCard = cards.length > 0 && cards[0] || undefined;
         let nextCards = this.currentCards;
         if (oldCard) {
-            if (oldCard.slot !== 0) {
+            if (oldCard.slot !== 0 || (oldCard.previousSlot || 0) > 0) {
                 nextCards = nextCards.slice(1);
             } else {
                 nextCards = nextCards.slice(1).concat(oldCard);
@@ -45,6 +47,7 @@ export class Context {
                 nextCards.push(groupCards[randomIndex]);
                 groupCards.splice(randomIndex, 1);
             }
+            // FIXME: two changes to next context do not work
             this.currentGroup = currentGroup;
         }
         this.currentCards = nextCards;
@@ -62,7 +65,7 @@ export class Context {
             const nextTryDate = (card.slotChanged || 0) +
                 slotProperties.durationInDays * 1000 * 60 * 60 * 24;
             return now > nextTryDate;
-        }) || [];
+        }).sort((a, b) => (a.slot || 0) - (b.slot || 0)) || [];
     }
 
     public get pupilIndex() {

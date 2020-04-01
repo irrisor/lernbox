@@ -2,9 +2,8 @@ import * as React from "react";
 import "./styles.css";
 import {Context, reactContext} from "./Context";
 import {Bar} from "./Bar";
-import {Route, Switch, useHistory, useRouteMatch, useParams} from "react-router-dom";
+import {Route, Switch, useHistory, useParams, useRouteMatch} from "react-router-dom";
 import {Question} from "./Question";
-import {Front} from "./Front";
 import {PupilList} from "./PupilList";
 import {Overview} from "./Overview";
 import {Box} from "@material-ui/core";
@@ -16,7 +15,7 @@ import {Wrong} from "./Wrong";
 
 function PupilRoute() {
     const context = React.useContext(reactContext);
-    const { path } = useRouteMatch();
+    const {path} = useRouteMatch();
     const {pupilIndex} = useParams();
     context.pupilIndex = Number(pupilIndex);
     return (
@@ -28,7 +27,6 @@ function PupilRoute() {
                 <Wrong/>
             </Route>
             <Route path={`${path}/question`}>
-                <Front/>
                 <Question/>
             </Route>
             <Route path={`${path}/`}>
@@ -63,60 +61,59 @@ export default function App() {
             >
                 <Box
                     display="flex"
-                    flexDirection="column"
                     height="100%"
                     bgcolor="background.default"
                     maxHeight={750}
                 >
-                    <Bar/>
-                    <Box
-                        display="flex"
-                        p={1}
-                        flexGrow={1}
-                        flexDirection="column"
-                        maxWidth="600px"
-                        mx="auto"
-                    >
-                        <Switch>
-                            <Route path="/pupil/:pupilIndex">
-                                <PupilRoute/>
-                            </Route>
-                            <Route path="/svg">
-                                <div className="everywhere">
-                                    <SnapSVG width="100%" height="100%">
-                                        {(s, svgElement) => {
-                                            Snap.load(positiveSVGs[0], data => {
-                                                const w = svgElement.clientWidth;
-                                                const h = svgElement.clientHeight;
-                                                const group = s.g();
-                                                group.append(data as Snap.Element);
-                                                group.select("svg").attr({"overflow": "visible"});
-                                                // let group = s.g(s.selectAll("*"));
-                                                group.transform(`s0,${w / 2},${h / 2}`).animate(
-                                                    {transform: `s2,${w / 2},${h / 2}`, opacity: 0}, 300,
-                                                    undefined, () => group.remove());
-
-                                                Snap.load(randomPositiveSVG(), data => {
+                    <Bar>
+                        <Box
+                            display="flex"
+                            flexGrow={1}
+                            flexDirection="column"
+                            maxWidth="600px"
+                            mx="auto"
+                        >
+                            <Switch>
+                                <Route path="/pupil/:pupilIndex">
+                                    <PupilRoute/>
+                                </Route>
+                                <Route path="/svg">
+                                    <div className="everywhere">
+                                        <SnapSVG width="100%" height="100%">
+                                            {(s, svgElement) => {
+                                                Snap.load(positiveSVGs[0], data => {
                                                     const w = svgElement.clientWidth;
                                                     const h = svgElement.clientHeight;
                                                     const group = s.g();
                                                     group.append(data as Snap.Element);
                                                     group.select("svg").attr({"overflow": "visible"});
                                                     // let group = s.g(s.selectAll("*"));
-                                                    group.transform(`s0,${w / 2},${h / 2}`).animate({transform: `s0.8,${w / 2},${h / 2}`}, 100, undefined, () => group.selectAll("path, circle").forEach(element => {
-                                                        element.animate({transform: `s1.1`}, 700, a => sin(a * 500 * Math.PI), () => element.animate({transform: `s1`}, 400, mina.bounce))
-                                                    }));
+                                                    group.transform(`s0,${w / 2},${h / 2}`).animate(
+                                                        {transform: `s2,${w / 2},${h / 2}`, opacity: 0}, 300,
+                                                        undefined, () => group.remove());
+
+                                                    Snap.load(randomPositiveSVG(), data => {
+                                                        const w = svgElement.clientWidth;
+                                                        const h = svgElement.clientHeight;
+                                                        const group = s.g();
+                                                        group.append(data as Snap.Element);
+                                                        group.select("svg").attr({"overflow": "visible"});
+                                                        // let group = s.g(s.selectAll("*"));
+                                                        group.transform(`s0,${w / 2},${h / 2}`).animate({transform: `s0.8,${w / 2},${h / 2}`}, 100, undefined, () => group.selectAll("path, circle").forEach(element => {
+                                                            element.animate({transform: `s1.1`}, 700, a => sin(a * 500 * Math.PI), () => element.animate({transform: `s1`}, 400, mina.bounce))
+                                                        }));
+                                                    });
                                                 });
-                                            });
-                                        }}
-                                    </SnapSVG>
-                                </div>
-                            </Route>
-                            <Route path="/">
-                                <PupilList/>
-                            </Route>
-                        </Switch>
-                    </Box>
+                                            }}
+                                        </SnapSVG>
+                                    </div>
+                                </Route>
+                                <Route path="/">
+                                    <PupilList/>
+                                </Route>
+                            </Switch>
+                        </Box>
+                    </Bar>
                 </Box>
             </Box>
         </ContextProvider>
