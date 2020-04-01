@@ -18,11 +18,11 @@ import Tab from '@material-ui/core/Tab';
 export function Overview() {
     const context = React.useContext(reactContext);
     const pupil = context.pupil;
+    const [activeTab, setActiveTab] = React.useState(0);
     if (!pupil) return <>Kein Schüler ausgewählt</>;
     const activeCards = context.activeCards;
     const groups = Array.from(new Set(pupil.cards.flatMap(card => card.groups)))
         .sort((a, b) => a.localeCompare(b));
-    const [activeTab, setActiveTab] = React.useState(0);
     return (
         <>
             <Main>
