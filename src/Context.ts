@@ -4,6 +4,16 @@ import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 
 export class Context {
+    deletePupil(): void {
+        const index = this.pupilIndex;
+        if (index !== undefined) {
+            this.update(context => {
+                context._pupils = context._pupils.slice(0, index).concat(context._pupils.slice(index + 1))
+            });
+        }
+        this.history.push("/");
+    }
+
     createPupil(newName: string) {
         this.update(context => {
             context._pupils = this.pupils.concat({
@@ -20,7 +30,7 @@ export class Context {
         this.history.push(this.pupilIndex !== undefined ? `/pupil/${this.pupilIndex}/` : "/");
     }
 
-    private _pupilIndex?: number = 0;
+    private _pupilIndex?: number;
     private _currentGroup?: string;
     private _currentCards: IndexCard[] = [];
     private _pupils: readonly Pupil[] = [];
@@ -47,10 +57,13 @@ export class Context {
                 nextCards.push(groupCards[randomIndex]);
                 groupCards.splice(randomIndex, 1);
             }
-            // FIXME: two changes to next context do not work
-            this.currentGroup = currentGroup;
+            this.update(context => {
+                context._currentGroup = currentGroup;
+                context._currentCards = nextCards;
+            });
+        } else {
+            this.currentCards = nextCards;
         }
-        this.currentCards = nextCards;
         this.history.push(`/pupil/${this.pupilIndex}/${nextCards.length > 0 ? "question" : ""}`);
     };
     readonly history: History<LocationState>;
@@ -73,6 +86,9 @@ export class Context {
     }
 
     public set pupilIndex(value: number | undefined) {
+        if (value !== undefined && (Number.isNaN(value) || value < 0 || value >= this.pupils.length)) {
+            value = undefined;
+        }
         if (value !== this._pupilIndex) {
             this.update(context => {
                 context._pupilIndex = value;
@@ -140,7 +156,6 @@ export class Context {
             }
             // the only function we should reuse
             this._setContext = originalContext._setContext;
-            localStorage.setItem("pupils", JSON.stringify(this.pupils));
         }
     }
 
@@ -157,6 +172,7 @@ export class Context {
         const newContext = new Context(this.history, this);
         updateFunction(newContext);
         this._setContext(newContext);
+        localStorage.setItem("pupils", JSON.stringify(this.pupils));
     }
 }
 

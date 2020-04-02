@@ -7,7 +7,7 @@ export function Back() {
     if (!context.card) return <>Keine Karte aktiv</>;
     return (
         <IndexCardVisual
-            category={context.card.groups.join(", ")}
+            category={context.currentGroup || context.card.groups.join(", ")}
             main={context.card.answers[0]}
         />
     );

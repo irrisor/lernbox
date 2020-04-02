@@ -9,6 +9,8 @@ import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import MenuIcon from "@material-ui/icons/Menu";
 import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import DeleteIcon from "@material-ui/icons/Delete";
+import LogoffIcon from "@material-ui/icons/ExitToApp";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
@@ -104,8 +106,16 @@ const Menu = () => {
                     <ListItemIcon><FullscreenIcon/></ListItemIcon>
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
-                <ListItem button onClick={() => context.history.push("/")}>
-                    <ListItemIcon>{}</ListItemIcon>
+                <ListItem button
+                          disabled={context.pupilIndex === undefined}
+                          onClick={() => context.history.push(`/pupil/${context.pupilIndex}/delete`)}>
+                    <ListItemIcon><DeleteIcon/></ListItemIcon>
+                    <ListItemText primary="Löschen"/>
+                </ListItem>
+                <ListItem button
+                          disabled={context.pupilIndex === undefined}
+                          onClick={() => context.history.push("/")}>
+                    <ListItemIcon><LogoffIcon/></ListItemIcon>
                     <ListItemText primary="Abmelden"/>
                 </ListItem>
             </List>

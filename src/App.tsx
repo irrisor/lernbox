@@ -12,6 +12,8 @@ import {SnapSVG} from "./SnapSVG";
 import Snap, {sin} from "snapsvg-cjs";
 import {Right} from "./Right";
 import {Wrong} from "./Wrong";
+import {PupilDelete} from "./PupilDelete";
+import {Late} from "./Late";
 
 function PupilRoute() {
     const context = React.useContext(reactContext);
@@ -26,8 +28,14 @@ function PupilRoute() {
             <Route path={`${path}/wrong`}>
                 <Wrong/>
             </Route>
+            <Route path={`${path}/late`}>
+                <Late/>
+            </Route>
             <Route path={`${path}/question`}>
                 <Question/>
+            </Route>
+            <Route path={`${path}/delete`}>
+                <PupilDelete/>
             </Route>
             <Route path={`${path}/`}>
                 <Overview/>

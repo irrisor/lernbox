@@ -98,7 +98,7 @@ export function Overview() {
                 </TableContainer>
             </Main>
             <BottomGridContainer>
-                <Grid item xs={12}>
+                {/*<Grid item xs={12}>
                     <Button
                         variant="contained"
                         onClick={() => context.history.push("/")}
@@ -106,7 +106,7 @@ export function Overview() {
                     >
                         Abmelden
                     </Button>
-                </Grid>
+                </Grid>*/}
                 <Grid item xs={12}>
                     <Button
                         variant="contained"

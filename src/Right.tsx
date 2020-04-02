@@ -12,11 +12,13 @@ export function Right() {
     return (<>
         <Main>
             <Grid container spacing={2} justify="center" alignContent="center">
-                <Grid item>
+                <Grid item xs={12}>
                     <Back/>
                 </Grid>
-                <Grid item>
+                <Grid item xs={12}>
                     Richtig! Die Karte kommt in das nächste Fach.
+                </Grid>
+                <Grid item xs={12}>
                     <img src={svg} height={64} alt="negative" style={{
                         margin: "auto",
                         paddingTop: 8,
