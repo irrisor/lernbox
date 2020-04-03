@@ -8,7 +8,11 @@ export class Context {
         const index = this.pupilIndex;
         if (index !== undefined) {
             this.update(context => {
-                context._pupils = context._pupils.slice(0, index).concat(context._pupils.slice(index + 1))
+                context._pupils = context._pupils.slice(0, index).concat(context._pupils.slice(index + 1));
+            });
+        } else {
+            this.update(context => {
+                context._pupils = [];
             });
         }
         this.history.push("/");
@@ -78,7 +82,7 @@ export class Context {
             const nextTryDate = (card.slotChanged || 0) +
                 slotProperties.durationInDays * 1000 * 60 * 60 * 24;
             return now > nextTryDate;
-        }).sort((a, b) => (a.slot || 0) - (b.slot || 0)) || [];
+        }).sort((a, b) => (b.slot || 0) - (a.slot || 0)) || [];
     }
 
     public get pupilIndex() {
@@ -119,9 +123,6 @@ export class Context {
 
     public get card(): IndexCard | undefined {
         const cards = this.currentCards;
-        if (cards.length === 0) {
-            this.next();
-        }
         return cards.length > 0 && cards[0] || undefined;
     }
 

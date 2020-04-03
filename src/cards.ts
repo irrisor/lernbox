@@ -8,6 +8,8 @@ export interface IndexCard {
     previousSlot?: number;
     slotChanged?: number;
     restrictedToPupils?: string[];
+    inputType?: "text" | "number" | "select";
+    inputOptions?: string[];
 }
 
 export interface Slot {
@@ -32,9 +34,7 @@ export const slots: Slot[] = [
     {durationInDays: 180},
 ];
 
-export const cards: IndexCard[] = [
-
-];
+export const cards: IndexCard[] = [];
 
 /** 1-mal-1 */
 for (let x = 1; x <= 10; x++) {
@@ -45,6 +45,7 @@ for (let x = 1; x <= 10; x++) {
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 6,
             groups: ["1x1"].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1-Kern"] : []),
+            inputType: "number"
         });
     }
 }
@@ -70,7 +71,7 @@ for (let x = 1; x <= 10; x++) {
         "der Busch",
         "der Rosenbusch",
         "der Strauch",
-    ]
+    ],
 }, {
     group: "Tiere",
     words: [
@@ -83,13 +84,13 @@ for (let x = 1; x <= 10; x++) {
         "die Pizza",
         "der Luftballon",
         "die Fraktur",
-    ]
+    ],
 },
 ]).forEach(({words, pupil, group}) => {
     words.forEach(wordsEntry => {
         const spacePosition = wordsEntry.indexOf(" ");
-        const word = wordsEntry.substr(spacePosition+1);
-        const article = wordsEntry.substr(0,spacePosition);
+        const word = wordsEntry.substr(spacePosition + 1);
+        const article = wordsEntry.substr(0, spacePosition);
         let card: IndexCard = {
             question: word,
             answers: [wordsEntry, article, article.substr(0, 1).toUpperCase() + article.substr(1)],
@@ -97,6 +98,8 @@ for (let x = 1; x <= 10; x++) {
             groups: ["Artikel", group],
             description: "Der? Die? Das?",
             restrictedToPupils: pupil ? [pupil] : undefined,
+            inputType: "select",
+            inputOptions: ["der", "die", "das"],
         };
         let existingCard = cards.find(someCard => someCard.question === card.question
             && JSON.stringify(someCard.groups) === JSON.stringify(card.groups));

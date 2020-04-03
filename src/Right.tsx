@@ -11,7 +11,7 @@ export function Right() {
     const svg = React.useMemo(() => randomPositiveSVG(), [context.card]);
     return (<>
         <Main>
-            <Grid container spacing={2} justify="center" alignContent="center">
+            <Grid container spacing={2} justify="center" alignContent="center" onClick={() => context.next()}>
                 <Grid item xs={12}>
                     <Back/>
                 </Grid>

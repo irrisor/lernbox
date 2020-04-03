@@ -19,7 +19,10 @@ function PupilRoute() {
     const context = React.useContext(reactContext);
     const {path} = useRouteMatch();
     const {pupilIndex} = useParams();
-    context.pupilIndex = Number(pupilIndex);
+    React.useEffect(() => {
+            context.pupilIndex = Number(pupilIndex);
+        }, [pupilIndex],
+    );
     return (
         <Switch>
             <Route path={`${path}/right`}>

@@ -8,7 +8,7 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "./layout/Main";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {Button, Grid, TextField} from "@material-ui/core";
-import {onEnter} from "./Question";
+import {onEnterPressed} from "./Question";
 
 export function PupilList() {
     const context = React.useContext(reactContext);
@@ -44,7 +44,7 @@ export function PupilList() {
                         <TextField label={"neuen Namen eingeben"}
                                    value={newName}
                                    onChange={event => setNewName(event.target.value)}
-                                   onKeyPress={onEnter(createPupil)}
+                                   onKeyPress={onEnterPressed(createPupil)}
                                    fullWidth/>
                     </ListItem>
                 </List>
