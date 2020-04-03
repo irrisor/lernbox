@@ -39,7 +39,7 @@ export class Context {
     private _currentCards: IndexCard[] = [];
     private _pupils: readonly Pupil[] = [];
     readonly next = (group?: string) => {
-        const oldCard = cards.length > 0 && cards[0] || undefined;
+        const oldCard = cards.length > 0 ? cards[0] : undefined;
         let nextCards = this.currentCards;
         if (oldCard) {
             if (oldCard.slot !== 0 || (oldCard.previousSlot || 0) > 0) {
@@ -75,14 +75,14 @@ export class Context {
 
     public get activeCards(): IndexCard[] {
         const now = Date.now();
-        return this.pupil && this.pupil.cards.filter(card => {
+        return this.pupil ? this.pupil.cards.filter(card => {
             const slot = card.slot || 0;
             if (slot >= slots.length) return false;
             const slotProperties = slots[slot];
             const nextTryDate = (card.slotChanged || 0) +
                 slotProperties.durationInDays * 1000 * 60 * 60 * 24;
             return now > nextTryDate;
-        }).sort((a, b) => (b.slot || 0) - (a.slot || 0)) || [];
+        }).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
     }
 
     public get pupilIndex() {
@@ -123,11 +123,11 @@ export class Context {
 
     public get card(): IndexCard | undefined {
         const cards = this.currentCards;
-        return cards.length > 0 && cards[0] || undefined;
+        return cards.length > 0 ? cards[0] : undefined;
     }
 
     public get pupil(): Pupil | undefined {
-        return this.pupilIndex !== undefined && this.pupils[this.pupilIndex] || undefined;
+        return this.pupilIndex !== undefined ? this.pupils[this.pupilIndex] : undefined;
     }
 
     public get pupils() {

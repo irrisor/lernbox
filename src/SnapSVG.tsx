@@ -10,7 +10,7 @@ export function SnapSVG({children, ...otherProps}: SVGProps<SVGElement> & {
         if (svg) {
             children(Snap(svg), svg)
         }
-    }, [svg]);
+    }, [svg, children]);
     return (<svg
         {...otherProps}
         ref={setSVG}

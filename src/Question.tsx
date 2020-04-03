@@ -42,11 +42,11 @@ export function Question() {
     const history = useHistory();
     const [input, setInput] = React.useState("");
 
-    const maxPassSeconds = context.card && context.card.time_s || Number.MAX_VALUE;
+    const maxPassSeconds = context.card ? context.card.time_s : Number.MAX_VALUE;
     const [secondsPassed, setSecondsPassed] = React.useState(0);
     useEffect(() => {
         if (!context.card && context.pupilIndex !== undefined) context.next();
-    }, [context.card, context.pupilIndex]);
+    }, [context]);
 
     function check() {
         const card = context.card;
@@ -73,7 +73,7 @@ export function Question() {
         return () => clearTimeout(timeout);
     }, [secondsPassed]);
 
-    const inputType = context.card && context.card.inputType || "text";
+    const inputType = context.card ? context.card.inputType : "text";
     const checkIfInputOrNoWait = () => {
         if (secondsPassed >= minWaitSeconds || input) check();
     };

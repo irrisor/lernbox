@@ -21,7 +21,7 @@ export function Wrong({text = "Das ist leider nicht richtig. Lerne noch einmal v
         }
     }, [waiting]);
 
-    const svg = React.useMemo(() => randomNegativeSVG(), [context.card]);
+    const svg = React.useMemo(() => context.card && randomNegativeSVG(), [context.card]);
     return (<>
         <Main>
             <Grid container spacing={2}>

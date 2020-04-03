@@ -5,7 +5,7 @@ import {Main} from "./layout/Main";
 
 export function PupilDelete() {
     const context = React.useContext(reactContext);
-    const name = context.pupil && context.pupil.name || "Alle";
+    const name = context.pupil ? context.pupil.name : "Alle";
     return (<>
         <Main>
             <Grid container spacing={2}>

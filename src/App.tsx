@@ -21,7 +21,7 @@ function PupilRoute() {
     const {pupilIndex} = useParams();
     React.useEffect(() => {
             context.pupilIndex = Number(pupilIndex);
-        }, [pupilIndex],
+        }, [pupilIndex, context.pupilIndex],
     );
     return (
         <Switch>

@@ -8,7 +8,7 @@ import {reactContext} from "./Context";
 
 export function Right() {
     const context = React.useContext(reactContext);
-    const svg = React.useMemo(() => randomPositiveSVG(), [context.card]);
+    const svg = React.useMemo(() => context.card && randomPositiveSVG(), [context.card]);
     return (<>
         <Main>
             <Grid container spacing={2} justify="center" alignContent="center" onClick={() => context.next()}>
