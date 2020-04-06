@@ -8,7 +8,11 @@ export function SnapSVG({children, ...otherProps}: SVGProps<SVGElement> & {
     const [svg, setSVG] = React.useState();
     React.useEffect(() => {
         if (svg) {
-            children(Snap(svg), svg)
+            const s = Snap(svg);
+            children(s, svg);
+            return () => {
+                s.clear();
+            };
         }
     }, [svg, children]);
     return (<svg

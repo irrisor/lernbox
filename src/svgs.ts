@@ -88,6 +88,8 @@ export const negativeSVGs = [
     require("./img/Twemoji_v12/Twemoji12 1f632.svg"),
 ];
 
+export const timeReminderSVG = require("./img/Twemoji_v12/Twemoji12 23f0.svg");
+
 const random = (svgs: string[]) => svgs[Math.floor(Math.random() * svgs.length - 1) + 1];
 export const randomPositiveSVG = () => random(positiveSVGs);
 export const randomNegativeSVG = () => random(negativeSVGs);

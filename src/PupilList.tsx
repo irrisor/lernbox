@@ -25,7 +25,7 @@ export function PupilList() {
             <Main>
                 <List component="nav" aria-label="main mailbox folders" style={{width: "100%"}}>
                     {context.pupils.map((pupil, index) => (
-                        <ListItem button key={pupil.name}>
+                        <ListItem button key={pupil.name+index}>
                             <ListItemIcon>
                                 <AccountCircle/>
                             </ListItemIcon>
@@ -48,6 +48,8 @@ export function PupilList() {
                                    fullWidth/>
                     </ListItem>
                 </List>
+                <div>
+                </div>
             </Main>
             <BottomGridContainer>
                 <Grid item xs={12}>

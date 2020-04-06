@@ -51,13 +51,15 @@ export class Context {
         if (nextCards.length === 0 && this.pupil) {
             nextCards = [];
             const currentGroup = group || this.currentGroup;
-            const groupCards = currentGroup ? this.activeCards.filter(card => card.groups.indexOf(currentGroup) >= 0)
-                : this.activeCards;
+            const groupCards = this.groupCards(currentGroup);
             const newCardCount = Math.min(10, groupCards.length);
             console.log(`Selecting ${newCardCount} new cards from ${
                 currentGroup ? "group " + currentGroup : "all cards"}.`);
             for (let i = 0; i < newCardCount; i++) {
-                const randomIndex = Math.floor(Math.random() * groupCards.length);
+                const firstSlotSize = groupCards.findIndex(
+                    card => (card.slot || 0) !== (groupCards[0].slot || 0));
+                const randomIndex = Math.floor(Math.random() *
+                    (firstSlotSize < 0 ? groupCards.length : firstSlotSize));
                 nextCards.push(groupCards[randomIndex]);
                 groupCards.splice(randomIndex, 1);
             }
@@ -70,19 +72,31 @@ export class Context {
         }
         this.history.push(`/pupil/${this.pupilIndex}/${nextCards.length > 0 ? "question" : ""}`);
     };
+
+    private groupCards(group?: string) {
+        const currentGroup = group || this.currentGroup;
+        return currentGroup ? this.activeCards.filter(card => card.groups.indexOf(currentGroup) >= 0)
+            : this.activeCards;
+    }
+
     readonly history: History<LocationState>;
     private _initialized: boolean = false;
 
+    public static isCardActive(card: IndexCard) {
+        const nextTryDate = Context.getNextTryDate(card);
+        return nextTryDate ? Date.now() > nextTryDate : false;
+    };
+
+    static getNextTryDate(card: IndexCard): number|undefined {
+        const slot = card.slot || 0;
+        if (slot >= slots.length) return undefined;
+        const slotProperties = slots[slot];
+        return (card.slotChanged || 0) +
+            (slotProperties.durationInDays-0.5) * 1000 * 60 * 60 * 24;
+    }
+
     public get activeCards(): IndexCard[] {
-        const now = Date.now();
-        return this.pupil ? this.pupil.cards.filter(card => {
-            const slot = card.slot || 0;
-            if (slot >= slots.length) return false;
-            const slotProperties = slots[slot];
-            const nextTryDate = (card.slotChanged || 0) +
-                slotProperties.durationInDays * 1000 * 60 * 60 * 24;
-            return now > nextTryDate;
-        }).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
+        return this.pupil ? this.pupil.cards.filter(Context.isCardActive).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
     }
 
     public get pupilIndex() {
@@ -97,6 +111,7 @@ export class Context {
             this.update(context => {
                 context._pupilIndex = value;
                 context._currentCards = [];
+                context._currentGroup = undefined;
             });
         }
     }
@@ -110,7 +125,7 @@ export class Context {
     }
 
     public get cardsLeft() {
-        return this.currentCards.length;
+        return this.groupCards().length;
     }
 
     public get currentGroup() {

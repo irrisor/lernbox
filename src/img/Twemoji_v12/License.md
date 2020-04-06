@@ -1,4 +1,4 @@
-This file is licensed under the Creative Commons [Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/deed.en) license.
+This file is licensed under the [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/deed.en) license.
 	
 Attribution: Twitter
 

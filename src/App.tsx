@@ -75,6 +75,7 @@ export default function App() {
                     height="100%"
                     bgcolor="background.default"
                     maxHeight={750}
+                    paddingBottom={1}
                 >
                     <Bar>
                         <Box
@@ -82,6 +83,8 @@ export default function App() {
                             flexGrow={1}
                             flexDirection="column"
                             maxWidth="600px"
+                            minWidth="350px"
+                            width="80%"
                             mx="auto"
                         >
                             <Switch>

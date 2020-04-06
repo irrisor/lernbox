@@ -27,14 +27,20 @@ fach 4 nach 3 Monaten in dem Fach
 Fach 5 nach 6 Monaten in dem Fach
 * */
 export const slots: Slot[] = [
-    {durationInDays: 1},
+    {durationInDays: 0},
     {durationInDays: 7},
     {durationInDays: 30},
     {durationInDays: 90},
     {durationInDays: 180},
 ];
 
-export const cards: IndexCard[] = [];
+export const cards: IndexCard[] = [{
+    question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
+    time_s: 30,
+    groups: ["Test"],
+    answers: ["nach"],
+    description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so..."
+}];
 
 /** 1-mal-1 */
 for (let x = 1; x <= 10; x++) {
@@ -43,7 +49,7 @@ for (let x = 1; x <= 10; x++) {
             question: `${x} • ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
-            time_s: 6,
+            time_s: 4,
             groups: ["1x1"].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1-Kern"] : []),
             inputType: "number"
         });

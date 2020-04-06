@@ -1,5 +1,5 @@
 import * as React from "react";
-import {reactContext} from "./Context";
+import {Context, reactContext} from "./Context";
 import {Button, Grid, Link} from "@material-ui/core";
 import {Main} from "./layout/Main";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
@@ -13,25 +13,49 @@ import Paper from '@material-ui/core/Paper';
 import {positiveSVGs} from "./svgs";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import moment from "moment";
+import "moment/locale/de";
+import Typography from "@material-ui/core/Typography";
+import {makeStyles} from "@material-ui/core/styles";
+
+moment.locale("de");
+
+const useStyles = makeStyles({
+    groups: {
+        fontSize: 14,
+        textAlign: "right",
+        display: "inline-block",
+        marginRight: 0,
+        marginLeft: "auto"
+    }
+});
 
 export function Overview() {
     const context = React.useContext(reactContext);
     const pupil = context.pupil;
     const [activeTab, setActiveTab] = React.useState(0);
+    const classes = useStyles();
     if (!pupil) return <>Kein Schüler ausgewählt</>;
     const activeCards = context.activeCards;
     const groups = Array.from(new Set(pupil.cards.flatMap(card => card.groups)))
         .sort((a, b) => a.localeCompare(b));
+    const maxHeight = "500px";
     return (
         <>
             <Main>
-                <Tabs value={activeTab} onChange={(event, newTab) => setActiveTab(newTab)} aria-label="tabs"
-                style={{marginBottom: 8}}>
-                    <Tab label="Gruppen" id="groups-tab" aria-label="gruppen"/>
-                    <Tab label="Fächer" id="slots-tab" aria-label="fach"/>
+                <Tabs value={activeTab}
+                      onChange={(event, newTab) => setActiveTab(newTab)}
+                      aria-label="tabs"
+                      style={{marginBottom: 8}}
+                      variant="scrollable"
+                      scrollButtons="auto"
+                >
+                    <Tab label="Gruppen" id="groups-tab" aria-label="nach Gruppen"/>
+                    <Tab label="Fächer" id="slots-tab" aria-label="nach Fach"/>
+                    <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>
                 </Tabs>
                 <TableContainer component={Paper} style={{
-                    maxHeight: "500px",
+                    maxHeight: maxHeight,
                     display: activeTab === 0 ? undefined : "none",
                 }}>
                     <Table aria-label="Gruppen" stickyHeader>
@@ -59,7 +83,7 @@ export function Overview() {
                     </Table>
                 </TableContainer>
                 <TableContainer component={Paper} style={{
-                    maxHeight: "500px",
+                    maxHeight: maxHeight,
                     display: activeTab === 1 ? undefined : "none",
                 }}>
                     <Table aria-label="Fächer" stickyHeader>
@@ -93,6 +117,50 @@ export function Overview() {
                                     </TableCell>
                                 </TableRow>
                             ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TableContainer component={Paper} style={{
+                    maxHeight: maxHeight,
+                    display: activeTab === 2 ? undefined : "none",
+                }}>
+                    <Table aria-label="Karten" stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Karte</TableCell>
+                                <TableCell align="right">Fach</TableCell>
+                                <TableCell align="right">Aktiv</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {pupil.cards.sort((a, b) => {
+                                const slotOrder = (b.slot || 0) - (a.slot || 0);
+                                if (slotOrder !== 0) {
+                                    return slotOrder;
+                                }
+                                const activeOrder = (a.slotChanged || 0) - (b.slotChanged || 0);
+                                if ( activeOrder !== 0) {
+                                    return activeOrder;
+                                }
+                                return a.question.localeCompare(b.question);
+                            }).map((card, index) => {
+                                const nextTryDate = Context.getNextTryDate(card);
+                                return <TableRow key={index}>
+                                    <TableCell component="th" scope="row" style={{display: "flex"}}>
+                                        {card.question} <Typography
+                                        className={classes.groups}
+                                        color="textSecondary"
+                                        gutterBottom
+                                    >{card.groups.join(", ")}</Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {(card.slot || 0) + 1}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {Context.isCardActive(card) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
+                                    </TableCell>
+                                </TableRow>
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>
