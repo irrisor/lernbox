@@ -9,7 +9,7 @@ const graphURL = `https://graph.microsoft.com/v1.0`;
 const msalConfig = {
     auth: {
         clientId: "8fb151bc-771b-4a24-9a6e-e44e028db48c",
-        redirectUri: "http://localhost:3000/login",
+        redirectUri: `http://${window.location.hostname}${window.location.port && ":"}${window.location.port}/login`,
     },
 };
 
@@ -23,7 +23,8 @@ export function Login() {
     let [token, setToken] = React.useState<string | undefined>();
     useEffect(() => {
         if (token === undefined) {
-            msalInstance.acquireTokenSilent(request).then(response => setToken(response.accessToken));
+            msalInstance.acquireTokenSilent(request).then(response => setToken(response.accessToken)).catch(e =>
+                console.debug("ignoring failed token request", e));
         }
     }, [token]);
 
