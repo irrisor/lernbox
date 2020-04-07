@@ -9,7 +9,7 @@ const graphURL = `https://graph.microsoft.com/v1.0`;
 const msalConfig = {
     auth: {
         clientId: "8fb151bc-771b-4a24-9a6e-e44e028db48c",
-        redirectUri: `http://${window.location.hostname}${window.location.port && ":"}${window.location.port}/login`,
+        redirectUri: `http://${window.location.origin}/login`,
     },
 };
 
