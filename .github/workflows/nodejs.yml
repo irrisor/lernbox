@@ -30,6 +30,7 @@ jobs:
 #      env:
 #        CI: true
     - run: git status
+    - run: git checkout package-lock.json
     - name: FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@3.0.0
       with:
