@@ -14,6 +14,7 @@ import {Right} from "./Right";
 import {Wrong} from "./Wrong";
 import {PupilDelete} from "./PupilDelete";
 import {Late} from "./Late";
+import {Login} from "./Login";
 
 function PupilRoute() {
     const context = React.useContext(reactContext);
@@ -122,6 +123,7 @@ export default function App() {
                                         </SnapSVG>
                                     </div>
                                 </Route>
+                                <Route path="/login" component={Login}/>
                                 <Route path="/">
                                     <PupilList/>
                                 </Route>
