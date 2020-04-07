@@ -1,7 +1,7 @@
 import * as React from "react";
-import {useEffect, useMemo} from "react";
+import {useEffect} from "react";
 import * as msal from "@azure/msal-browser";
-import {Button} from "@material-ui/core";
+import {Button, Grid} from "@material-ui/core";
 import {reactContext} from "./Context";
 import {Main} from "./layout/Main";
 
@@ -14,18 +14,18 @@ const msalConfig = {
 };
 
 const msalInstance = new msal.PublicClientApplication(msalConfig);
+const request = {
+    scopes: ["Files.ReadWrite.AppFolder"],
+};
 
 export function Login() {
     const context = React.useContext(reactContext);
     let [token, setToken] = React.useState<string | undefined>();
-    const request = {
-        scopes: ["Files.ReadWrite.AppFolder"],
-    };
     useEffect(() => {
         if (token === undefined) {
             msalInstance.acquireTokenSilent(request).then(response => setToken(response.accessToken));
         }
-    }, [token === undefined]);
+    }, [token]);
 
     async function authHeader() {
         if (!token) {
@@ -59,13 +59,6 @@ export function Login() {
                         console.log("filesResponse=", filesResponse);
                         const body = await filesResponse.json();
                         console.log("filesResponse.body=", body);
-
-                        const uploadResponse = await fetch(`${graphURL}/drive/special/approot:/pupils.json:/content`,
-                            {
-                                method: "PUT",
-                                headers: await authHeader(),
-                                body: JSON.stringify(context.pupils),
-                            });
                     } catch (e) {
                         // TODO handle error
                         console.error(e);
@@ -75,7 +68,37 @@ export function Login() {
                 </Button>
                 :
                 <div>
-                    Logged in as: {msalInstance.getAccount().name} ({msalInstance.getAccount().userName})
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            Logged in as: {msalInstance.getAccount().name} ({msalInstance.getAccount().userName})
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button variant="contained" fullWidth onClick={async () => {
+                                const uploadResponse = await fetch(`${graphURL}/drive/special/approot:/pupils.json:/content`,
+                                    {
+                                        method: "PUT",
+                                        headers: await authHeader(),
+                                        body: JSON.stringify(context.pupils),
+                                    });
+                                console.log("uploadResponse=", uploadResponse);
+                            }}>
+                                Upload
+                            </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button variant="contained" fullWidth onClick={async () => {
+                                const downloadResponse = await fetch(`${graphURL}/drive/special/approot:/pupils.json:/content`,
+                                    {
+                                        method: "GET",
+                                        headers: await authHeader(),
+                                    });
+                                console.log("downloadResponse=", downloadResponse);
+                                context.pupils = await downloadResponse.json();
+                            }}>
+                                Download
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </div>
             }
         </Main>

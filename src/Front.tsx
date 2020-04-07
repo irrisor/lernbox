@@ -8,7 +8,7 @@ export function Front() {
     return (
         <IndexCardVisual
             category={context.currentGroup || context.card.groups.join(", ")}
-            main={context.card.question}
+            text={context.card.question}
             description={context.card.description}
         />
     );

@@ -8,7 +8,7 @@ export function Back() {
     return (
         <IndexCardVisual
             category={context.currentGroup || context.card.groups.join(", ")}
-            main={context.card.answers[0]}
+            text={context.card.answers[0]}
         />
     );
 }

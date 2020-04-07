@@ -6,7 +6,6 @@ import Typography from "@material-ui/core/Typography";
 import {Box, Grid} from "@material-ui/core";
 import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
-import {timeReminderSVG} from "./svgs";
 
 const useStyles = makeStyles({
     root: {
@@ -29,10 +28,9 @@ const useStyles = makeStyles({
     },
 });
 
-const loadScaledSVG = (s: Snap.Paper, svgElement: SVGElement) => {
-    Snap.load(
-        timeReminderSVG
-        // "https://upload.wikimedia.org/wikipedia/commons/b/b9/CC%2BCommercial-license-button.svg"
+export function IndexCardVisual({category, text, description, image}: { category?: string, text: string, description?: string, image?: string }) {
+    const classes = useStyles();
+    const svg = React.useMemo(() => (s: Snap.Paper) => image !== undefined ? Snap.load(image
         , data => {
             const group = s.g();
             const dataElement = data as Snap.Element;
@@ -45,11 +43,7 @@ const loadScaledSVG = (s: Snap.Paper, svgElement: SVGElement) => {
                 loadedSVG.node.setAttribute("viewBox",
                     `${0} ${0} ${width} ${height}`);
             }
-        });
-};
-
-export function IndexCardVisual({category, main, description}: { category?: string, main: string, description?: string }) {
-    const classes = useStyles();
+        }) : undefined, [image]);
     return (
         <>
             <Card className={classes.root}>
@@ -69,23 +63,24 @@ export function IndexCardVisual({category, main, description}: { category?: stri
                             flexGrow={1}
                         >
                             <Grid container spacing={1}>
-                                {/*<Grid item xs={2}>
-                                    <img src={timeReminderSVG} style={{height: 32, maxWidth: 32, verticalAlign: "middle"}}/>
-                                    <div style={{height: "100%", verticalAlign: "middle", display: "inline-block"}}/>
-                                </Grid>*/}
-                                <Grid item xs={12/*8*/}>
-                                    <Typography variant="h5" component="h2" style={{display: "inline-block"}}>
-                                        {main}
-                                    </Typography>
-                                </Grid>
-                                {/*<Grid item xs={12}>
-
-                                    <SnapSVG width="80%" height="100%">
-                                        {loadScaledSVG}
+                                {svg && text &&
+                                <Grid item xs={2}>
+                                    <SnapSVG width="100%" height="100%">
+                                        {svg}
                                     </SnapSVG>
-                                </Grid>*/}
-                                {/*<Grid item xs={2}>
-                                </Grid>*/}
+                                    <div style={{height: "100%", verticalAlign: "middle", display: "inline-block"}}/>
+                                </Grid>}
+                                {text ? <Grid item xs={text && svg ? 8 : 12}>
+                                        <Typography variant="h5" component="h2" style={{display: "inline-block"}}>
+                                            {text}
+                                        </Typography>
+                                    </Grid> :
+                                    svg && <Grid item xs={12}>
+                                        <SnapSVG width="80%" height="100%">
+                                            {svg}
+                                        </SnapSVG>
+                                    </Grid>}
+                                {text && svg && <Grid item xs={2}/>}
                             </Grid>
                         </Box>
                         <Typography className={classes.pos} color="textSecondary"/>
