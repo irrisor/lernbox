@@ -29,18 +29,18 @@ jobs:
 #    - run: npm test
 #      env:
 #        CI: true
-    - run: git status
-    - run: git checkout package-lock.json
-    - name: FTP Deploy
-      uses: SamKirkland/FTP-Deploy-Action@3.0.0
+    - name: ftp-action
+      uses: sebastianpopp/ftp-action@v2.0.0
       with:
-        # Deployment destination server & path. Formatted as protocol://domain.com:port/full/destination/path/
-        ftp-server: lernbox.irrisor.net
-        # FTP account username
-        ftp-username: lernbox@lernbox.irrisor.net
-        # FTP account password
-        ftp-password: ${{ secrets.LERNBOX_IRRISOR_NET_PASSWORD }}
-        # The local folder to copy, defaults to root project folder
-        local-dir: ./build
-        # Passes through options into git-ftp
-        # git-ftp-args:
+        # FTP host
+        host: lernbox.irrisor.net
+        # FTP user
+        user: lernbox@lernbox.irrisor.net
+        # FTP password
+        password: ${{ secrets.LERNBOX_IRRISOR_NET_PASSWORD }}
+        # Force SSL encryption
+        forceSsl: true
+        # Local directory
+        localDir: build/
+        # Remote directory
+        remoteDir: .
