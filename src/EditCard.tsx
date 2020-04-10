@@ -12,8 +12,13 @@ export function EditCard() {
         answers: ["Huhu!"],
         groups: ["Test"],
         time_s: 15,
-        image: "https://commons.wikimedia.org/wiki/File:H%C3%A9raldique_meuble_Rainette.svg",
+        image: "Dolphin.svg",
+        imageParameters: {
+            "text": "",
+        }
     });
+    const [temporaryImageParameters, setTemporaryImageParameters] = React.useState<string>(JSON.stringify(card.imageParameters));
+    const [temporaryImageParametersError, setTemporaryImageParametersError] = React.useState<string>("");
     return (
         <>
             <Main>
@@ -49,6 +54,26 @@ export function EditCard() {
                             onChange={event => setCard(Object.assign({}, card,
                                 {image: event.target.value}))}
                             fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Bild Parameter Vorderseite (JSON)"
+                            value={temporaryImageParameters}
+                            onChange={event => {
+                                setTemporaryImageParameters(event.target.value);
+                                try {
+                                    const newImageParameters = JSON.parse(event.target.value);
+                                    setCard(Object.assign({}, card,
+                                        {imageParameters: newImageParameters}));
+                                    setTemporaryImageParametersError("");
+                                } catch ( e ) {
+                                    setTemporaryImageParametersError(e.message||"Kein gültiges JSON");
+                                }
+                            }}
+                            fullWidth
+                            error={!!temporaryImageParametersError}
+                            helperText={temporaryImageParametersError||undefined}
                         />
                     </Grid>
                     <Grid item xs={12}>

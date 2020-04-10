@@ -12,6 +12,7 @@ export function Front({card}: { card: IndexCard | undefined }) {
             text={card.question}
             description={card.description}
             image={card.image}
+            imageParameters={card.imageParameters}
         />
     );
 }

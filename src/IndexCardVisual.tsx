@@ -6,6 +6,7 @@ import Typography from "@material-ui/core/Typography";
 import {Box, Grid} from "@material-ui/core";
 import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
+import {IndexCard} from "./cards";
 
 const useStyles = makeStyles({
     root: {
@@ -38,7 +39,28 @@ const useStyles = makeStyles({
     },
 });
 
-export function IndexCardVisual({category, text, description, image}: { category?: string, text?: string, description?: string, image?: string }) {
+function convertUnit(width: string): number | undefined {
+    if (width) {
+        const unit = width.substring(width.length - 2);
+        if (unit === "pt") {
+            return Number(width.substring(0, width.length - 2)) * 1.33;
+        } else if (unit === "px") {
+            return Number(width.substring(0, width.length - 2));
+        }
+        return Number(width);
+    } else {
+        return undefined;
+    }
+}
+
+export function IndexCardVisual({category, text, description, image, imageParameters}:
+                                    {
+                                        category?: string,
+                                        text?: string,
+                                        description?: string,
+                                        image?: string
+                                        imageParameters?: IndexCard["imageParameters"]
+                                    }) {
     const classes = useStyles();
     const [imageURL, setImageURL] = React.useState<string | undefined>();
     const [imageInfoURL, setImageInfoURL] = React.useState<string | undefined>();
@@ -63,23 +85,52 @@ export function IndexCardVisual({category, text, description, image}: { category
             }
         })()
     }, [image]);
-    const svg = React.useMemo(() => (s: Snap.Paper) => imageURL ? Snap.load(imageURL
-        , data => {
-            const group = s.g();
-            const dataElement = data as Snap.Element;
-            group.append(dataElement);
-            const loadedSVG = group.select("svg");
-            if (loadedSVG !== null) {
-                const width = loadedSVG.attr("width");
-                const height = loadedSVG.attr("height");
-                loadedSVG.node.removeAttribute("width");
-                loadedSVG.node.removeAttribute("height");
-                if (!loadedSVG.attr("viewBox") && width && height) {
-                    loadedSVG.node.setAttribute("viewBox",
-                        `${0} ${0} ${width} ${height}`);
-                }
+    const svg = React.useMemo(() => (s: Snap.Paper, svgElement: SVGElement) => {
+        if (imageURL) {
+            if (imageURL.match(/.*\.svg/)) {
+                Snap.load(imageURL
+                    , data => {
+                        const group = s.g();
+                        const dataElement = data as Snap.Element;
+                        group.append(dataElement);
+                        const loadedSVG = group.select("svg");
+                        if (loadedSVG !== null) {
+                            const width = convertUnit(loadedSVG.attr("width"));
+                            const height = convertUnit(loadedSVG.attr("height"));
+                            loadedSVG.node.removeAttribute("width");
+                            loadedSVG.node.removeAttribute("height");
+                            if (!loadedSVG.attr("viewBox") && width && height) {
+                                loadedSVG.node.setAttribute("viewBox",
+                                    `${0} ${0} ${width} ${height}`);
+                            }
+                            if (imageParameters) {
+                                for (const selector of Object.keys(imageParameters)) {
+                                    const value = imageParameters[selector];
+                                    try {
+                                        const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
+                                        if (element) {
+                                            if (typeof value === "string") {
+                                                element.attr({text: value});
+                                            } else {
+                                                element.attr(value);
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error("Error aplying imageParameter", selector, imageParameters, e);
+                                    }
+                                }
+                            }
+                        }
+                    });
+            } else if (imageURL.match(/.*\.(jpg|png)/)) {
+                const image = s.image(imageURL, 0, 0, undefined as unknown as number, undefined as unknown as number);
+                image.node.onload = () => {
+                    const bBox = image.getBBox();
+                    svgElement.setAttribute("viewBox", `0 0 ${bBox.width} ${bBox.height}`)
+                };
             }
-        }) : undefined, [imageURL]);
+        }
+    }, [imageURL, imageParameters]);
     const imageInfoLink = imageInfoURL ?
         <a href={imageInfoURL}
            className={classes.imageDescription}

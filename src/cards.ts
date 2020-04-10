@@ -1,6 +1,9 @@
 export interface IndexCard {
     question?: string;
     image?: string;
+    imageParameters?: {
+        [seletector: string]: string | { [attribute: string]: string }
+    };
     description?: string;
     answers: string[];
     time_s: number;
@@ -40,7 +43,7 @@ export const cards: IndexCard[] = [{
     time_s: 30,
     groups: ["Test"],
     answers: ["nach"],
-    description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so..."
+    description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
 }];
 
 /** 1-mal-1 */
@@ -52,7 +55,7 @@ for (let x = 1; x <= 10; x++) {
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 4,
             groups: ["1x1"].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1-Kern"] : []),
-            inputType: "number"
+            inputType: "number",
         });
     }
 }
