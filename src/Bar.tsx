@@ -7,6 +7,7 @@ import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
 import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import MenuIcon from "@material-ui/icons/Menu";
+import Logo from "@material-ui/icons/School";
 import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -150,7 +151,7 @@ export function Bar(props: { children: React.ReactNode }) {
                         <MenuIcon/>
                     </IconButton>
                     <Typography variant="h6" className={classes.title}>
-                        Lernbox{context.pupil && ` von ${context.pupil.name}`}
+                        <Logo style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && ` von ${context.pupil.name}`}
                     </Typography>
                     <IconButton
                         color="inherit"

@@ -1,5 +1,6 @@
 export interface IndexCard {
-    question: string;
+    question?: string;
+    image?: string;
     description?: string;
     answers: string[];
     time_s: number;

@@ -5,6 +5,16 @@ import {Button, Grid} from "@material-ui/core";
 import {reactContext} from "./Context";
 import {Main} from "./layout/Main";
 
+/*
+documentation:
+Login:
+https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/acquire-token.md
+File access:
+https://docs.microsoft.com/de-de/onedrive/developer/rest-api/concepts/special-folders-appfolder?view=odsp-graph-online
+
+
+management: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+*/
 const graphURL = `https://graph.microsoft.com/v1.0`;
 const msalConfig = {
     auth: {
@@ -15,7 +25,8 @@ const msalConfig = {
 
 const msalInstance = new msal.PublicClientApplication(msalConfig);
 const request = {
-    scopes: ["Files.ReadWrite.AppFolder"],
+    scopes: ["Files.ReadWrite.AppFolder",
+        "Files.Read.All", "Files.ReadWrite.All", "Sites.Read.All", "Sites.ReadWrite.All"],
 };
 
 export function Login() {
@@ -28,7 +39,7 @@ export function Login() {
         }
     }, [token]);
 
-    async function authHeader() {
+    const authHeader = React.useMemo(() => async () => {
         if (!token) {
             let tokenResponse;
             try {
@@ -43,7 +54,21 @@ export function Login() {
         return {
             "Authorization": "Bearer " + token,
         };
-    }
+    }, [token]);
+
+    const [sharedWithMe, setSharedWithMe] = React.useState<any>();
+    useEffect(() => {
+        if (token) {
+            (async () => {
+                const sharedWithMeResponse = await fetch(`${graphURL}/me/drive/sharedWithMe`,
+                    {headers: await authHeader()},
+                );
+                const body = await sharedWithMeResponse.json();
+                console.log("sharedWithMeBody=", body);
+                setSharedWithMe(body.value);
+            })()
+        }
+    }, [token]);
 
     // const files = useMemo(()=>)
 
@@ -52,10 +77,9 @@ export function Login() {
             {!token ?
                 <Button variant="contained" onClick={async () => {
                     try {
+                        const headers = await authHeader();
                         const filesResponse = await fetch(`${graphURL}/drive/special/approot/children`,
-                            {
-                                headers: await authHeader(),
-                            },
+                            {headers},
                         );
                         console.log("filesResponse=", filesResponse);
                         const body = await filesResponse.json();
@@ -98,6 +122,11 @@ export function Login() {
                             }}>
                                 Download
                             </Button>
+                        </Grid>
+                        <Grid item xs={12}>
+                            {Array.isArray(sharedWithMe) && sharedWithMe.map(entry => <div>
+                                {entry.remoteItem.name}
+                            </div>)}
                         </Grid>
                     </Grid>
                 </div>

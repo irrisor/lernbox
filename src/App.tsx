@@ -15,6 +15,7 @@ import {Wrong} from "./Wrong";
 import {PupilDelete} from "./PupilDelete";
 import {Late} from "./Late";
 import {Login} from "./Login";
+import {EditCard} from "./EditCard";
 
 function PupilRoute() {
     const context = React.useContext(reactContext);
@@ -124,6 +125,7 @@ export default function App() {
                                     </div>
                                 </Route>
                                 <Route path="/login" component={Login}/>
+                                <Route path="/edit" component={EditCard}/>
                                 <Route path="/">
                                     <PupilList/>
                                 </Route>

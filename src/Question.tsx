@@ -42,7 +42,7 @@ export function Question() {
     const history = useHistory();
     const [input, setInput] = React.useState("");
 
-    const maxPassSeconds = context.card ? context.card.time_s : Number.MAX_VALUE;
+    const maxPassSeconds = context.card && context.card.time_s > 0 ? context.card.time_s : Number.MAX_VALUE;
     const [secondsPassed, setSecondsPassed] = React.useState(0);
     useEffect(() => {
         if (!context.card && context.pupilIndex !== undefined) context.next();
@@ -82,7 +82,7 @@ export function Question() {
             <Main>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <Front/>
+                        <Front card={context.card}/>
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="h5"> </Typography>

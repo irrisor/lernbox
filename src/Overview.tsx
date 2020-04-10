@@ -142,7 +142,7 @@ export function Overview() {
                                 if ( activeOrder !== 0) {
                                     return activeOrder;
                                 }
-                                return a.question.localeCompare(b.question);
+                                return (a.question||a.image||"").localeCompare(b.question||b.image||"");
                             }).map((card, index) => {
                                 const nextTryDate = Context.getNextTryDate(card);
                                 return <TableRow key={index}>

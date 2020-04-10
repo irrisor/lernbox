@@ -23,27 +23,72 @@ const useStyles = makeStyles({
         fontSize: 14,
         textAlign: "right",
     },
+    imageDescription: {
+        fontSize: 10,
+        textAlign: "center",
+        textDecoration: "none",
+    },
     pos: {
         marginBottom: 12,
     },
+    centerVertically: {
+        justifyContent: "center",
+        display: "flex",
+        flexDirection: "column",
+    }
 });
 
-export function IndexCardVisual({category, text, description, image}: { category?: string, text: string, description?: string, image?: string }) {
+export function IndexCardVisual({category, text, description, image}: { category?: string, text?: string, description?: string, image?: string }) {
     const classes = useStyles();
-    const svg = React.useMemo(() => (s: Snap.Paper) => image !== undefined ? Snap.load(image
+    const [imageURL, setImageURL] = React.useState<string | undefined>();
+    const [imageInfoURL, setImageInfoURL] = React.useState<string | undefined>();
+    React.useEffect(() => {
+        (async () => {
+            const match = image && image.match(
+                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^\/]*)|https:\/\/upload.wikimedia.org\/.*\/([^\/]*))/);
+            const wikiMediaFileName = match ? match[2] || match[3] : image;
+            if (wikiMediaFileName) {
+                const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${
+                    wikiMediaFileName
+                }&prop=imageinfo&iiprop=extmetadata%7Curl&format=json&origin=*`;
+                const response = await fetch(apiURL, {mode: "cors"});
+                const metadata = await response.json();
+                const pages = metadata && metadata.query && Object.keys(metadata.query.pages);
+                const page = Array.isArray(pages) && pages.length > 0 && metadata.query.pages[pages[0]];
+                if (page && page.imageinfo && Array.isArray(page.imageinfo) && page.imageinfo.length > 0 && page.imageinfo[0]) {
+                    const imageinfo = page.imageinfo[0];
+                    setImageURL(imageinfo.url);
+                    setImageInfoURL(imageinfo.descriptionurl);
+                }
+            }
+        })()
+    }, [image]);
+    const svg = React.useMemo(() => (s: Snap.Paper) => imageURL ? Snap.load(imageURL
         , data => {
             const group = s.g();
             const dataElement = data as Snap.Element;
             group.append(dataElement);
             const loadedSVG = group.select("svg");
-            const width = loadedSVG.attr("width");
-            const height = loadedSVG.attr("height");
-            loadedSVG.attr({width: undefined, height: undefined});
-            if (!loadedSVG.attr("viewBox") && width && height) {
-                loadedSVG.node.setAttribute("viewBox",
-                    `${0} ${0} ${width} ${height}`);
+            if (loadedSVG !== null) {
+                const width = loadedSVG.attr("width");
+                const height = loadedSVG.attr("height");
+                loadedSVG.attr({width: undefined, height: undefined});
+                if (!loadedSVG.attr("viewBox") && width && height) {
+                    loadedSVG.node.setAttribute("viewBox",
+                        `${0} ${0} ${width} ${height}`);
+                }
             }
-        }) : undefined, [image]);
+        }) : undefined, [imageURL]);
+    const imageInfoLink = imageInfoURL ?
+        <a href={imageInfoURL}
+           className={classes.imageDescription}
+           target="_blank"
+        >
+        <Typography
+            className={classes.imageDescription}
+            variant="body2"
+            color="primary"
+        >Bildquelle</Typography></a> : null;
     return (
         <>
             <Card className={classes.root}>
@@ -63,30 +108,49 @@ export function IndexCardVisual({category, text, description, image}: { category
                             flexGrow={1}
                         >
                             <Grid container spacing={1}>
-                                {svg && text &&
+                                {image && text &&
                                 <Grid item xs={2}>
                                     <SnapSVG width="100%" height="100%">
                                         {svg}
                                     </SnapSVG>
-                                    <div style={{height: "100%", verticalAlign: "middle", display: "inline-block"}}/>
                                 </Grid>}
-                                {text ? <Grid item xs={text && svg ? 8 : 12}>
-                                        <Typography variant="h5" component="h2" style={{display: "inline-block"}}>
+                                {text ? <Grid item xs={text && image ? 8 : 12}
+                                              style={{
+                                                  justifyContent: "center",
+                                                  display: "flex",
+                                                  flexDirection: "column",
+                                              }}>
+                                        <Typography variant="h5" component="h2">
                                             {text}
                                         </Typography>
                                     </Grid> :
-                                    svg && <Grid item xs={12}>
+                                    image && <Grid item xs={12}>
                                         <SnapSVG width="80%" height="100%">
                                             {svg}
                                         </SnapSVG>
                                     </Grid>}
-                                {text && svg && <Grid item xs={2}/>}
+                                {text && image && <Grid item xs={2}/>}
                             </Grid>
                         </Box>
                         <Typography className={classes.pos} color="textSecondary"/>
-                        <Typography variant="body2" component="p">
-                            {description}
-                        </Typography>
+                        <Grid container>
+                            {imageInfoLink && (text||description) &&
+                            <Grid item xs={2} className={classes.centerVertically}>
+                                {imageInfoLink}
+                            </Grid>}
+                            {(text||description) ? <Grid item xs={imageInfoLink ? 8 : 12}
+                                          className={classes.centerVertically}>
+                                    <Typography variant="body2" component="p">
+                                        {description}
+                                    </Typography>
+                                </Grid> :
+                                imageInfoLink && <Grid item xs={12}>
+                                    {imageInfoLink}
+                                </Grid>}
+                            {imageInfoLink && (text||description) && <Grid item xs={2}/>}
+                        </Grid>
+
+
                     </Box>
                 </CardContent>
             </Card>
