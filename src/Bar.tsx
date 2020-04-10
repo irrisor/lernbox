@@ -11,6 +11,7 @@ import Logo from "@material-ui/icons/School";
 import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import DeleteIcon from "@material-ui/icons/Delete";
+import SyncIcon from "@material-ui/icons/Sync";
 import LogoffIcon from "@material-ui/icons/ExitToApp";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -91,7 +92,7 @@ function toggleFullScreen() {
 }
 
 
-const Menu = () => {
+const Menu = (props: {onClick: () => true}) => {
     const classes = useStyles();
     const context = React.useContext(reactContext);
     return (
@@ -99,25 +100,30 @@ const Menu = () => {
             <div className={classes.toolbar}/>
             <Divider/>
             <List>
-                <ListItem button onClick={() => context.back()}>
+                <ListItem button onClick={() => props.onClick() && context.back()}>
                     <ListItemIcon><AccountCircle/></ListItemIcon>
                     <ListItemText primary="Übersicht"/>
                 </ListItem>
-                <ListItem button onClick={toggleFullScreen}>
+                <ListItem button onClick={() => props.onClick() && toggleFullScreen()}>
                     <ListItemIcon><FullscreenIcon/></ListItemIcon>
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
                 <ListItem button
+                          onClick={() => props.onClick() && context.history.push(`/login`)}>
+                    <ListItemIcon><SyncIcon/></ListItemIcon>
+                    <ListItemText primary="Synchronisieren"/>
+                </ListItem>
+                <ListItem button
                           disabled={context.pupilIndex === undefined}
-                          onClick={() => context.history.push(`/pupil/${context.pupilIndex}/delete`)}>
+                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupilIndex}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Löschen"/>
                 </ListItem>
                 <ListItem button
                           disabled={context.pupilIndex === undefined}
-                          onClick={() => context.history.push("/")}>
+                          onClick={() => () => props.onClick() && context.history.push("/")}>
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
-                    <ListItemText primary="Abmelden"/>
+                    <ListItemText primary="Schüler wechseln"/>
                 </ListItem>
             </List>
         </div>
@@ -131,9 +137,10 @@ export function Bar(props: { children: React.ReactNode }) {
     const isWideScreen = useMediaQuery(theme.breakpoints.up('sm'));
     const [menuOpen, setMenuOpen] = React.useState(localStorage.getItem("menuOpen") === "true");
 
-    const handleDrawerToggle = () => {
+    const handleDrawerToggle = (): true => {
         localStorage.setItem("menuOpen", "" + !menuOpen);
         setMenuOpen(!menuOpen);
+        return true;
     };
     return (
         <>
@@ -186,7 +193,7 @@ export function Bar(props: { children: React.ReactNode }) {
                         keepMounted: true, // Better open performance on mobile.
                     }}
                 >
-                    <Menu/>
+                    <Menu onClick={handleDrawerToggle}/>
                 </Drawer>
                 }
                 {isWideScreen && menuOpen &&
@@ -197,7 +204,7 @@ export function Bar(props: { children: React.ReactNode }) {
                     variant="permanent"
                     open
                 >
-                    <Menu/>
+                    <Menu onClick={(): true => true}/>
                 </Drawer>
                 }
             </nav>
