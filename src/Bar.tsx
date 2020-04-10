@@ -121,7 +121,7 @@ const Menu = (props: {onClick: () => true}) => {
                 </ListItem>
                 <ListItem button
                           disabled={context.pupilIndex === undefined}
-                          onClick={() => () => props.onClick() && context.history.push("/")}>
+                          onClick={() => props.onClick() && context.history.push("/")}>
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
                     <ListItemText primary="Schüler wechseln"/>
                 </ListItem>
