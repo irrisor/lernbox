@@ -135,7 +135,6 @@ export function Bar(props: { children: React.ReactNode }) {
         localStorage.setItem("menuOpen", "" + !menuOpen);
         setMenuOpen(!menuOpen);
     };
-    console.log("up: ", theme.breakpoints.up('sm'));
     return (
         <>
             <CssBaseline/>

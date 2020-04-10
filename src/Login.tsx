@@ -29,6 +29,23 @@ const request = {
         "Files.Read.All", "Files.ReadWrite.All", "Sites.Read.All", "Sites.ReadWrite.All"],
 };
 
+const authHeaderFunction = async (token: string|undefined, setToken: (value: string)=>void) => {
+    if (!token) {
+        let tokenResponse;
+        try {
+            tokenResponse = await msalInstance.acquireTokenSilent(request);
+        } catch (e) {
+            // fallback to interaction when silent call fails
+            tokenResponse = await msalInstance.loginPopup(request);
+        }
+        console.log("tokenResponse=", tokenResponse);
+        setToken(token = tokenResponse.accessToken);
+    }
+    return {
+        "Authorization": "Bearer " + token,
+    };
+};
+
 export function Login() {
     const context = React.useContext(reactContext);
     let [token, setToken] = React.useState<string | undefined>();
@@ -39,29 +56,12 @@ export function Login() {
         }
     }, [token]);
 
-    const authHeader = React.useMemo(() => async () => {
-        if (!token) {
-            let tokenResponse;
-            try {
-                tokenResponse = await msalInstance.acquireTokenSilent(request);
-            } catch (e) {
-                // fallback to interaction when silent call fails
-                tokenResponse = await msalInstance.loginPopup(request);
-            }
-            console.log("tokenResponse=", tokenResponse);
-            setToken(token = tokenResponse.accessToken);
-        }
-        return {
-            "Authorization": "Bearer " + token,
-        };
-    }, [token]);
-
     const [sharedWithMe, setSharedWithMe] = React.useState<any>();
     useEffect(() => {
         if (token) {
             (async () => {
                 const sharedWithMeResponse = await fetch(`${graphURL}/me/drive/sharedWithMe`,
-                    {headers: await authHeader()},
+                    {headers: await authHeaderFunction(token, setToken)},
                 );
                 const body = await sharedWithMeResponse.json();
                 console.log("sharedWithMeBody=", body);
@@ -77,7 +77,7 @@ export function Login() {
             {!token ?
                 <Button variant="contained" onClick={async () => {
                     try {
-                        const headers = await authHeader();
+                        const headers = await authHeaderFunction(token, setToken);
                         const filesResponse = await fetch(`${graphURL}/drive/special/approot/children`,
                             {headers},
                         );
@@ -102,7 +102,7 @@ export function Login() {
                                 const uploadResponse = await fetch(`${graphURL}/drive/special/approot:/pupils.json:/content`,
                                     {
                                         method: "PUT",
-                                        headers: await authHeader(),
+                                        headers: await authHeaderFunction(token, setToken),
                                         body: JSON.stringify(context.pupils),
                                     });
                                 console.log("uploadResponse=", uploadResponse);
@@ -115,7 +115,7 @@ export function Login() {
                                 const downloadResponse = await fetch(`${graphURL}/drive/special/approot:/pupils.json:/content`,
                                     {
                                         method: "GET",
-                                        headers: await authHeader(),
+                                        headers: await authHeaderFunction(token, setToken),
                                     });
                                 console.log("downloadResponse=", downloadResponse);
                                 context.pupils = await downloadResponse.json();

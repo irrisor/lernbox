@@ -35,7 +35,7 @@ const useStyles = makeStyles({
         justifyContent: "center",
         display: "flex",
         flexDirection: "column",
-    }
+    },
 });
 
 export function IndexCardVisual({category, text, description, image}: { category?: string, text?: string, description?: string, image?: string }) {
@@ -45,7 +45,7 @@ export function IndexCardVisual({category, text, description, image}: { category
     React.useEffect(() => {
         (async () => {
             const match = image && image.match(
-                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^\/]*)|https:\/\/upload.wikimedia.org\/.*\/([^\/]*))/);
+                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*))/);
             const wikiMediaFileName = match ? match[2] || match[3] : image;
             if (wikiMediaFileName) {
                 const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${
@@ -72,7 +72,8 @@ export function IndexCardVisual({category, text, description, image}: { category
             if (loadedSVG !== null) {
                 const width = loadedSVG.attr("width");
                 const height = loadedSVG.attr("height");
-                loadedSVG.attr({width: undefined, height: undefined});
+                loadedSVG.node.removeAttribute("width");
+                loadedSVG.node.removeAttribute("height");
                 if (!loadedSVG.attr("viewBox") && width && height) {
                     loadedSVG.node.setAttribute("viewBox",
                         `${0} ${0} ${width} ${height}`);
@@ -83,12 +84,13 @@ export function IndexCardVisual({category, text, description, image}: { category
         <a href={imageInfoURL}
            className={classes.imageDescription}
            target="_blank"
+           rel="noopener noreferrer"
         >
-        <Typography
-            className={classes.imageDescription}
-            variant="body2"
-            color="primary"
-        >Bildquelle</Typography></a> : null;
+            <Typography
+                className={classes.imageDescription}
+                variant="body2"
+                color="primary"
+            >Bildquelle</Typography></a> : null;
     return (
         <>
             <Card className={classes.root}>
@@ -134,12 +136,12 @@ export function IndexCardVisual({category, text, description, image}: { category
                         </Box>
                         <Typography className={classes.pos} color="textSecondary"/>
                         <Grid container>
-                            {imageInfoLink && (text||description) &&
+                            {imageInfoLink && (text || description) &&
                             <Grid item xs={2} className={classes.centerVertically}>
                                 {imageInfoLink}
                             </Grid>}
-                            {(text||description) ? <Grid item xs={imageInfoLink ? 8 : 12}
-                                          className={classes.centerVertically}>
+                            {(text || description) ? <Grid item xs={imageInfoLink ? 8 : 12}
+                                                           className={classes.centerVertically}>
                                     <Typography variant="body2" component="p">
                                         {description}
                                     </Typography>
@@ -147,7 +149,7 @@ export function IndexCardVisual({category, text, description, image}: { category
                                 imageInfoLink && <Grid item xs={12}>
                                     {imageInfoLink}
                                 </Grid>}
-                            {imageInfoLink && (text||description) && <Grid item xs={2}/>}
+                            {imageInfoLink && (text || description) && <Grid item xs={2}/>}
                         </Grid>
 
 
