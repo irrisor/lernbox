@@ -19,7 +19,6 @@ import {Front} from "./Front";
 
 export function onEnterPressed(call: () => void): React.KeyboardEventHandler {
     return ev => {
-        console.log(ev);
         if (ev.key === "Enter") {
             call();
             ev.preventDefault();
@@ -29,7 +28,6 @@ export function onEnterPressed(call: () => void): React.KeyboardEventHandler {
 
 export function onTabPress(call: () => void): React.KeyboardEventHandler {
     return ev => {
-        console.log(ev);
         if (ev.key === "Tab") {
             call();
             ev.preventDefault();
@@ -53,7 +51,7 @@ export function Question() {
         if (!card) return;
         card.slotChanged = Date.now();
         card.previousSlot = card.slot;
-        if (card.answers.indexOf(input.trim()) >= 0) {
+        if (card.answers.filter(answer => !!answer.trim()).indexOf(input.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
                 card.slot = (card.slot || 0) + 1;
                 history.push(`/pupil/${context.pupilIndex}/right`);

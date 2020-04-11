@@ -1,11 +1,17 @@
+import {houseSVG} from "./svgs";
+
+type ImageParameters = {
+    [seletector: string]: string | { [attribute: string]: string }
+};
+
 export interface IndexCard {
     question?: string;
     image?: string;
-    imageParameters?: {
-        [seletector: string]: string | { [attribute: string]: string }
-    };
+    imageParameters?: ImageParameters;
     description?: string;
     answers: string[];
+    answerImage?: string;
+    answerImageParameters?: ImageParameters;
     time_s: number;
     groups: string[];
     slot?: number;
@@ -54,7 +60,32 @@ for (let x = 1; x <= 10; x++) {
             description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 4,
-            groups: ["1x1"].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1-Kern"] : []),
+            groups: ["1•1", `1•1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1 Kern"] : []),
+            inputType: "number",
+        });
+        cards.push({
+            question: `${x * y} : ${y}`,
+            description: "Wie lautet das Ergebnis?",
+            answers: [`${x * y} : ${y} = ${x}`, `${x}`],
+            time_s: 4,
+            groups: ["1:1", `1:1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1:1 Kern"] : []),
+            inputType: "number",
+        });
+    }
+}
+
+/** Zahlzerlegung */
+for (let x = 0; x <= 10; x++) {
+    for (let y = 0; y <= x; y++) {
+        cards.push({
+            image: houseSVG,
+            answerImage: houseSVG,
+            imageParameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": ""},
+            answerImageParameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": "" + (x - y)},
+            description: "Was fehlt?",
+            answers: ["", "" + (x - y)],
+            time_s: 6,
+            groups: ["Zahlzerlegung"],
             inputType: "number",
         });
     }

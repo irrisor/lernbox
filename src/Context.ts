@@ -53,8 +53,8 @@ export class Context {
             const currentGroup = group || this.currentGroup;
             const groupCards = this.groupCards(currentGroup);
             const newCardCount = Math.min(10, groupCards.length);
-            console.log(`Selecting ${newCardCount} new cards from ${
-                currentGroup ? "group " + currentGroup : "all cards"}.`);
+            // console.log(`Selecting ${newCardCount} new cards from ${
+            //     currentGroup ? "group " + currentGroup : "all cards"}.`);
             for (let i = 0; i < newCardCount; i++) {
                 const firstSlotSize = groupCards.findIndex(
                     card => (card.slot || 0) !== (groupCards[0].slot || 0));

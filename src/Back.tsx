@@ -9,6 +9,8 @@ export function Back() {
         <IndexCardVisual
             category={context.currentGroup || context.card.groups.join(", ")}
             text={context.card.answers[0]}
+            image={context.card.answerImage}
+            imageParameters={context.card.answerImageParameters}
         />
     );
 }

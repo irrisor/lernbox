@@ -54,6 +54,7 @@ const useStyles = makeStyles((theme: Theme) =>
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
+            // height: "100%"
         },
     }),
 );
@@ -92,7 +93,7 @@ function toggleFullScreen() {
 }
 
 
-const Menu = (props: {onClick: () => true}) => {
+const Menu = (props: { onClick: () => true }) => {
     const classes = useStyles();
     const context = React.useContext(reactContext);
     return (
