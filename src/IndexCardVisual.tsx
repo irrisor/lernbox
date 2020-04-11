@@ -110,11 +110,21 @@ export function IndexCardVisual({category, text, description, image, imageParame
                                 for (const selector of Object.keys(imageParameters)) {
                                     const value = imageParameters[selector];
                                     try {
-                                        const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
-                                        if (element) {
-                                            if (typeof value === "string") {
-                                                element.attr({text: value});
+                                        if (typeof value === "string") {
+                                            const elements = loadedSVG.selectAll(selector + " tspan");
+                                            if (elements) {
+                                                elements.forEach(element => {
+                                                    element.node.textContent = value;
+                                                });
                                             } else {
+                                                const texts = loadedSVG.selectAll(selector);
+                                                if (texts) {
+                                                    texts.attr({text: value});
+                                                }
+                                            }
+                                        } else {
+                                            const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
+                                            if (element) {
                                                 element.attr(value);
                                             }
                                         }
