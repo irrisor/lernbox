@@ -26,7 +26,7 @@ export function Yay() {
                                 group.append(data as Snap.Element);
                                 group.select("svg").attr({"overflow": "visible"});
                                 // let group = s.g(s.selectAll("*"));
-                                group.transform(`s0,${w / 2},${h / 2}`).animate({transform: `s0.8,${w / 2},${h / 2}`}, 100, undefined, () => group.selectAll("path, circle").forEach(element => {
+                                group.transform(`s0,${w / 2},${h / 2}`).animate({transform: `s0.8,${w / 2},${h / 2}`}, 100, undefined, () => group.selectAll("path, circle, elipse").forEach(element => {
                                     element.animate({transform: `s1.1`}, 700, a => sin(a * 500 * Math.PI), () => element.animate({transform: `s1`}, 400, mina.bounce))
                                 }));
                             });

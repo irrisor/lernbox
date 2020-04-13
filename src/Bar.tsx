@@ -12,6 +12,7 @@ import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import DeleteIcon from "@material-ui/icons/Delete";
 import SyncIcon from "@material-ui/icons/Sync";
+import ImageIcon from "@material-ui/icons/Image";
 import LogoffIcon from "@material-ui/icons/ExitToApp";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -60,34 +61,18 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function toggleFullScreen() {
-    const documentAny = document as any;
     if (
-        !documentAny.fullscreenElement && // alternative standard method
-        !documentAny.mozFullScreenElement &&
-        !documentAny.webkitFullscreenElement &&
-        !documentAny.msFullscreenElement
+        !document.fullscreenElement
     ) {
         // current working methods
-        if (documentAny.documentElement.requestFullscreen) {
-            documentAny.documentElement.requestFullscreen();
-        } else if (documentAny.documentElement.msRequestFullscreen) {
-            documentAny.documentElement.msRequestFullscreen();
-        } else if (documentAny.documentElement.mozRequestFullScreen) {
-            documentAny.documentElement.mozRequestFullScreen();
-        } else if (documentAny.documentElement.webkitRequestFullscreen) {
-            documentAny.documentElement.webkitRequestFullscreen(
-                (Element as any).ALLOW_KEYBOARD_INPUT,
-            );
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(
+                e => console.warn("Switching to fullscreen failed."));
         }
     } else {
-        if (documentAny.exitFullscreen) {
-            documentAny.exitFullscreen();
-        } else if (documentAny.msExitFullscreen) {
-            documentAny.msExitFullscreen();
-        } else if (documentAny.mozCancelFullScreen) {
-            documentAny.mozCancelFullScreen();
-        } else if (documentAny.webkitExitFullscreen) {
-            documentAny.webkitExitFullscreen();
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(
+                e => console.warn("Exiting fullscreen failed."));
         }
     }
 }
@@ -113,6 +98,11 @@ const Menu = (props: { onClick: () => true }) => {
                           onClick={() => props.onClick() && context.history.push(`/login`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
+                </ListItem>
+                <ListItem button
+                          onClick={() => props.onClick() && context.history.push(`/search`)}>
+                    <ListItemIcon><ImageIcon/></ListItemIcon>
+                    <ListItemText primary="Bilder suchen"/>
                 </ListItem>
                 <ListItem button
                           disabled={context.pupilIndex === undefined}

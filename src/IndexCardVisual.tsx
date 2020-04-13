@@ -67,8 +67,8 @@ export function IndexCardVisual({category, text, description, image, imageParame
     React.useEffect(() => {
         (async () => {
             const match = image && image.match(
-                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*)|[^/]*)/);
-            const wikiMediaFileName = match ? match[2] || match[3] : undefined;
+                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*)|.*commons.wikimedia.org%2Fwiki%2FFile%3A([^/&]*)&.*|([^/]*))/);
+            const wikiMediaFileName = match ? match[2] || match[3] || match[4] || match[5] : undefined;
             if (wikiMediaFileName) {
                 const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${
                     wikiMediaFileName

@@ -89,5 +89,4 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-/src/react-app-env.d.ts
 /build/
