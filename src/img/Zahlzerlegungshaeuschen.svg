@@ -1,3 +1,125 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4363004f0cf9a299f9dc34c0d78a31e3b871a48d8c21c260d7696e6c4ec0c597
-size 5132
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="74mm"
+   height="52mm"
+   viewBox="0 0 74 52"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="Zahlzerlegungshäuschen Vorlage.svg">
+  <defs
+     id="defs2">
+    <linearGradient
+       id="linearGradient4522"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop4520" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="162.13681"
+     inkscape:cy="84.752914"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="3840"
+     inkscape:window-height="2097"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-245)">
+    <path
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.15988345;stroke-opacity:1"
+       d="m 12.079942,270.08263 h 49.840116 v 19.84012 H 12.079942 Z"
+       id="rect3713"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4534"
+       d="m 12.086999,270.00269 24.913,-17.89826 24.913002,17.89826 v 19.913 H 12.086999 Z"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.17399831;stroke-opacity:1"
+       sodipodi:nodetypes="cccccc" />
+    <circle
+       style="fill:none;stroke:#000000;stroke-width:0.31663972;stroke-opacity:1"
+       id="path4536"
+       cx="37"
+       cy="262.00613"
+       r="6.84168" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.23556988px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 37,270.00269 v 20"
+       id="path4542"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:0.5;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="36.733006"
+       y="265.1218"
+       id="Summe"
+       inkscape:label="#text4546"><tspan
+         sodipodi:role="line"
+         x="36.733006"
+         y="265.1218"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944466px;line-height:0.5;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;text-anchor:middle;stroke-width:0.26458332"
+         id="tspan4553">A</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:0.5;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="24.272976"
+       y="283.15829"
+       id="Summand1"
+       inkscape:label="#text4546-5"><tspan
+         sodipodi:role="line"
+         x="24.272976"
+         y="283.15829"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944466px;line-height:0.5;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;text-anchor:middle;stroke-width:0.26458332"
+         id="tspan4553-3">B</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:0.5;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="49.14381"
+       y="283.15829"
+       id="Summand2"
+       inkscape:label="#text4546-5-4"><tspan
+         sodipodi:role="line"
+         x="49.14381"
+         y="283.15829"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.81944466px;line-height:0.5;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;text-anchor:middle;stroke-width:0.26458332"
+         id="tspan4553-3-1">C</tspan></text>
+  </g>
+</svg>
