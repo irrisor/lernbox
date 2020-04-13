@@ -8,7 +8,7 @@ export function Front({card}: { card: IndexCard | undefined }) {
     if (!card) return <>Keine Karte aktiv</>;
     return (
         <IndexCardVisual
-            category={context.currentGroup || card.groups.join(", ")}
+            category={context.currentGroup || (card.groups.length > 0 ? card.groups[0] : "")}
             text={card.question}
             description={card.description}
             image={card.image}

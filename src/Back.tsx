@@ -4,13 +4,14 @@ import {IndexCardVisual} from "./IndexCardVisual";
 
 export function Back() {
     const context = React.useContext(reactContext);
-    if (!context.card) return <>Keine Karte aktiv</>;
+    const card = context.card;
+    if (!card) return <>Keine Karte aktiv</>;
     return (
         <IndexCardVisual
-            category={context.currentGroup || context.card.groups.join(", ")}
-            text={context.card.answers[0]}
-            image={context.card.answerImage}
-            imageParameters={context.card.answerImageParameters}
+            category={context.currentGroup || (card.groups.length > 0 ? card.groups[0] : "")}
+            text={card.answers[0]}
+            image={card.answerImage}
+            imageParameters={card.answerImageParameters}
         />
     );
 }
