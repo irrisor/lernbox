@@ -2,6 +2,7 @@ import * as React from "react";
 import {cards, IndexCard, slots} from "./cards";
 import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
+import {synchronize} from "./Login";
 
 export class Context {
     deletePupil(): void {
@@ -48,9 +49,9 @@ export class Context {
                 nextCards = nextCards.slice(1).concat(oldCard);
             }
         }
-        if (nextCards.length === 0 && this.pupil) {
+        const currentGroup = group || this.currentGroup;
+        if (nextCards.length === 0 ? this.pupil : currentGroup !== this.currentGroup) {
             nextCards = [];
-            const currentGroup = group || this.currentGroup;
             const groupCards = this.groupCards(currentGroup);
             const newCardCount = Math.min(10, groupCards.length);
             // console.log(`Selecting ${newCardCount} new cards from ${
@@ -63,13 +64,11 @@ export class Context {
                 nextCards.push(groupCards[randomIndex]);
                 groupCards.splice(randomIndex, 1);
             }
-            this.update(context => {
-                context._currentGroup = currentGroup;
-                context._currentCards = nextCards;
-            });
-        } else {
-            this.currentCards = nextCards;
         }
+        this.update(context => {
+            context._currentGroup = currentGroup;
+            context._currentCards = nextCards;
+        });
         this.history.push(`/pupil/${this.pupilIndex}/${nextCards.length > 0 ? "question" : ""}`);
     };
 
@@ -187,8 +186,8 @@ export class Context {
     private update(updateFunction: (newContext: Context) => void) {
         const newContext = new Context(this.history, this);
         updateFunction(newContext);
+        synchronize(newContext);
         this._setContext(newContext);
-        localStorage.setItem("pupils", JSON.stringify(this.pupils));
     }
 }
 

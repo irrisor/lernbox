@@ -11,7 +11,7 @@ import {Right} from "./Right";
 import {Wrong} from "./Wrong";
 import {PupilDelete} from "./PupilDelete";
 import {Late} from "./Late";
-import {Login} from "./Login";
+import {Login, synchronize} from "./Login";
 import {EditCard} from "./EditCard";
 import {Yay} from "./Yay";
 import {Search} from "./Search";
@@ -80,14 +80,7 @@ export default function App() {
     const history = useHistory();
     const [context, setContext] = React.useState(() => {
         const newContext = new Context(history);
-        const storedPupils = localStorage.getItem("pupils");
-        if (storedPupils) {
-            try {
-                newContext.pupils = JSON.parse(storedPupils);
-            } catch (e) {
-                console.error("Error reading local storage", e);
-            }
-        }
+        synchronize(newContext, true).catch(e => console.error("Error synchronizing data", e));
         return newContext;
     });
     context.setContext = setContext;
