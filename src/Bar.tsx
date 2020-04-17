@@ -105,13 +105,13 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Bilder suchen"/>
                 </ListItem>
                 <ListItem button
-                          disabled={context.pupilIndex === undefined}
-                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupilIndex}/delete`)}>
+                          disabled={context.activePupilName === undefined}
+                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.activePupilName}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Löschen"/>
                 </ListItem>
                 <ListItem button
-                          disabled={context.pupilIndex === undefined}
+                          disabled={context.activePupilName === undefined}
                           onClick={() => props.onClick() && context.history.push("/")}>
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
                     <ListItemText primary="Schüler wechseln"/>

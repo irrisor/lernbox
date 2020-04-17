@@ -35,7 +35,7 @@ export function Overview() {
     const pupil = context.pupil;
     const [activeTab, setActiveTab] = React.useState(0);
     const classes = useStyles();
-    if (!pupil) return <>Kein Schüler ausgewählt</>;
+    if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
     const activeCards = context.activeCards;
     const groups = Array.from(new Set(pupil.cards.flatMap(card => card.groups)))
         .sort((a, b) => a.localeCompare(b));

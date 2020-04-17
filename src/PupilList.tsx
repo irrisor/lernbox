@@ -12,7 +12,7 @@ import {onEnterPressed} from "./Question";
 
 export function PupilList() {
     const context = React.useContext(reactContext);
-    React.useEffect(() => context.pupilIndex = undefined, [context.pupilIndex]);
+    React.useEffect(() => context.activePupilName = undefined, [context.activePupilName]);
     const [newName, setNewName] = React.useState("");
     const createPupil = () => {
         if (newName !== "") {
@@ -24,7 +24,7 @@ export function PupilList() {
         <>
             <Main>
                 <List component="nav" aria-label="main mailbox folders" style={{width: "100%"}}>
-                    {context.pupils.map((pupil, index) => (
+                    {context.pupilsList.map((pupil, index) => (
                         <ListItem button key={pupil.name+index}>
                             <ListItemIcon>
                                 <AccountCircle/>
@@ -32,7 +32,7 @@ export function PupilList() {
                             <ListItemText
                                 primary={pupil.name}
                                 onClick={() => {
-                                    context.history.push(`/pupil/${index}/`);
+                                    context.history.push(`/pupil/${pupil.name}/`);
                                 }}
                             />
                         </ListItem>

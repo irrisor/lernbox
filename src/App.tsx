@@ -19,10 +19,10 @@ import {Search} from "./Search";
 function PupilRoute() {
     const context = React.useContext(reactContext);
     const {path} = useRouteMatch();
-    const {pupilIndex} = useParams();
+    const {pupilName} = useParams();
     React.useEffect(() => {
-            context.pupilIndex = Number(pupilIndex);
-        }, [pupilIndex, context.pupilIndex],
+            context.activePupilName = pupilName;
+        }, [pupilName, context.activePupilName],
     );
     return (
         <Switch>
@@ -87,7 +87,7 @@ export default function App() {
     return (
         <ContextProvider value={context}>
             <Switch>
-                <Route path="/pupil/:pupilIndex">
+                <Route path="/pupil/:pupilName">
                     <ScreenBox>
                         <PupilRoute/>
                     </ScreenBox>

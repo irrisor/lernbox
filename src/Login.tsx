@@ -104,6 +104,8 @@ async function synchronizeFile(filename: string, localData: any) {
                         remoteData = localData;
                     }
                 }
+            } else {
+                remoteData = Object.assign(remoteData, localData);
             }
         } else {
             remoteData = localData;
@@ -127,7 +129,7 @@ async function synchronizeFile(filename: string, localData: any) {
 
 export async function synchronize(context: Context, init?: boolean) {
     let remoteData = await synchronizeFile("pupils.json", init ? undefined : context.pupils);
-    if (context.pupils !== remoteData) {
+    if (context.pupils !== remoteData && remoteData) {
         context.pupils = remoteData;
     }
 }

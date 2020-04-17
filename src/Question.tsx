@@ -43,7 +43,7 @@ export function Question() {
     const maxPassSeconds = context.card && context.card.time_s > 0 ? context.card.time_s : Number.MAX_VALUE;
     const [secondsPassed, setSecondsPassed] = React.useState(0);
     useEffect(() => {
-        if (!context.card && context.pupilIndex !== undefined) context.next();
+        if (!context.card && context.activePupilName !== undefined) context.next();
     }, [context]);
 
     function check() {
@@ -54,14 +54,14 @@ export function Question() {
         if (card.answers.filter(answer => !!answer.trim()).indexOf(input.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
                 card.slot = (card.slot || 0) + 1;
-                history.push(`/pupil/${context.pupilIndex}/right`);
+                history.push(`/pupil/${context.activePupilName}/right`);
             } else {
                 card.slot = 0;
-                history.push(`/pupil/${context.pupilIndex}/late`);
+                history.push(`/pupil/${context.activePupilName}/late`);
             }
         } else {
             card.slot = 0;
-            history.push(`/pupil/${context.pupilIndex}/wrong`);
+            history.push(`/pupil/${context.activePupilName}/wrong`);
         }
     }
 
