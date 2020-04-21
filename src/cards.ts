@@ -44,13 +44,23 @@ export const slots: Slot[] = [
     {durationInDays: 180},
 ];
 
-export const cards: IndexCard[] = [{
-    question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
-    time_s: 30,
-    groups: ["Test"],
-    answers: ["nach"],
-    description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
-}];
+export const cards: IndexCard[] = [
+    {
+        question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
+        time_s: 30,
+        groups: ["Test"],
+        answers: ["nach"],
+        description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
+    },
+    {
+        question: "anderen Text",
+        image: "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg",
+        time_s: 30,
+        groups: ["Test"],
+        answers: ["nach"],
+        description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
+    },
+];
 
 /** 1-mal-1 */
 for (let x = 1; x <= 10; x++) {

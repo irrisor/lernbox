@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Lernbox.iml" filepath="$PROJECT_DIR$/Lernbox.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server/lernbox-functions/lernbox-functions.iml" filepath="$PROJECT_DIR$/server/lernbox-functions/lernbox-functions.iml" />
     </modules>
   </component>
 </project>

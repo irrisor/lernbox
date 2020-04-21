@@ -59,8 +59,7 @@ const authHeaderFunction = async (token: string | null, setToken: (value: string
     if (!token || !msalInstance.getAccount()) {
         token = await requestTokenOrLogin(setToken, token) || null;
     }
-    if (!token )
-    {
+    if (!token) {
         return {};
     }
     return {
@@ -210,18 +209,23 @@ export function Login() {
         }
     }, [token]);
 
-    // const files = useMemo(()=>)
+    React.useEffect(() => {
+        (async () => {
+            const response = await fetch("http://localhost:7071/api/GetPupilData?name=Christian");
+            console.log("function response was ", await response.text());
+        })();
+    });
 
     return (<>
         <Main>
             {!token || !msalInstance.getAccount() ? <>
                     <Typography variant="h4">Datensynchronisation mit OneDrive</Typography>
                     <p>
-                        Um die gleichen Daten (Karten und Schüler mit deren Fächern) an mehreren Orten zu verwenden
-                        können diese in Netzwerk gesprechert werden. Hierzu wird Microsoft OneDrive verwenden.
-                        Dazu muss man sich mit einem Microsoft Konto (z.B. von Windows 10) anmelden.
-                        Klicke auf folgenden Button, um Lernbox den Zugriff auf einen eigens für die Anwendung erstellten
-                        Ordner zu gewähren.
+                        Um die gleichen Daten (Karten und Schüler mit deren Fächern) an mehreren Orten zu verwenden,
+                        können diese im Netzwerk gespeichert werden. Hierzu wird Microsoft OneDrive verwendet.
+                        Um dies zu aktivieren, muss man sich mit einem Microsoft Konto (z.B. von Windows 10) anmelden.
+                        Klicke auf den folgenden Button, um Lernbox den Zugriff auf einen eigens für die Anwendung
+                        erstellten Ordner zu gewähren.
                     </p>
                     <Button variant="contained" onClick={async () => {
                         try {

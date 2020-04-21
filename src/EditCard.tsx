@@ -15,10 +15,11 @@ export function EditCard() {
         image: "Dolphin.svg",
         imageParameters: {
             "text": "",
-        }
+        },
     });
     const [temporaryImageParameters, setTemporaryImageParameters] = React.useState<string>(JSON.stringify(card.imageParameters));
     const [temporaryImageParametersError, setTemporaryImageParametersError] = React.useState<string>("");
+    const advancedMode = true /*TODO advanced mode*/;
     return (
         <>
             <Main>
@@ -41,7 +42,7 @@ export function EditCard() {
                     <Grid item xs={12}>
                         <TextField
                             label="Beschreibung"
-                            value={card.description||""}
+                            value={card.description || ""}
                             onChange={event => setCard(Object.assign({}, card,
                                 {description: event.target.value || undefined}))}
                             fullWidth
@@ -56,7 +57,7 @@ export function EditCard() {
                             fullWidth
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    {advancedMode && <Grid item xs={12}>
                         <TextField
                             label="Bild Parameter Vorderseite (JSON)"
                             value={temporaryImageParameters}
@@ -67,15 +68,15 @@ export function EditCard() {
                                     setCard(Object.assign({}, card,
                                         {imageParameters: newImageParameters}));
                                     setTemporaryImageParametersError("");
-                                } catch ( e ) {
-                                    setTemporaryImageParametersError(e.message||"Kein gültiges JSON");
+                                } catch (e) {
+                                    setTemporaryImageParametersError(e.message || "Kein gültiges JSON");
                                 }
                             }}
                             fullWidth
                             error={!!temporaryImageParametersError}
-                            helperText={temporaryImageParametersError||undefined}
+                            helperText={temporaryImageParametersError || undefined}
                         />
-                    </Grid>
+                    </Grid>}
                     <Grid item xs={12}>
                         <TextField
                             label="Gruppen (mit ; getrennt)"
@@ -152,6 +153,7 @@ export function EditCard() {
                         />
                     </Grid>
                     <Grid item xs={12}/>
+
                 </Grid>
             </Main>
             <BottomGridContainer>

@@ -147,7 +147,7 @@ export function Overview() {
                                 const nextTryDate = Context.getNextTryDate(card);
                                 return <TableRow key={index}>
                                     <TableCell component="th" scope="row" style={{display: "flex"}}>
-                                        {card.question} <Typography
+                                        {card.question||JSON.stringify(card.imageParameters)} <Typography
                                         className={classes.groups}
                                         color="textSecondary"
                                         gutterBottom

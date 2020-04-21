@@ -15,6 +15,7 @@ import {Login, synchronize} from "./Login";
 import {EditCard} from "./EditCard";
 import {Yay} from "./Yay";
 import {Search} from "./Search";
+import {ListCards} from "./ListCards";
 
 function PupilRoute() {
     const context = React.useContext(reactContext);
@@ -105,6 +106,11 @@ export default function App() {
                 <Route path="/edit">
                     <ScreenBox>
                         <EditCard/>
+                    </ScreenBox>
+                </Route>
+                <Route path="/list">
+                    <ScreenBox fullScreen>
+                        <ListCards/>
                     </ScreenBox>
                 </Route>
                 <Route path="/search">
