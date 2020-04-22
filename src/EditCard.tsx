@@ -198,7 +198,7 @@ export function EditCard() {
                 <Grid item xs={12} md={4}>
                     <Button variant="contained" color="primary"
                             fullWidth
-                            disabled={!card.question ||
+                            disabled={!(card.question||card.image) ||
                             card.answers.length === 0 ||
                             card.groups.length === 0}
                             onClick={() => {
