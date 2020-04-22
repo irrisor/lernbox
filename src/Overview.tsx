@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Context, reactContext} from "./Context";
-import {Button, Grid, Link} from "@material-ui/core";
+import {Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
 import {Main} from "./layout/Main";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import Table from '@material-ui/core/Table';
@@ -17,6 +17,9 @@ import moment from "moment";
 import "moment/locale/de";
 import Typography from "@material-ui/core/Typography";
 import {makeStyles} from "@material-ui/core/styles";
+import {IndexCard, IndexCardInstance} from "./cards";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 
 moment.locale("de");
 
@@ -26,8 +29,8 @@ const useStyles = makeStyles({
         textAlign: "right",
         display: "inline-block",
         marginRight: 0,
-        marginLeft: "auto"
-    }
+        marginLeft: "auto",
+    },
 });
 
 export function Overview() {
@@ -35,11 +38,52 @@ export function Overview() {
     const pupil = context.pupil;
     const [activeTab, setActiveTab] = React.useState(0);
     const classes = useStyles();
-    if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
-    const activeCards = context.activeCards;
-    const groups = Array.from(new Set(pupil.cards.flatMap(card => card.groups)))
-        .sort((a, b) => a.localeCompare(b));
+    const [expandedGroup, setExpandedGroup] = React.useState<string | undefined>();
+    const groups = context.groups(true, pupil?.instances || []);
+    const [selectedGroups, setSelectedGroups] = React.useState<string[]>([]);
+
+    const activeInstances = context.activeInstances;
     const maxHeight = "500px";
+
+    if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
+
+    function tableRowForGroup(group: string, subgroups: string[], activeCount: number) {
+        return <TableRow key={group}>
+            <TableCell padding="checkbox">
+
+                <Checkbox
+                    checked={selectedGroups.indexOf(group) >= 0}
+                    inputProps={{'aria-labelledby': group}}
+                    onChange={(event, checked) => {
+                        if (checked) {
+                            setSelectedGroups(selectedGroups.concat(group));
+                        } else {
+                            setSelectedGroups(selectedGroups.filter(selectedGroup => selectedGroup !== group));
+                        }
+                    }}
+                />
+            </TableCell>
+            <TableCell padding="checkbox">
+                {subgroups.length > 0 && <IconButton
+                    color="inherit"
+                    aria-label="gruppe erweitern"
+                    edge="start"
+                    onClick={() => expandedGroup === group ? setExpandedGroup(undefined) : setExpandedGroup(group)}
+                >
+                    {expandedGroup === group ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+                </IconButton>}
+            </TableCell>
+            <TableCell component="th" scope="row" padding="none" id={group}>
+                {groups.indexOf(group) < 0 ? <span style={{paddingLeft: 20}}/> : null}
+                {activeCount ? <Link style={{cursor: "pointer"}} onClick={() => {
+                    context.next(group);
+                }}>{group.trim()}</Link> : group}
+            </TableCell>
+            <TableCell
+                align="right">{activeCount}</TableCell>
+        </TableRow>;
+    }
+
     return (
         <>
             <Main>
@@ -61,23 +105,22 @@ export function Overview() {
                     <Table aria-label="Gruppen" stickyHeader>
                         <TableHead>
                             <TableRow>
+                                <TableCell/>
+                                <TableCell/>
                                 <TableCell>Gruppe</TableCell>
                                 <TableCell align="right">Aktive Karten</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {groups.map(group => {
-                                const activeCount = activeCards.filter(card => card.groups.indexOf(group) >= 0).length;
-                                return (<TableRow key={group}>
-                                        <TableCell component="th" scope="row">
-                                            {activeCount ? <Link onClick={() => {
-                                                context.next(group);
-                                            }}>{group}</Link> : group}
-                                        </TableCell>
-                                        <TableCell
-                                            align="right">{activeCount}</TableCell>
-                                    </TableRow>
-                                );
+                            {groups.flatMap(group => {
+                                const groupInstances = activeInstances.filter(instance => (context.getCard(instance)?.groups.indexOf(group) || 0) >= 0);
+                                const activeCount = groupInstances.length;
+                                const subgroups = context.groups(false, groupInstances).filter(subgroup => subgroup !== group);
+                                return [(tableRowForGroup(group, subgroups, activeCount)),
+                                ].concat(subgroups.length > 0 && expandedGroup === group ? subgroups.map(
+                                    subgroup => tableRowForGroup(subgroup, [],
+                                        activeInstances.filter(instance => (context.getCard(instance)?.groups.indexOf(subgroup) || 0) >= 0).length),
+                                ) : []);
                             })}
                         </TableBody>
                     </Table>
@@ -110,10 +153,10 @@ export function Overview() {
                                                 </span>
                                     </TableCell>
                                     <TableCell align="right">
-                                        {pupil.cards.filter(card => (card.slot || 0) === slot).length}
+                                        {pupil.instances.filter(instance => (instance.slot || 0) === slot).length}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {activeCards.filter(card => (card.slot || 0) === slot).length}
+                                        {activeInstances.filter(instance => (instance.slot || 0) === slot).length}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -133,34 +176,36 @@ export function Overview() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {pupil.cards.sort((a, b) => {
-                                const slotOrder = (b.slot || 0) - (a.slot || 0);
-                                if (slotOrder !== 0) {
-                                    return slotOrder;
-                                }
-                                const activeOrder = (a.slotChanged || 0) - (b.slotChanged || 0);
-                                if ( activeOrder !== 0) {
-                                    return activeOrder;
-                                }
-                                return (a.question||a.image||"").localeCompare(b.question||b.image||"");
-                            }).map((card, index) => {
-                                const nextTryDate = Context.getNextTryDate(card);
-                                return <TableRow key={index}>
-                                    <TableCell component="th" scope="row" style={{display: "flex"}}>
-                                        {card.question||JSON.stringify(card.imageParameters)} <Typography
-                                        className={classes.groups}
-                                        color="textSecondary"
-                                        gutterBottom
-                                    >{card.groups.join(", ")}</Typography>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {(card.slot || 0) + 1}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {Context.isCardActive(card) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
-                                    </TableCell>
-                                </TableRow>
-                            })}
+                            {(pupil.instances.map(instance => [instance, context.getCard(instance)])
+                                .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
+                                .sort(([a, aCard], [b, bCard]) => {
+                                    const slotOrder = (b.slot || 0) - (a.slot || 0);
+                                    if (slotOrder !== 0) {
+                                        return slotOrder;
+                                    }
+                                    const activeOrder = (a.slotChanged || 0) - (b.slotChanged || 0);
+                                    if (activeOrder !== 0) {
+                                        return activeOrder;
+                                    }
+                                    return (aCard.question || aCard.image || "").localeCompare(bCard.question || bCard.image || "");
+                                }).map(([instance, card], index) => {
+                                    const nextTryDate = Context.getNextTryDate(instance);
+                                    return <TableRow key={index}>
+                                        <TableCell component="th" scope="row" style={{display: "flex"}}>
+                                            {card.question || JSON.stringify(card.imageParameters)} <Typography
+                                            className={classes.groups}
+                                            color="textSecondary"
+                                            gutterBottom
+                                        >{card.groups.join(", ")}</Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {(instance.slot || 0) + 1}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {Context.isCardActive(card) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
+                                        </TableCell>
+                                    </TableRow>
+                                })}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -179,7 +224,7 @@ export function Overview() {
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => context.next()}
+                        onClick={() => context.next(...selectedGroups)}
                         fullWidth
                     >
                         Lernen

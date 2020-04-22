@@ -81,13 +81,13 @@ function saveToken(newToken: string | null) {
     }
 }
 
-async function synchronizeFile(filename: string, localData: any) {
+async function synchronizeFile(filename: string, localData: any, skipRemote?: boolean) {
     if (localData) {
         localStorage.setItem(filename, JSON.stringify(localData));
     } else {
         localData = JSON.parse(localStorage.getItem(filename) || "null");
     }
-    const token = loadToken();
+    const token = skipRemote ? undefined : loadToken();
     if (token) {
         let remoteData = await download(filename, token, saveToken);
         const remoteKey = "remote-" + filename;
@@ -126,10 +126,25 @@ async function synchronizeFile(filename: string, localData: any) {
     }
 }
 
+let inSynchronize: boolean;
+
 export async function synchronize(context: Context, init?: boolean) {
-    let remoteData = await synchronizeFile("pupils.json", init ? undefined : context.pupils);
-    if (context.pupils !== remoteData && remoteData) {
-        context.pupils = remoteData;
+    if (inSynchronize) {
+        console.error(new Error("Cannot start another synchronization while synchronizing"));
+        return;
+    }
+    inSynchronize = true;
+    try {
+        let remotePupils = await synchronizeFile("pupils.json", init ? undefined : context.pupils, init);
+        if (context.pupils !== remotePupils && remotePupils) {
+            context.pupils = remotePupils;
+        }
+        let remoteCards = await synchronizeFile("cards.json", init ? undefined : context.cards, init);
+        if (context.cards !== remoteCards && remoteCards) {
+            context.cards = remoteCards;
+        }
+    } finally {
+        inSynchronize = false;
     }
 }
 
@@ -141,7 +156,7 @@ async function upload(filename: string, value: any, token: string | null, setTok
             body: JSON.stringify(value),
         });
     console.debug("uploadResponse=", uploadResponse);
-    if (uploadResponse.status !== 200) {
+    if (uploadResponse.status !== 200 && uploadResponse.status !== 201) {
         throw uploadResponse;
     }
 }
@@ -156,6 +171,9 @@ async function download(filename: string, token: string | null, setToken: (token
     if (downloadResponse.status !== 200) {
         if (downloadResponse.status === 401) {
             setToken(null);
+        }
+        if (downloadResponse.status === 404) {
+            return null;
         }
         throw downloadResponse;
     }

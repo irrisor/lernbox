@@ -25,6 +25,7 @@ function PupilRoute() {
             context.activePupilName = pupilName;
         }, [pupilName, context.activePupilName],
     );
+    if ( !context.pupil ) return <span style={{display: "none"}}>Kein Schüler</span>;
     return (
         <Switch>
             <Route path={`${path}/right`}>
@@ -58,6 +59,7 @@ const ScreenBox = ({fullScreen, children}: { fullScreen?: boolean, children: Rea
         height="100%"
         bgcolor="background.default"
         maxHeight={fullScreen ? undefined : 750}
+        padding={1}
         paddingBottom={1}
     >
         <Bar>
@@ -79,12 +81,17 @@ const ScreenBox = ({fullScreen, children}: { fullScreen?: boolean, children: Rea
 export default function App() {
     const ContextProvider = reactContext.Provider;
     const history = useHistory();
-    const [context, setContext] = React.useState(() => {
-        const newContext = new Context(history);
-        synchronize(newContext, true).catch(e => console.error("Error synchronizing data", e));
-        return newContext;
-    });
-    context.setContext = setContext;
+    const [context, setContext] = React.useState(() => new Context(history));
+    React.useEffect(()=>{(async ()=>{
+        if ( !context.touched ) {
+            context.touched = true;
+            await synchronize(context, true).catch(e => console.error("Error synchronizing data", e));
+            context.setContext = setContext;
+            setContext(new Context(history, context));
+            await synchronize(context, false).catch(e => console.error("Error synchronizing data", e));
+        }
+    })();});
+    if ( !context.initialized ) return <span style={{display: "none"}}>context not initialized</span>;
     return (
         <ContextProvider value={context}>
             <Switch>
@@ -103,12 +110,12 @@ export default function App() {
                         <Login/>
                     </ScreenBox>
                 </Route>
-                <Route path="/edit">
-                    <ScreenBox>
+                <Route path={["/edit/new/:group", "/edit/:cardId", "/edit"]}>
+                    <ScreenBox fullScreen>
                         <EditCard/>
                     </ScreenBox>
                 </Route>
-                <Route path="/list">
+                <Route path={["/list/:group", "/list"]}>
                     <ScreenBox fullScreen>
                         <ListCards/>
                     </ScreenBox>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {cards, IndexCard, slots} from "./cards";
+import {IndexCard, IndexCardInstance, predefinedCards, slots} from "./cards";
 import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 import {synchronize} from "./Login";
@@ -24,11 +24,14 @@ export class Context {
 
     createPupil(newName: string) {
         this.update(context => {
+            const newPupil: Pupil = {
+                name: newName,
+                instances: this.cards.map(card => ({
+                    id: card.id,
+                })),
+            };
             context._pupils = Object.assign({}, this.pupils, {
-                [newName]: {
-                    name: newName,
-                    cards: JSON.parse(JSON.stringify(cards)),
-                },
+                [newName]: newPupil,
             });
             context._activePupilName = newName;
             context.back();
@@ -36,71 +39,94 @@ export class Context {
     }
 
     back() {
-        this.currentCards = [];
+        this.currentInstances = [];
         this.history.push(this.activePupilName !== undefined ? `/pupil/${this.activePupilName}/` : "/");
     }
 
     private _activePupilName?: string;
-    private _currentGroup?: string;
-    private _currentCards: IndexCard[] = [];
+    private _currentGroups: string[] = [];
+    private _currentInstances: IndexCardInstance[] = [];
+    private _cards: IndexCard[] = predefinedCards;
     private _pupils: PupilSet = {};
-    readonly next = (group?: string) => {
+    public touched: boolean = false;
+
+    public get initialized(): boolean {
+        return this._initialized;
+    }
+
+    readonly next = (...groups: string[]) => {
+        const cards = this.currentInstances;
         const oldCard = cards.length > 0 ? cards[0] : undefined;
-        let nextCards = this.currentCards;
+        let nextInstances = this.currentInstances;
         if (oldCard) {
             if (oldCard.slot !== 0 || (oldCard.previousSlot || 0) > 0) {
-                nextCards = nextCards.slice(1);
+                nextInstances = nextInstances.slice(1);
             } else {
-                nextCards = nextCards.slice(1).concat(oldCard);
+                nextInstances = nextInstances.slice(1).concat(oldCard);
             }
         }
-        const currentGroup = group || this.currentGroup;
-        if (nextCards.length === 0 ? this.pupil : currentGroup !== this.currentGroup) {
-            nextCards = [];
-            const groupCards = this.groupCards(currentGroup);
-            const newCardCount = Math.min(10, groupCards.length);
+        const currentGroups = groups.length > 0 ? groups : this.currentGroups;
+        if (nextInstances.length === 0 ? this.pupil : currentGroups !== this.currentGroups) {
+            nextInstances = [];
+            const groupInstances = this.groupCards(...currentGroups);
+            const newCardCount = Math.min(10, groupInstances.length);
             // console.log(`Selecting ${newCardCount} new cards from ${
-            //     currentGroup ? "group " + currentGroup : "all cards"}.`);
+            //     currentGroups ? "group " + currentGroups : "all cards"}.`);
             for (let i = 0; i < newCardCount; i++) {
-                const firstSlotSize = groupCards.findIndex(
-                    card => (card.slot || 0) !== (groupCards[0].slot || 0));
+                const firstSlotSize = groupInstances.findIndex(
+                    card => (card.slot || 0) !== (groupInstances[0].slot || 0));
                 const randomIndex = Math.floor(Math.random() *
-                    (firstSlotSize < 0 ? groupCards.length : firstSlotSize));
-                nextCards.push(groupCards[randomIndex]);
-                groupCards.splice(randomIndex, 1);
+                    (firstSlotSize < 0 ? groupInstances.length : firstSlotSize));
+                nextInstances.push(groupInstances[randomIndex]);
+                groupInstances.splice(randomIndex, 1);
             }
         }
         this.update(context => {
-            context._currentGroup = currentGroup;
-            context._currentCards = nextCards;
+            context._currentGroups = currentGroups;
+            context._currentInstances = nextInstances;
         });
-        this.history.push(`/pupil/${this.activePupilName}/${nextCards.length > 0 ? "question" : ""}`);
+        this.history.push(`/pupil/${this.activePupilName}/${nextInstances.length > 0 ? "question" : ""}`);
     };
 
-    private groupCards(group?: string) {
-        const currentGroup = group || this.currentGroup;
-        return currentGroup ? this.activeCards.filter(card => card.groups.indexOf(currentGroup) >= 0)
-            : this.activeCards;
+    public getCard(idOrInstance: string | IndexCardInstance | undefined): IndexCard | undefined {
+        if (!idOrInstance) return undefined;
+        return this.cards.find(card =>
+            card.id === (typeof idOrInstance === "string" ? idOrInstance : idOrInstance.id));
+    }
+
+    private groupCards(...groups: string[]) {
+        const currentGroups = groups.length > 0 ? groups : this.currentGroups;
+        return currentGroups.length > 0 ? this.activeInstances.filter(cardInstance =>
+                this.inGroup(this.getCard(cardInstance.id), ...currentGroups))
+            : this.activeInstances;
     }
 
     readonly history: History<LocationState>;
     private _initialized: boolean = false;
 
-    public static isCardActive(card: IndexCard) {
-        const nextTryDate = Context.getNextTryDate(card);
+    public static isCardActive(instance: IndexCardInstance) {
+        const nextTryDate = Context.getNextTryDate(instance);
         return nextTryDate ? Date.now() > nextTryDate : false;
     };
 
-    static getNextTryDate(card: IndexCard): number | undefined {
-        const slot = card.slot || 0;
+    static getNextTryDate(instance: IndexCardInstance): number | undefined {
+        const slot = instance.slot || 0;
         if (slot >= slots.length) return undefined;
         const slotProperties = slots[slot];
-        return (card.slotChanged || 0) +
+        return (instance.slotChanged || 0) +
             (slotProperties.durationInDays - 0.5) * 1000 * 60 * 60 * 24;
     }
 
-    public get activeCards(): IndexCard[] {
-        return this.pupil ? this.pupil.cards.filter(Context.isCardActive).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
+    public get activeInstances(): IndexCardInstance[] {
+        return this.pupil ? this.pupil.instances.filter(Context.isCardActive).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
+    }
+
+    public groups(topLevel?: boolean, instances?: IndexCardInstance[]) {
+        return Array.from(new Set(
+            instances ?
+                instances.flatMap(card => this.getCard(card.id)?.groups.slice(0, topLevel ? 1 : undefined) || [])
+                : this.cards.flatMap(card => card.groups.slice(0, topLevel ? 1 : undefined))),
+        ).sort((a, b) => a.localeCompare(b));
     }
 
     public get activePupilName() {
@@ -111,35 +137,47 @@ export class Context {
         if (value !== this._activePupilName) {
             this.update(context => {
                 context._activePupilName = value;
-                context._currentCards = [];
-                context._currentGroup = undefined;
+                context._currentInstances = [];
+                context._currentGroups = [];
             });
         }
     }
 
-    set currentCards(value: IndexCard[]) {
-        this.update(context => (context._currentCards = value));
+    set cards(value: IndexCard[]) {
+        this.update(context => (context._cards = value));
     }
 
-    get currentCards(): IndexCard[] {
-        return this._currentCards;
+    get cards(): IndexCard[] {
+        return this._cards;
+    }
+
+    set currentInstances(value: IndexCardInstance[]) {
+        this.update(context => (context._currentInstances = value));
+    }
+
+    get currentInstances(): IndexCardInstance[] {
+        return this._currentInstances;
     }
 
     public get cardsLeft() {
         return this.groupCards().length;
     }
 
-    public get currentGroup() {
-        return this._currentGroup;
+    public get currentGroups() {
+        return this._currentGroups;
     }
 
-    public set currentGroup(value: string | undefined) {
-        this.update(context => (context._currentGroup = value));
+    public set currentGroups(value: string[]) {
+        this.update(context => (context._currentGroups = value));
+    }
+
+    public get cardInstance(): IndexCardInstance | undefined {
+        const instances = this.currentInstances;
+        return instances.length > 0 ? instances[0] : undefined;
     }
 
     public get card(): IndexCard | undefined {
-        const cards = this.currentCards;
-        return cards.length > 0 ? cards[0] : undefined;
+        return this.getCard(this.cardInstance);
     }
 
     public get pupil(): Pupil | undefined {
@@ -159,11 +197,36 @@ export class Context {
             console.error("Refraining to use value as pupils: ", value);
             value = {};
         }
-        if (this._initialized) {
-            this.update(context => (context._pupils = value));
-        } else {
-            this._pupils = value;
-        }
+        Object.keys(value).forEach(name => {
+            const pupil = value[name] as any;
+            if (pupil.cards) {
+                // old data we need to convert
+                pupil.instances = pupil.cards.map((old: any): IndexCardInstance => {
+                    const candidates = this.cards.filter(card =>
+                        card.question === old.question);
+                    let id;
+                    if (candidates.length === 1) {
+                        id = candidates[0].id;
+                    } else if (candidates.length > 1) {
+                        id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
+                            || candidates[0].id;
+                    } else {
+                        console.error("Error converting old data: No canditate found for card ", old);
+                        id = "";
+                    }
+                    return {
+                        id,
+                        slot: old.slot,
+                        previousSlot: old.previousSlot,
+                        slotChanged: old.slotChanged,
+                    };
+                }).filter((instance: IndexCardInstance) => instance.id);
+                delete pupil.cards;
+            }
+        });
+        this.update(context => {
+            context._pupils = value;
+        });
     }
 
     constructor(history: History<LocationState>, originalContext?: Context) {
@@ -193,11 +256,19 @@ export class Context {
         this._setContext = value;
     }
 
-    private update(updateFunction: (newContext: Context) => void) {
-        const newContext = new Context(this.history, this);
-        updateFunction(newContext);
-        synchronize(newContext);
-        this._setContext(newContext);
+    private async update(updateFunction: (newContext: Context) => void) {
+        if (this._initialized) {
+            const newContext = new Context(this.history, this);
+            updateFunction(newContext);
+            this._setContext(newContext);
+            await synchronize(newContext);
+        } else {
+            updateFunction(this);
+        }
+    }
+
+    private inGroup(card: IndexCard | undefined, ...groups: string[]) {
+        return card !== undefined && card.groups.filter(group => groups.indexOf(group) >= 0).length > 0;
     }
 }
 

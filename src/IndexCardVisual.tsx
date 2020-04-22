@@ -15,9 +15,10 @@ const useStyles = makeStyles({
         marginLeft: "auto",
         marginRight: "auto",
         textAlign: "center",
+        cursor: "pointer"
     },
     content: {
-        minHeight: 200,
+        minHeight: 280,
         display: "flex",
     },
     title: {
@@ -53,13 +54,14 @@ function convertUnit(width: string): number | undefined {
     }
 }
 
-export function IndexCardVisual({category, text, description, image, imageParameters}:
+export function IndexCardVisual({category, text, description, image, imageParameters, onClick}:
                                     {
                                         category?: string,
                                         text?: string,
                                         description?: string,
                                         image?: string
-                                        imageParameters?: IndexCard["imageParameters"]
+                                        imageParameters?: IndexCard["imageParameters"],
+                                        onClick?: ()=>void
                                     }) {
     const classes = useStyles();
     const [imageURL, setImageURL] = React.useState<string | undefined>();
@@ -155,9 +157,14 @@ export function IndexCardVisual({category, text, description, image, imageParame
                 variant="body2"
                 color="primary"
             >Bildquelle</Typography></a> : null;
+    const [hovered, setHovered] = React.useState(false);
     return (
         <>
-            <Card className={classes.root}>
+            <Card className={classes.root}
+                  onClick={onClick}
+                  onMouseEnter={()=>setHovered(true)}
+                  onMouseLeave={()=>setHovered(false)}
+                  elevation={onClick && hovered ? 4 : 1}>
                 <CardContent className={classes.content}>
                     <Box display="flex" flexDirection="column" flexGrow="1">
                         <Typography

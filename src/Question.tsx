@@ -40,27 +40,28 @@ export function Question() {
     const history = useHistory();
     const [input, setInput] = React.useState("");
 
-    const maxPassSeconds = context.card && context.card.time_s > 0 ? context.card.time_s : Number.MAX_VALUE;
+    const instance = context.cardInstance;
+    const card = context.card;
+    const maxPassSeconds = card && card.time_s > 0 ? card.time_s : Number.MAX_VALUE;
     const [secondsPassed, setSecondsPassed] = React.useState(0);
     useEffect(() => {
-        if (!context.card && context.activePupilName !== undefined) context.next();
+        if (!context.cardInstance && context.activePupilName !== undefined) context.next();
     }, [context]);
 
     function check() {
-        const card = context.card;
-        if (!card) return;
-        card.slotChanged = Date.now();
-        card.previousSlot = card.slot;
+        if (!instance || !card) return;
+        instance.slotChanged = Date.now();
+        instance.previousSlot = instance.slot;
         if (card.answers.filter(answer => !!answer.trim()).indexOf(input.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
-                card.slot = (card.slot || 0) + 1;
+                instance.slot = (instance.slot || 0) + 1;
                 history.push(`/pupil/${context.activePupilName}/right`);
             } else {
-                card.slot = 0;
+                instance.slot = 0;
                 history.push(`/pupil/${context.activePupilName}/late`);
             }
         } else {
-            card.slot = 0;
+            instance.slot = 0;
             history.push(`/pupil/${context.activePupilName}/wrong`);
         }
     }
@@ -71,7 +72,7 @@ export function Question() {
         return () => clearTimeout(timeout);
     }, [secondsPassed]);
 
-    const inputType = context.card ? context.card.inputType : "text";
+    const inputType = card?.inputType || "text";
     const checkIfInputOrNoWait = () => {
         if (secondsPassed >= minWaitSeconds || input) check();
     };
@@ -80,14 +81,14 @@ export function Question() {
             <Main>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <Front card={context.card}/>
+                        <Front card={card}/>
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="h5"> </Typography>
                         {inputType === "select" ?
                             <RadioGroup aria-label="answer" name="answer" value={input}
                                         onChange={event => setInput(event.target.value)}>
-                                {context.card?.inputOptions?.map(option =>
+                                {card?.inputOptions?.map(option =>
                                     <FormControlLabel value={option}
                                                       key={option}
                                                       control={<Radio/>}

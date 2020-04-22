@@ -1,10 +1,14 @@
 import {houseSVG} from "./svgs";
+import { v5 as uuidv5 } from 'uuid';
 
 type ImageParameters = {
     [seletector: string]: string | { [attribute: string]: string }
 };
 
+export const uuidNamespace = "70072bd9-cf2b-4044-b541-53ad5518c4b5";
+
 export interface IndexCard {
+    id: string;
     question?: string;
     image?: string;
     imageParameters?: ImageParameters;
@@ -14,12 +18,15 @@ export interface IndexCard {
     answerImageParameters?: ImageParameters;
     time_s: number;
     groups: string[];
+    inputType?: "text" | "number" | "select";
+    inputOptions?: string[];
+}
+
+export interface IndexCardInstance {
+    id: string;
     slot?: number;
     previousSlot?: number;
     slotChanged?: number;
-    restrictedToPupils?: string[];
-    inputType?: "text" | "number" | "select";
-    inputOptions?: string[];
 }
 
 export interface Slot {
@@ -44,8 +51,9 @@ export const slots: Slot[] = [
     {durationInDays: 180},
 ];
 
-export const cards: IndexCard[] = [
+export const predefinedCards: IndexCard[] = [
     {
+        id: uuidv5(`A`,uuidNamespace),
         question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
         time_s: 30,
         groups: ["Test"],
@@ -53,6 +61,7 @@ export const cards: IndexCard[] = [
         description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
     },
     {
+        id: uuidv5(`B`,uuidNamespace),
         question: "anderen Text",
         image: "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg",
         time_s: 30,
@@ -65,7 +74,8 @@ export const cards: IndexCard[] = [
 /** 1-mal-1 */
 for (let x = 1; x <= 10; x++) {
     for (let y = 1; y <= 10; y++) {
-        cards.push({
+        predefinedCards.push({
+            id: uuidv5(`${x}*${y}`,uuidNamespace),
             question: `${x} • ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
@@ -73,7 +83,8 @@ for (let x = 1; x <= 10; x++) {
             groups: ["1•1", `1•1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1 Kern"] : []),
             inputType: "number",
         });
-        cards.push({
+        predefinedCards.push({
+            id: uuidv5(`${x}:${y}`,uuidNamespace),
             question: `${x * y} : ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x * y} : ${y} = ${x}`, `${x}`],
@@ -87,7 +98,8 @@ for (let x = 1; x <= 10; x++) {
 /** Zahlzerlegung */
 for (let x = 0; x <= 10; x++) {
     for (let y = 0; y <= x; y++) {
-        cards.push({
+        predefinedCards.push({
+            id: uuidv5(`${x-y}+${y}`,uuidNamespace),
             image: houseSVG,
             answerImage: houseSVG,
             imageParameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": ""},
@@ -103,19 +115,6 @@ for (let x = 0; x <= 10; x++) {
 
 /** Artikel **/
 ([{
-    pupil: "Christian",
-    group: " meine Übungen",
-    words: [
-        "der Baum",
-        "der Fuchs",
-    ],
-}, {
-    pupil: "Joran",
-    group: " meine Übungen",
-    words: [
-        "der Fuchs",
-    ],
-}, {
     group: "Pflanzen",
     words: [
         "die Rose",
@@ -137,33 +136,27 @@ for (let x = 0; x <= 10; x++) {
         "die Fraktur",
     ],
 },
-]).forEach(({words, pupil, group}) => {
+]).forEach(({words, group}) => {
     words.forEach(wordsEntry => {
         const spacePosition = wordsEntry.indexOf(" ");
         const word = wordsEntry.substr(spacePosition + 1);
         const article = wordsEntry.substr(0, spacePosition);
         let card: IndexCard = {
+            id: uuidv5(`artikel:${word}`,uuidNamespace),
             question: word,
             answers: [wordsEntry, article, article.substr(0, 1).toUpperCase() + article.substr(1)],
             time_s: 15,
             groups: ["Artikel", group],
             description: "Der? Die? Das?",
-            restrictedToPupils: pupil ? [pupil] : undefined,
             inputType: "select",
             inputOptions: ["der", "die", "das"],
         };
-        let existingCard = cards.find(someCard => someCard.question === card.question
+        let existingCard = predefinedCards.find(someCard => someCard.question === card.question
             && JSON.stringify(someCard.groups) === JSON.stringify(card.groups));
         if (existingCard) {
-            if (!existingCard.restrictedToPupils || existingCard.restrictedToPupils.length === 0 ||
-                !card.restrictedToPupils || card.restrictedToPupils.length === 0) {
-                existingCard.restrictedToPupils = undefined;
-            } else {
-                existingCard.restrictedToPupils = existingCard.restrictedToPupils.concat(card.restrictedToPupils);
-            }
             card = existingCard;
         } else {
-            cards.push(card);
+            predefinedCards.push(card);
         }
     });
 });

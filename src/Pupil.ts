@@ -1,6 +1,6 @@
-import { IndexCard } from "./cards";
+import {IndexCardInstance} from "./cards";
 
 export interface Pupil {
-  name: string;
-  cards: IndexCard[];
+    name: string;
+    instances: IndexCardInstance[];
 }

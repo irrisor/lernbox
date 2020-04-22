@@ -10,6 +10,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import Logo from "@material-ui/icons/School";
 import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import ListIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import SyncIcon from "@material-ui/icons/Sync";
 import ImageIcon from "@material-ui/icons/Image";
@@ -89,6 +90,11 @@ const Menu = (props: { onClick: () => true }) => {
                 <ListItem button onClick={() => props.onClick() && context.back()}>
                     <ListItemIcon><AccountCircle/></ListItemIcon>
                     <ListItemText primary="Übersicht"/>
+                </ListItem>
+                <ListItem button
+                          onClick={() => props.onClick() && context.history.push(`/list`)}>
+                    <ListItemIcon><ListIcon/></ListItemIcon>
+                    <ListItemText primary="Karten bearbeiten"/>
                 </ListItem>
                 <ListItem button onClick={() => props.onClick() && toggleFullScreen()}>
                     <ListItemIcon><FullscreenIcon/></ListItemIcon>
