@@ -26,7 +26,7 @@ export function Wrong({text = "Das ist leider nicht richtig. Lerne noch einmal v
         <Main>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <Back/>
+                    <Back card={context.card}/>
                 </Grid>
                 <Grid item xs={12}>
                     {text}

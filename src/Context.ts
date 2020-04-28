@@ -3,6 +3,7 @@ import {IndexCard, IndexCardInstance, predefinedCards, slots} from "./cards";
 import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 import {synchronize} from "./Login";
+import {lookupImage} from "./EditCard";
 
 export type PupilSet = Readonly<{ [name: string]: Pupil }>;
 
@@ -144,6 +145,30 @@ export class Context {
     }
 
     set cards(value: IndexCard[]) {
+        for (let i = 0; i < value.length; i++) {
+            const anyCard: any = value[i];
+            if ( anyCard.image )
+            {
+                // convert old image data
+                const {image, answerImage, imageParameters, answerImageParameters, ...other} = anyCard;
+                value[i] = Object.assign(other, {
+                    questionImage: image || imageParameters ? {
+                        image: image,
+                        parameters: imageParameters
+                    } : undefined,
+                    answerImage: answerImage || answerImageParameters ? {
+                        image: answerImage,
+                        parameters: answerImageParameters
+                    } : undefined
+                });
+            }
+            const card = value[i];
+            if ( card.questionImage?.image && !card.questionImage?.url )
+            {
+                lookupImage(card.questionImage, newImage => card.questionImage = newImage);
+                lookupImage(card.answerImage, newImage => card.answerImage = newImage);
+            }
+        }
         this.update(context => (context._cards = value));
     }
 

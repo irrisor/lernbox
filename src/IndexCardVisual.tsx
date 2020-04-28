@@ -6,7 +6,8 @@ import Typography from "@material-ui/core/Typography";
 import {Box, Grid} from "@material-ui/core";
 import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
-import {IndexCard} from "./cards";
+import {Image} from "./cards";
+import LazyLoad from 'react-lazyload';
 
 const useStyles = makeStyles({
     root: {
@@ -15,7 +16,7 @@ const useStyles = makeStyles({
         marginLeft: "auto",
         marginRight: "auto",
         textAlign: "center",
-        cursor: "pointer"
+        cursor: "pointer",
     },
     content: {
         minHeight: 280,
@@ -54,100 +55,79 @@ function convertUnit(width: string): number | undefined {
     }
 }
 
-export function IndexCardVisual({category, text, description, image, imageParameters, onClick}:
+export function IndexCardVisual(props:
                                     {
                                         category?: string,
                                         text?: string,
                                         description?: string,
-                                        image?: string
-                                        imageParameters?: IndexCard["imageParameters"],
-                                        onClick?: ()=>void
+                                        image?: Image,
+                                        onClick?: () => void
                                     }) {
+    const {category, text, description, onClick} = props;
+    const {parameters, url, infoURL} = props.image || {parameters: undefined, url: undefined, infoURL: undefined};
     const classes = useStyles();
-    const [imageURL, setImageURL] = React.useState<string | undefined>();
-    const [imageInfoURL, setImageInfoURL] = React.useState<string | undefined>();
-    React.useEffect(() => {
-        (async () => {
-            const match = image && image.match(
-                /(https:\/\/commons.wikimedia.org\/wiki\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*)|.*commons.wikimedia.org%2Fwiki%2FFile%3A([^/&]*)&.*|([^/]*))/);
-            const wikiMediaFileName = match ? match[2] || match[3] || match[4] || match[5] : undefined;
-            if (wikiMediaFileName) {
-                const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${
-                    wikiMediaFileName
-                }&prop=imageinfo&iiprop=extmetadata%7Curl&format=json&origin=*`;
-                const response = await fetch(apiURL, {mode: "cors"});
-                const metadata = await response.json();
-                const pages = metadata && metadata.query && Object.keys(metadata.query.pages);
-                const page = Array.isArray(pages) && pages.length > 0 && metadata.query.pages[pages[0]];
-                if (page && page.imageinfo && Array.isArray(page.imageinfo) && page.imageinfo.length > 0 && page.imageinfo[0]) {
-                    const imageinfo = page.imageinfo[0];
-                    setImageURL(imageinfo.url);
-                    setImageInfoURL(imageinfo.descriptionurl);
-                }
-            } else if (image && image.match(/[./].*/)) {
-                setImageURL(image);
-                setImageInfoURL(undefined);
-            }
-        })()
-    }, [image]);
-    const svg = React.useMemo(() => (s: Snap.Paper, svgElement: SVGElement) => {
-        if (imageURL) {
-            if (imageURL.match(/.*\.svg/)) {
-                Snap.load(imageURL
-                    , data => {
-                        const group = s.g();
-                        const dataElement = data as Snap.Element;
-                        group.append(dataElement);
-                        const loadedSVG = group.select("svg");
-                        if (loadedSVG !== null) {
-                            const width = convertUnit(loadedSVG.attr("width"));
-                            const height = convertUnit(loadedSVG.attr("height"));
-                            loadedSVG.node.removeAttribute("width");
-                            loadedSVG.node.removeAttribute("height");
-                            if (!loadedSVG.attr("viewBox") && width && height) {
-                                loadedSVG.node.setAttribute("viewBox",
-                                    `${0} ${0} ${width} ${height}`);
-                            }
-                            if (imageParameters) {
-                                for (const selector of Object.keys(imageParameters)) {
-                                    const value = imageParameters[selector];
-                                    try {
-                                        if (typeof value === "string") {
-                                            const elements = loadedSVG.selectAll(selector + " tspan");
-                                            if (elements) {
-                                                elements.forEach(element => {
-                                                    element.node.textContent = value;
-                                                });
+    // FIXME https://commons.wikimedia.org/wiki/File:FoxBassoon.jpg
+    // FIXME https://commons.wikimedia.org/wiki/File:Xylophone_(colourful).svg
+    const svg = React.useMemo(() => {
+        return (s: Snap.Paper, svgElement: SVGElement) => {
+            if (url) {
+                if (url.match(/.*\.svg/)) {
+                    Snap.load(url
+                        , data => {
+                            const group = s.g();
+                            const dataElement = data as Snap.Element;
+                            group.append(dataElement);
+                            const loadedSVG = group.select("svg");
+                            if (loadedSVG !== null) {
+                                const width = convertUnit(loadedSVG.attr("width"));
+                                const height = convertUnit(loadedSVG.attr("height"));
+                                loadedSVG.node.removeAttribute("width");
+                                loadedSVG.node.removeAttribute("height");
+                                if (!loadedSVG.attr("viewBox") && width && height) {
+                                    loadedSVG.node.setAttribute("viewBox",
+                                        `${0} ${0} ${width} ${height}`);
+                                }
+                                if (parameters) {
+                                    for (const selector of Object.keys(parameters)) {
+                                        const value = parameters[selector];
+                                        try {
+                                            if (typeof value === "string") {
+                                                const elements = loadedSVG.selectAll(selector + " tspan");
+                                                if (elements) {
+                                                    elements.forEach(element => {
+                                                        element.node.textContent = value;
+                                                    });
+                                                } else {
+                                                    const texts = loadedSVG.selectAll(selector);
+                                                    if (texts) {
+                                                        texts.attr({text: value});
+                                                    }
+                                                }
                                             } else {
-                                                const texts = loadedSVG.selectAll(selector);
-                                                if (texts) {
-                                                    texts.attr({text: value});
+                                                const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
+                                                if (element) {
+                                                    element.attr(value);
                                                 }
                                             }
-                                        } else {
-                                            const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
-                                            if (element) {
-                                                element.attr(value);
-                                            }
+                                        } catch (e) {
+                                            console.error("Error aplying imageParameter", selector, parameters, e);
                                         }
-                                    } catch (e) {
-                                        console.error("Error aplying imageParameter", selector, imageParameters, e);
                                     }
                                 }
                             }
-                        }
-                    });
-            } else if (imageURL.match(/.*\.(jpg|png)/)) {
-                const image = s.image(imageURL, 0, 0, undefined as unknown as number, undefined as unknown as number);
-                image.node.onload = () => {
-                    const bBox = image.getBBox();
-                    svgElement.setAttribute("viewBox", `0 0 ${bBox.width} ${bBox.height}`)
-                };
+                        });
+                } else if (url.match(/.*\.(jpg|png)/)) {
+                    const image = s.image(url, 0, 0, undefined as unknown as number, undefined as unknown as number);
+                    image.node.onload = () => {
+                        const bBox = image.getBBox();
+                        svgElement.setAttribute("viewBox", `0 0 ${bBox.width} ${bBox.height}`)
+                    };
+                }
             }
-        }
-    }, [imageURL, imageParameters]);
-    const imageInfoLink = imageInfoURL ?
-        <a href={imageInfoURL}
+        };
+    }, [url, parameters]);
+    const imageInfoLink = infoURL ?
+        <a href={infoURL}
            className={classes.imageDescription}
            target="_blank"
            rel="noopener noreferrer"
@@ -162,8 +142,8 @@ export function IndexCardVisual({category, text, description, image, imageParame
         <>
             <Card className={classes.root}
                   onClick={onClick}
-                  onMouseEnter={()=>setHovered(true)}
-                  onMouseLeave={()=>setHovered(false)}
+                  onMouseEnter={() => setHovered(true)}
+                  onMouseLeave={() => setHovered(false)}
                   elevation={onClick && hovered ? 4 : 1}>
                 <CardContent className={classes.content}>
                     <Box display="flex" flexDirection="column" flexGrow="1">
@@ -181,13 +161,15 @@ export function IndexCardVisual({category, text, description, image, imageParame
                             flexGrow={1}
                         >
                             <Grid container spacing={1}>
-                                {image && text &&
+                                {url && text &&
                                 <Grid item xs={2}>
-                                    <SnapSVG width="100%" height="100%">
-                                        {svg}
-                                    </SnapSVG>
+                                    <LazyLoad>
+                                        <SnapSVG width="100%" height="100%">
+                                            {svg}
+                                        </SnapSVG>
+                                    </LazyLoad>
                                 </Grid>}
-                                {text ? <Grid item xs={text && image ? 8 : 12}
+                                {text ? <Grid item xs={text && url ? 8 : 12}
                                               style={{
                                                   justifyContent: "center",
                                                   display: "flex",
@@ -197,12 +179,14 @@ export function IndexCardVisual({category, text, description, image, imageParame
                                             {text}
                                         </Typography>
                                     </Grid> :
-                                    image && <Grid item xs={12}>
-                                        <SnapSVG width="80%" height="100%">
-                                            {svg}
-                                        </SnapSVG>
+                                    url && <Grid item xs={12}>
+                                        <LazyLoad>
+                                            <SnapSVG width="80%" height="100%">
+                                                {svg}
+                                            </SnapSVG>
+                                        </LazyLoad>
                                     </Grid>}
-                                {text && image && <Grid item xs={2}/>}
+                                {text && url && <Grid item xs={2}/>}
                             </Grid>
                         </Box>
                         <Typography className={classes.pos} color="textSecondary"/>

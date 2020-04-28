@@ -179,20 +179,20 @@ export function Overview() {
                             {(pupil.instances.map(instance => [instance, context.getCard(instance)])
                                 .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
                                 .sort(([a, aCard], [b, bCard]) => {
-                                    const slotOrder = (b.slot || 0) - (a.slot || 0);
+                                    const slotOrder = (a.slot || 0) - (b.slot || 0);
                                     if (slotOrder !== 0) {
                                         return slotOrder;
                                     }
-                                    const activeOrder = (a.slotChanged || 0) - (b.slotChanged || 0);
+                                    const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0))/60/60/1000);
                                     if (activeOrder !== 0) {
                                         return activeOrder;
                                     }
-                                    return (aCard.question || aCard.image || "").localeCompare(bCard.question || bCard.image || "");
+                                    return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
                                 }).map(([instance, card], index) => {
                                     const nextTryDate = Context.getNextTryDate(instance);
                                     return <TableRow key={index}>
                                         <TableCell component="th" scope="row" style={{display: "flex"}}>
-                                            {card.question || JSON.stringify(card.imageParameters)} <Typography
+                                            {card.question || JSON.stringify(card.questionImage?.parameters)} <Typography
                                             className={classes.groups}
                                             color="textSecondary"
                                             gutterBottom
@@ -202,7 +202,7 @@ export function Overview() {
                                             {(instance.slot || 0) + 1}
                                         </TableCell>
                                         <TableCell align="right">
-                                            {Context.isCardActive(card) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
+                                            {Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
                                         </TableCell>
                                     </TableRow>
                                 })}

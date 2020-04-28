@@ -1,5 +1,5 @@
 import {houseSVG} from "./svgs";
-import { v5 as uuidv5 } from 'uuid';
+import {v5 as uuidv5} from 'uuid';
 
 type ImageParameters = {
     [seletector: string]: string | { [attribute: string]: string }
@@ -7,15 +7,20 @@ type ImageParameters = {
 
 export const uuidNamespace = "70072bd9-cf2b-4044-b541-53ad5518c4b5";
 
+export interface Image {
+    image?: string;
+    url?: string;
+    infoURL?: string;
+    parameters?: ImageParameters;
+}
+
 export interface IndexCard {
     id: string;
     question?: string;
-    image?: string;
-    imageParameters?: ImageParameters;
+    questionImage?: Image;
     description?: string;
     answers: string[];
-    answerImage?: string;
-    answerImageParameters?: ImageParameters;
+    answerImage?: Image;
     time_s: number;
     groups: string[];
     inputType?: "text" | "number" | "select";
@@ -53,7 +58,7 @@ export const slots: Slot[] = [
 
 export const predefinedCards: IndexCard[] = [
     {
-        id: uuidv5(`A`,uuidNamespace),
+        id: uuidv5(`A`, uuidNamespace),
         question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
         time_s: 30,
         groups: ["Test"],
@@ -61,9 +66,9 @@ export const predefinedCards: IndexCard[] = [
         description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
     },
     {
-        id: uuidv5(`B`,uuidNamespace),
+        id: uuidv5(`B`, uuidNamespace),
         question: "anderen Text",
-        image: "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg",
+        questionImage: {image: "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg"},
         time_s: 30,
         groups: ["Test"],
         answers: ["nach"],
@@ -75,7 +80,7 @@ export const predefinedCards: IndexCard[] = [
 for (let x = 1; x <= 10; x++) {
     for (let y = 1; y <= 10; y++) {
         predefinedCards.push({
-            id: uuidv5(`${x}*${y}`,uuidNamespace),
+            id: uuidv5(`${x}*${y}`, uuidNamespace),
             question: `${x} • ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
@@ -84,7 +89,7 @@ for (let x = 1; x <= 10; x++) {
             inputType: "number",
         });
         predefinedCards.push({
-            id: uuidv5(`${x}:${y}`,uuidNamespace),
+            id: uuidv5(`${x}:${y}`, uuidNamespace),
             question: `${x * y} : ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x * y} : ${y} = ${x}`, `${x}`],
@@ -99,11 +104,15 @@ for (let x = 1; x <= 10; x++) {
 for (let x = 0; x <= 10; x++) {
     for (let y = 0; y <= x; y++) {
         predefinedCards.push({
-            id: uuidv5(`${x-y}+${y}`,uuidNamespace),
-            image: houseSVG,
-            answerImage: houseSVG,
-            imageParameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": ""},
-            answerImageParameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": "" + (x - y)},
+            id: uuidv5(`${x - y}+${y}`, uuidNamespace),
+            questionImage: {
+                url: houseSVG,
+                parameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": ""},
+            },
+            answerImage: {
+                url: houseSVG,
+                parameters: {"#Summe": "" + x, "#Summand1": "" + y, "#Summand2": "" + (x - y)},
+            },
             description: "Was fehlt?",
             answers: ["", "" + (x - y)],
             time_s: 6,
@@ -142,7 +151,7 @@ for (let x = 0; x <= 10; x++) {
         const word = wordsEntry.substr(spacePosition + 1);
         const article = wordsEntry.substr(0, spacePosition);
         let card: IndexCard = {
-            id: uuidv5(`artikel:${word}`,uuidNamespace),
+            id: uuidv5(`artikel:${word}`, uuidNamespace),
             question: word,
             answers: [wordsEntry, article, article.substr(0, 1).toUpperCase() + article.substr(1)],
             time_s: 15,

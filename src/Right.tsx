@@ -13,7 +13,7 @@ export function Right() {
         <Main>
             <Grid container spacing={2} justify="center" alignContent="center" onClick={() => context.next()}>
                 <Grid item xs={12}>
-                    <Back/>
+                    <Back card={context.card}/>
                 </Grid>
                 <Grid item xs={12}>
                     Richtig! Die Karte kommt in das nächste Fach.

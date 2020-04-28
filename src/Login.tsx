@@ -112,6 +112,7 @@ async function synchronizeFile(filename: string, localData: any, skipRemote?: bo
         try {
             await upload(filename, remoteData, token, saveToken);
             localStorage.setItem(remoteKey, JSON.stringify(remoteData));
+            localStorage.setItem(filename, JSON.stringify(remoteData));
             return remoteData;
         } catch (error) {
             if (error.status === 409 /*Conflict*/) {

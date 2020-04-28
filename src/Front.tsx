@@ -15,8 +15,7 @@ export function Front({card, onClick}: {
             category={overlappingGroups.length > 0 ? overlappingGroups[0] : (card.groups.length > 0 ? card.groups[0] : "")}
             text={card.question}
             description={card.description}
-            image={card.image}
-            imageParameters={card.imageParameters}
+            image={card.questionImage}
             onClick={onClick}
         />
     );
