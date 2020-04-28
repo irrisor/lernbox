@@ -115,7 +115,7 @@ export default function App() {
                         <EditCard/>
                     </ScreenBox>
                 </Route>
-                <Route path={["/list/:group", "/list"]}>
+                <Route path={["/list/:group/:subgroup", "/list/:group", "/list"]}>
                     <ScreenBox fullScreen>
                         <ListCards/>
                     </ScreenBox>

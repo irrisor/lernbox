@@ -65,9 +65,8 @@ export function IndexCardVisual(props:
                                     }) {
     const {category, text, description, onClick} = props;
     const {parameters, url, infoURL} = props.image || {parameters: undefined, url: undefined, infoURL: undefined};
+    const [forceSnapSVG, setForceSnapSVG] = React.useState(false);
     const classes = useStyles();
-    // FIXME https://commons.wikimedia.org/wiki/File:FoxBassoon.jpg
-    // FIXME https://commons.wikimedia.org/wiki/File:Xylophone_(colourful).svg
     const svg = React.useMemo(() => {
         return (s: Snap.Paper, svgElement: SVGElement) => {
             if (url) {
@@ -164,9 +163,15 @@ export function IndexCardVisual(props:
                                 {url && text &&
                                 <Grid item xs={2}>
                                     <LazyLoad>
-                                        <SnapSVG width="100%" height="100%">
-                                            {svg}
-                                        </SnapSVG>
+                                        {forceSnapSVG || parameters ? <SnapSVG width="100%" height="100%">
+                                                {svg}
+                                            </SnapSVG> :
+                                            <img src={url}
+                                                 style={{maxHeight: 175, width: "100%"}}
+                                                 alt="Bild nicht geladen"
+                                                 onError={() => setForceSnapSVG(true)}
+                                            />
+                                        }
                                     </LazyLoad>
                                 </Grid>}
                                 {text ? <Grid item xs={text && url ? 8 : 12}
@@ -181,9 +186,15 @@ export function IndexCardVisual(props:
                                     </Grid> :
                                     url && <Grid item xs={12}>
                                         <LazyLoad>
-                                            <SnapSVG width="80%" height="100%">
-                                                {svg}
-                                            </SnapSVG>
+                                            {forceSnapSVG || parameters ? <SnapSVG width="80%" height="100%">
+                                                    {svg}
+                                                </SnapSVG> :
+                                                <img src={url}
+                                                     style={{height: 175, maxWidth: "80%"}}
+                                                     alt="Bild nicht geladen"
+                                                     onError={() => setForceSnapSVG(true)}
+                                                />
+                                            }
                                         </LazyLoad>
                                     </Grid>}
                                 {text && url && <Grid item xs={2}/>}

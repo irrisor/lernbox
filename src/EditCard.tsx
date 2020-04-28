@@ -64,13 +64,14 @@ function ImageParametersField({image, set}: { image: Image | undefined, set: (ne
                 if (newValue) {
                     try {
                         const newImageParameters = JSON.parse(newValue);
-                        set({parameters: newImageParameters});
+                        set(Object.assign({}, image, {parameters: newImageParameters}));
                         setTemporaryImageParametersError("");
                     } catch (e) {
                         setTemporaryImageParametersError(e.message || "Kein gültiges JSON");
                     }
                 } else {
-                    set({parameters: undefined});
+                    setTemporaryImageParametersError("");
+                    set(Object.assign({}, image, {parameters: undefined}));
                 }
             }}
             fullWidth
