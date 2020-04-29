@@ -27,7 +27,7 @@ export class Context {
         this.update(context => {
             const newPupil: Pupil = {
                 name: newName,
-                instances: this.cards.map(card => ({
+                instances: this.cards.filter(card=>card.answers?.length > 0 && card.answers[0]).map(card => ({
                     id: card.id,
                 })),
             };
@@ -122,10 +122,11 @@ export class Context {
         return this.pupil ? this.pupil.instances.filter(Context.isCardActive).sort((a, b) => (b.slot || 0) - (a.slot || 0)) : [];
     }
 
-    public groups(topLevel?: boolean, instances?: IndexCardInstance[]) {
+    public groups(topLevel?: boolean, instances?: (IndexCardInstance | IndexCard)[]) {
         return Array.from(new Set(
             instances ?
-                instances.flatMap(card => this.getCard(card.id)?.groups.slice(0, topLevel ? 1 : undefined) || [])
+                instances.flatMap(card => ("groups" in card ? card : this.getCard(card.id))?.groups
+                    .slice(0, topLevel ? 1 : undefined) || [])
                 : this.cards.flatMap(card => card.groups.slice(0, topLevel ? 1 : undefined))),
         ).sort((a, b) => a.localeCompare(b));
     }
@@ -147,24 +148,22 @@ export class Context {
     set cards(value: IndexCard[]) {
         for (let i = 0; i < value.length; i++) {
             const anyCard: any = value[i];
-            if ( anyCard.image )
-            {
+            if (anyCard.image) {
                 // convert old image data
                 const {image, answerImage, imageParameters, answerImageParameters, ...other} = anyCard;
                 value[i] = Object.assign(other, {
                     questionImage: image || imageParameters ? {
                         image: image,
-                        parameters: imageParameters
+                        parameters: imageParameters,
                     } : undefined,
                     answerImage: answerImage || answerImageParameters ? {
                         image: answerImage,
-                        parameters: answerImageParameters
-                    } : undefined
+                        parameters: answerImageParameters,
+                    } : undefined,
                 });
             }
             const card = value[i];
-            if ( card.questionImage?.image && !card.questionImage?.url )
-            {
+            if (card.questionImage?.image && !card.questionImage?.url) {
                 lookupImage(card.questionImage, newImage => card.questionImage = newImage);
                 lookupImage(card.answerImage, newImage => card.answerImage = newImage);
             }

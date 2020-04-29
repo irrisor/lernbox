@@ -27,6 +27,7 @@ const msalConfig = {
 };
 
 const msalInstance = new msal.PublicClientApplication(msalConfig);
+let loginPageOpened = false;
 
 function isShareActive() {
     return localStorage.getItem("isShareActive") === "true";
@@ -46,7 +47,9 @@ async function requestTokenOrLogin(setToken: (value: string) => void, token: str
         try {
             tokenResponse = await msalInstance.loginPopup(requestScopes());
         } catch (e2) {
-            msalInstance.loginRedirect(requestScopes());
+            if (loginPageOpened) {
+                msalInstance.loginRedirect(requestScopes());
+            }
             return;
         }
     }
@@ -206,9 +209,13 @@ export function Login() {
                 setAndSaveToken(newToken);
             }
         });
+        loginPageOpened = true;
+        return () => {
+            loginPageOpened = false;
+        }
     }, []);
     useEffect(() => {
-        if (token === undefined) {
+        if (!token) {
             msalInstance.acquireTokenSilent(requestScopes()).then(response => setAndSaveToken(response.accessToken)).catch(e =>
                 console.debug("ignoring failed token requestScopes", e));
         }

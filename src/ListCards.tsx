@@ -7,16 +7,34 @@ import Tab from "@material-ui/core/Tab";
 import {useParams} from "react-router";
 import {IndexCardVisual} from "./IndexCardVisual";
 import ResizeDetector from 'react-resize-detector';
+import {IndexCard} from "./cards";
 
 export const cardBreakpoints = {xs: 12 as 12, sm: 12 as 12, md: 6 as 6, lg: 4 as 4, xl: 3 as 3};
 
 export function ListCards() {
     const context = React.useContext(reactContext);
     const {group, subgroup} = useParams();
-    const groups = context.groups(true);
+    return <CardList
+        navigate={(group, subgroup) => context.history.push(`/list/${group}/${subgroup}`)}
+        create={group => context.history.push(`/edit/new/${group}`)}
+        onClick={card => context.history.push(`/edit/${card.id}`)}
+        {...{group, subgroup}}/>;
+}
+
+export function CardList({onClick, imagesOnly, group, subgroup, navigate, create}: {
+    onClick: (card: IndexCard) => void,
+    imagesOnly?: boolean,
+    group: string | undefined,
+    subgroup: string | undefined,
+    navigate: (group?: string, subgroup?: string) => void
+    create?: (group?: string) => void
+}) {
+    const context = React.useContext(reactContext);
+    const indexCards = imagesOnly ? context.cards.filter(card => card.questionImage?.url) : context.cards;
+    const groups = context.groups(true, indexCards);
     const groupIndex = group ? groups.indexOf(group) : -1;
     const activeGroup = group || groups[groupIndex !== -1 ? groupIndex : 0];
-    const groupCards = activeGroup ? context.cards.filter(card => (context.getCard(card)?.groups.indexOf(activeGroup) || 0) >= 0) : [];
+    const groupCards = activeGroup ? indexCards.filter(card => (context.getCard(card)?.groups.indexOf(activeGroup) || 0) >= 0) : [];
     const groupCardsWithoutSubgroup = groupCards.filter(card => card.groups.length === 1);
     const rest = "...";
     const subgroups = (groupCardsWithoutSubgroup.length > 0 ? [rest] : []).concat(
@@ -31,7 +49,7 @@ export function ListCards() {
                     <Box width={1}
                          style={{marginBottom: 8, width, position: "absolute"}}>
                         <AppBar position="static"><Tabs value={groupIndex >= 0 ? groupIndex : 0}
-                                                        onChange={(event, newTab) => context.history.push(`/list/${groups[newTab]}`)}
+                                                        onChange={(event, newTab) => navigate(groups[newTab])}
                                                         aria-label="tabs"
                                                         variant="scrollable"
                                                         scrollButtons="auto"
@@ -41,34 +59,38 @@ export function ListCards() {
                                 <Tab label={group} id={`${group}-tab`} aria-label={group} key={group}/>
                             ))}
                         </Tabs></AppBar>
-                        <Tabs value={subgroupIndex >= 0 ? subgroupIndex : 0}
-                              onChange={(event, newTab) => context.history.push(`/list/${activeGroup}/${subgroups[newTab] !== rest ? subgroups[newTab] : ""}`)}
-                              aria-label="tabs"
-                              variant="scrollable"
-                              scrollButtons="auto"
-                        >
-                            {subgroups.map(subgroup => (
-                                <Tab label={subgroup} id={`${subgroup}-tab`} aria-label={subgroup} key={subgroup}/>
-                            ))}
-                        </Tabs>
+                        <Box width={1} height={48} style={{backgroundColor: "white"}}>
+                            <Tabs value={subgroupIndex >= 0 ? subgroupIndex : 0}
+                                  onChange={(event, newTab) => navigate(activeGroup, subgroups[newTab] !== rest ? subgroups[newTab] : "")}
+                                  aria-label="tabs"
+                                  variant="scrollable"
+                                  scrollButtons="auto"
+                            >
+                                {subgroups.map(subgroup => (
+                                    <Tab label={subgroup} id={`${subgroup}-tab`} aria-label={subgroup} key={subgroup}/>
+                                ))}
+                            </Tabs>
+                        </Box>
                     </Box>
                 )}
             />
             <div style={{height: 128}}/>
             <Grid container spacing={2}>
+                {create &&
                 <Grid item {...cardBreakpoints}>
                     <IndexCardVisual text="+"
                                      description="Hier klicken, um eine neue Karte anzulegen."
-                                     onClick={() => context.history.push(`/edit/new/${activeGroup}`)}
+                                     onClick={() => create(activeGroup)}
                     />
-                </Grid>
-                {context.cards.filter(card => {
+                </Grid>}
+                {indexCards.filter(card => {
                     return card.groups.indexOf(activeGroup) === 0 && (
                         subgroups.length === 1 || (activeSubgroup === rest ? card.groups.length === 1 : card.groups.indexOf(activeSubgroup || "") > 0
                         ));
                 }).map(card => (
                     <Grid item {...cardBreakpoints} key={card.id}>
-                        <Front card={card} onClick={() => context.history.push(`/edit/${card.id}`)}/>
+                        <Front card={card}
+                               onClick={() => onClick(card)}/>
                     </Grid>
                 ))}
                 {/*<Grid item xs={12}>

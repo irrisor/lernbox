@@ -1,6 +1,23 @@
 import * as React from "react";
 import {Main} from "./layout/Main";
-import {Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField, Typography} from "@material-ui/core";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControl,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from "@material-ui/core";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {Image, IndexCard} from "./cards";
 import {Front} from "./Front";
@@ -8,6 +25,8 @@ import {useParams} from "react-router";
 import {reactContext} from "./Context";
 import {v4 as uuidv4} from "uuid";
 import {Back} from "./Back";
+import PermMediaIcon from "@material-ui/icons/PermMedia";
+import {CardList} from "./ListCards";
 
 export const fieldBreakpoints = {xs: 12 as 12, lg: 6 as 6};
 
@@ -81,6 +100,53 @@ function ImageParametersField({image, set}: { image: Image | undefined, set: (ne
     );
 }
 
+function ImageField({label, image, set}: { label: string, image: Image | undefined, set: (image: Image) => void }) {
+    const [open, setOpen] = React.useState(false);
+    const [group, setGroup] = React.useState<string | undefined>("Bilder");
+    const [subgroup, setSubgroup] = React.useState<string | undefined>();
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    return <Box display="flex" alignItems="flex-end">
+        <Box flexGrow={1}><TextField
+            label={label}
+            value={image ? image.image || "" : ""}
+            onChange={async event => {
+                set(Object.assign(image || {},
+                    {image: event.target.value, url: undefined, infoURL: undefined}));
+            }}
+            fullWidth
+        /></Box><Box>
+        <IconButton style={{marginBottom: -14}} onClick={() => setOpen(true)}>
+            <PermMediaIcon/>
+        </IconButton>
+        <Dialog onClose={() => setOpen(false)}
+                aria-labelledby="dialog-title"
+                open={open}
+                fullWidth
+                fullScreen={fullScreen}
+                maxWidth={false}
+
+        >
+            <DialogTitle id="dialog-title">Bild auswählen</DialogTitle>
+            <DialogContent style={{paddingTop: 0}}>
+                <CardList imagesOnly {...{group, subgroup}}
+                          onClick={card => {
+                              set(Object.assign({}, card.questionImage));
+                              setOpen(false);
+                          }}
+                          navigate={(group, subgroup) => {
+                              setGroup(group);
+                              setSubgroup(subgroup);
+                          }}/>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setOpen(false)}>Abbrechen</Button>
+            </DialogActions>
+        </Dialog>
+    </Box>
+    </Box>;
+}
+
 export function EditCard() {
     const {cardId, group} = useParams();
     const context = React.useContext(reactContext);
@@ -90,7 +156,6 @@ export function EditCard() {
         const originalCard: IndexCard = contextCard || {
             id: isCreate ? uuidv4() : (cardId as string),
             question: "",
-            questionImage: {image: "https://commons.wikimedia.org/wiki/File:Xylophone_(colourful).svg"},
             answers: [""],
             groups: group ? [group] : [],
             time_s: 15,
@@ -128,26 +193,6 @@ export function EditCard() {
                             </Grid>
                             <Grid item {...fieldBreakpoints}>
                                 <TextField
-                                    label="Bild Vorderseite"
-                                    value={card.questionImage ? card.questionImage.image || "" : ""}
-                                    onChange={async event => {
-                                        setCard(Object.assign({}, card,
-                                            {
-                                                questionImage: Object.assign(card.questionImage || {},
-                                                    {image: event.target.value, url: undefined, infoURL: undefined}),
-                                            }));
-                                    }}
-                                    fullWidth
-                                />
-                            </Grid>
-                            {advancedMode && <Grid item {...fieldBreakpoints}>
-                                <ImageParametersField image={card.questionImage} set={newImage => {
-                                    setCard(Object.assign({}, card,
-                                        {questionImage: newImage}));
-                                }}/>
-                            </Grid>}
-                            <Grid item {...fieldBreakpoints}>
-                                <TextField
                                     label="Beschreibung"
                                     value={card.description || ""}
                                     onChange={event => setCard(Object.assign({}, card,
@@ -155,6 +200,21 @@ export function EditCard() {
                                     fullWidth
                                 />
                             </Grid>
+                            <Grid item {...fieldBreakpoints}>
+                                <ImageField
+                                    label="Bild Vorderseite"
+                                    image={card.questionImage}
+                                    set={newImage => setCard(Object.assign({}, card,
+                                        {
+                                            questionImage: newImage,
+                                        }))}/>
+                            </Grid>
+                            {advancedMode && <Grid item {...fieldBreakpoints}>
+                                <ImageParametersField image={card.questionImage} set={newImage => {
+                                    setCard(Object.assign({}, card,
+                                        {questionImage: newImage}));
+                                }}/>
+                            </Grid>}
                             <Grid item {...fieldBreakpoints}>
                                 <TextField
                                     label="Gruppen (mit ; getrennt)"
@@ -196,18 +256,14 @@ export function EditCard() {
                                 />
                             </Grid>
                             <Grid item {...fieldBreakpoints}>
-                                <TextField
+
+                                <ImageField
                                     label="Bild Rückseite"
-                                    value={card.answerImage ? card.answerImage.image || "" : ""}
-                                    onChange={async event => {
-                                        setCard(Object.assign({}, card,
-                                            {
-                                                answerImage: Object.assign(card.answerImage || {},
-                                                    {image: event.target.value, url: undefined, infoURL: undefined}),
-                                            }));
-                                    }}
-                                    fullWidth
-                                />
+                                    image={card.answerImage}
+                                    set={newImage => setCard(Object.assign({}, card,
+                                        {
+                                            answerImage: newImage,
+                                        }))}/>
                             </Grid>
                             {advancedMode && <Grid item {...fieldBreakpoints}>
                                 <ImageParametersField image={card.answerImage} set={newImage => {

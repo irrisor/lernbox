@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Context, reactContext} from "./Context";
-import {Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
+import {Box, Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
 import {Main} from "./layout/Main";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import Table from '@material-ui/core/Table';
@@ -179,11 +179,11 @@ export function Overview() {
                             {(pupil.instances.map(instance => [instance, context.getCard(instance)])
                                 .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
                                 .sort(([a, aCard], [b, bCard]) => {
-                                    const slotOrder = (a.slot || 0) - (b.slot || 0);
+                                    const slotOrder = ((a.slot as number+1) || 0) - ((b.slot as number+1) || 0);
                                     if (slotOrder !== 0) {
                                         return slotOrder;
                                     }
-                                    const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0))/60/60/1000);
+                                    const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
                                     if (activeOrder !== 0) {
                                         return activeOrder;
                                     }
@@ -191,15 +191,18 @@ export function Overview() {
                                 }).map(([instance, card], index) => {
                                     const nextTryDate = Context.getNextTryDate(instance);
                                     return <TableRow key={index}>
-                                        <TableCell component="th" scope="row" style={{display: "flex"}}>
-                                            {card.question || JSON.stringify(card.questionImage?.parameters)} <Typography
-                                            className={classes.groups}
-                                            color="textSecondary"
-                                            gutterBottom
-                                        >{card.groups.join(", ")}</Typography>
+                                        <TableCell component="th" scope="row">
+                                            <Box display="flex">
+                                                {card.question || JSON.stringify(card.questionImage?.parameters)}
+                                                <Typography
+                                                    className={classes.groups}
+                                                    color="textSecondary"
+                                                    gutterBottom
+                                                >{card.groups.join(", ")}</Typography>
+                                            </Box>
                                         </TableCell>
                                         <TableCell align="right">
-                                            {(instance.slot || 0) + 1}
+                                            {instance.slot !== undefined ? instance.slot + 1 : "-"}
                                         </TableCell>
                                         <TableCell align="right">
                                             {Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}

@@ -7,7 +7,6 @@ import {Box, Grid} from "@material-ui/core";
 import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
 import {Image} from "./cards";
-import LazyLoad from 'react-lazyload';
 
 const useStyles = makeStyles({
     root: {
@@ -162,17 +161,15 @@ export function IndexCardVisual(props:
                             <Grid container spacing={1}>
                                 {url && text &&
                                 <Grid item xs={2}>
-                                    <LazyLoad>
-                                        {forceSnapSVG || parameters ? <SnapSVG width="100%" height="100%">
-                                                {svg}
-                                            </SnapSVG> :
-                                            <img src={url}
-                                                 style={{maxHeight: 175, width: "100%"}}
-                                                 alt="Bild nicht geladen"
-                                                 onError={() => setForceSnapSVG(true)}
-                                            />
-                                        }
-                                    </LazyLoad>
+                                    {forceSnapSVG || parameters ? <SnapSVG width="100%" height="100%">
+                                            {svg}
+                                        </SnapSVG> :
+                                        <img src={url}
+                                             style={{maxHeight: 175, width: "100%"}}
+                                             alt="Bild nicht geladen"
+                                             onError={() => setForceSnapSVG(true)}
+                                        />
+                                    }
                                 </Grid>}
                                 {text ? <Grid item xs={text && url ? 8 : 12}
                                               style={{
@@ -185,17 +182,15 @@ export function IndexCardVisual(props:
                                         </Typography>
                                     </Grid> :
                                     url && <Grid item xs={12}>
-                                        <LazyLoad>
-                                            {forceSnapSVG || parameters ? <SnapSVG width="80%" height="100%">
-                                                    {svg}
-                                                </SnapSVG> :
-                                                <img src={url}
-                                                     style={{height: 175, maxWidth: "80%"}}
-                                                     alt="Bild nicht geladen"
-                                                     onError={() => setForceSnapSVG(true)}
-                                                />
-                                            }
-                                        </LazyLoad>
+                                        {forceSnapSVG || parameters ? <SnapSVG width="80%" height="100%">
+                                                {svg}
+                                            </SnapSVG> :
+                                            <img src={url}
+                                                 style={{height: 175, maxWidth: "80%"}}
+                                                 alt="Bild nicht geladen"
+                                                 onError={() => setForceSnapSVG(true)}
+                                            />
+                                        }
                                     </Grid>}
                                 {text && url && <Grid item xs={2}/>}
                             </Grid>

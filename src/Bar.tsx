@@ -44,13 +44,14 @@ const useStyles = makeStyles((theme: Theme) =>
             },
             transition: "width 0.2s ease-out",
         },
-        appBar: {
-            zIndex: 5000,
+        appBarOnTop: {
+            zIndex: 2000,
         },
         // necessary for content to be below app bar
         toolbar: theme.mixins.toolbar,
         drawerPaper: {
             width: drawerWidth,
+            zIndex: 800
         },
         content: {
             flexGrow: 1,
@@ -114,7 +115,7 @@ const Menu = (props: { onClick: () => true }) => {
                           disabled={context.activePupilName === undefined}
                           onClick={() => props.onClick() && context.history.push(`/pupil/${context.activePupilName}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
-                    <ListItemText primary="Löschen"/>
+                    <ListItemText primary="Schüler löschen"/>
                 </ListItem>
                 <ListItem button
                           disabled={context.activePupilName === undefined}
@@ -142,7 +143,7 @@ export function Bar(props: { children: React.ReactNode }) {
     return (
         <>
             <CssBaseline/>
-            <AppBar position="fixed" className={classes.appBar}>
+            <AppBar position="fixed" className={menuOpen && !isWideScreen ? classes.appBarOnTop : undefined}>
                 <Toolbar>
                     <IconButton
                         color="inherit"

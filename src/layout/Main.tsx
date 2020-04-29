@@ -9,7 +9,7 @@ export function Main(props: { children: React.ReactNode }) {
             textAlign="center"
             flexGrow={1}
             m={0}
-            style={{marginTop: 16}}
+            style={{marginTop: 16, overflowY: "auto", overflowX: "hidden", height: "300px"}}
         >
             {props.children}
         </Box>
