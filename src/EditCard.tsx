@@ -14,10 +14,12 @@ import {
     MenuItem,
     Select,
     TextField,
+    Theme,
     Typography,
     useMediaQuery,
     useTheme,
 } from "@material-ui/core";
+import {createStyles} from "@material-ui/styles";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {Image, IndexCard} from "./cards";
 import {Front} from "./Front";
@@ -27,6 +29,7 @@ import {v4 as uuidv4} from "uuid";
 import {Back} from "./Back";
 import PermMediaIcon from "@material-ui/icons/PermMedia";
 import {CardList} from "./ListCards";
+import {makeStyles} from "@material-ui/core/styles";
 
 export const fieldBreakpoints = {xs: 12 as 12, lg: 6 as 6};
 
@@ -100,12 +103,27 @@ function ImageParametersField({image, set}: { image: Image | undefined, set: (ne
     );
 }
 
-function ImageField({label, image, set}: { label: string, image: Image | undefined, set: (image: Image) => void }) {
+const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        dialogPaper: {
+            minHeight: 'calc(100vh - 64px)',
+            maxHeight: 'calc(100vh - 64px)',
+        },
+    }));
+
+function ImageField({label, image, set, setGroupPath, ...passthroughProps}: {
+    label: string,
+    image: Image | undefined,
+    set: (image: Image) => void,
+    groupPath: string[],
+    setGroupPath: (groupPath: string[]) => void,
+    searchText: string,
+    setSearchText: (searchText: string) => void
+}) {
     const [open, setOpen] = React.useState(false);
-    const [group, setGroup] = React.useState<string | undefined>("Bilder");
-    const [subgroup, setSubgroup] = React.useState<string | undefined>();
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const classes = useStyles(theme);
     return <Box display="flex" alignItems="flex-end">
         <Box flexGrow={1}><TextField
             label={label}
@@ -125,18 +143,17 @@ function ImageField({label, image, set}: { label: string, image: Image | undefin
                 fullWidth
                 fullScreen={fullScreen}
                 maxWidth={false}
-
+                classes={{paper: classes.dialogPaper}}
         >
             <DialogTitle id="dialog-title">Bild auswählen</DialogTitle>
             <DialogContent style={{paddingTop: 0}}>
-                <CardList imagesOnly {...{group, subgroup}}
+                <CardList imagesOnly {...passthroughProps}
                           onClick={card => {
                               set(Object.assign({}, card.questionImage));
                               setOpen(false);
                           }}
-                          navigate={(group, subgroup) => {
-                              setGroup(group);
-                              setSubgroup(subgroup);
+                          navigate={groupPath => {
+                              setGroupPath(groupPath);
                           }}/>
             </DialogContent>
             <DialogActions>
@@ -171,6 +188,8 @@ export function EditCard() {
         setCard(Object.assign({}, card,
             {answerImage: newImage}));
     }), [card.answerImage?.image]);
+    const [groupPath, setGroupPath] = React.useState<string[]>(["Bilder"]);
+    const [searchText, setSearchText] = React.useState("");
     return (
         <>
             <Main>
@@ -207,7 +226,8 @@ export function EditCard() {
                                     set={newImage => setCard(Object.assign({}, card,
                                         {
                                             questionImage: newImage,
-                                        }))}/>
+                                        }))}
+                                    {...{groupPath, setGroupPath, searchText, setSearchText}}/>
                             </Grid>
                             {advancedMode && <Grid item {...fieldBreakpoints}>
                                 <ImageParametersField image={card.questionImage} set={newImage => {
@@ -263,7 +283,8 @@ export function EditCard() {
                                     set={newImage => setCard(Object.assign({}, card,
                                         {
                                             answerImage: newImage,
-                                        }))}/>
+                                        }))}
+                                    {...{groupPath, setGroupPath, searchText, setSearchText}}/>
                             </Grid>
                             {advancedMode && <Grid item {...fieldBreakpoints}>
                                 <ImageParametersField image={card.answerImage} set={newImage => {
@@ -319,7 +340,7 @@ export function EditCard() {
                     <Button variant="contained"
                             fullWidth
                             onClick={() => {
-                                context.history.push(`/list/${card.groups[0]}`);
+                                context.history.push(`/list/${card.groups.join("/")}`);
                             }}
                     >
                         Zurück
@@ -330,7 +351,7 @@ export function EditCard() {
                         fullWidth
                         color="secondary"
                         onClick={() => {
-                            context.history.push(`/list/${card.groups[0]}`);
+                            context.history.push(`/list/${card.groups.join("/")}`);
                             context.cards = context.cards.filter(existingCard => existingCard.id !== card.id);
                         }}
                     >

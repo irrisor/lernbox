@@ -1,127 +1,136 @@
 import * as React from "react";
-import {AppBar, Box, Grid} from "@material-ui/core";
+import {Box, Breadcrumbs, Grid, IconButton, Link, TextField, Tooltip, Typography} from "@material-ui/core";
 import {reactContext} from "./Context";
 import {Front} from "./Front";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
-import {useParams} from "react-router";
+import {useLocation} from "react-router";
 import {IndexCardVisual} from "./IndexCardVisual";
-import ResizeDetector from 'react-resize-detector';
 import {IndexCard} from "./cards";
+import SearchIcon from "@material-ui/icons/Search";
+import {AddBox, ArrowUpward, Close, FolderOpen} from "@material-ui/icons";
 
 export const cardBreakpoints = {xs: 12 as 12, sm: 12 as 12, md: 6 as 6, lg: 4 as 4, xl: 3 as 3};
 
 export function ListCards() {
     const context = React.useContext(reactContext);
-    const {group, subgroup} = useParams();
+    const location = useLocation();
+    const groupPath = location.pathname.split("/").slice(2).filter(fragment => !!fragment.trim());
+    const [searchText, setSearchText] = React.useState("");
     return <CardList
-        navigate={(group, subgroup) => context.history.push(`/list/${group}/${subgroup}`)}
-        create={group => context.history.push(`/edit/new/${group}`)}
+        navigate={(groupPath) => context.history.push(`/list/${groupPath.join("/")}`)}
+        create={groupPath => context.history.push(`/edit/new/${groupPath.join("/")}`)}
         onClick={card => context.history.push(`/edit/${card.id}`)}
-        {...{group, subgroup}}/>;
+        {...{groupPath, searchText, setSearchText}}
+    />;
 }
 
-export function CardList({onClick, imagesOnly, group, subgroup, navigate, create}: {
+function groupMatches(cardGroups: string[], groupPath: string[], allowSubGroup: boolean) {
+    if (!allowSubGroup && cardGroups.length !== groupPath.length) return false;
+    for (let i = 0; i < groupPath.length; i++) {
+        if (groupPath[i] !== cardGroups[i]) return false;
+    }
+    return true;
+}
+
+function containsSearchText(searchText: string, ...values: (string | undefined)[]) {
+    const searchTextLower = searchText.toLowerCase().split(" ");
+    for (const value of values) {
+        if (value && searchTextLower.reduce((previousValue, currentValue) => previousValue &&
+            value.toLowerCase().indexOf(currentValue) >= 0
+            , true)) return true;
+    }
+    return false;
+}
+
+export function CardList({onClick, imagesOnly, groupPath, navigate, create, searchText, setSearchText}: {
     onClick: (card: IndexCard) => void,
     imagesOnly?: boolean,
-    group: string | undefined,
-    subgroup: string | undefined,
-    navigate: (group?: string, subgroup?: string) => void
-    create?: (group?: string) => void
+    groupPath: string[],
+    navigate: (groups: string[]) => void,
+    create?: (groupPath: string[]) => void,
+    searchText: string,
+    setSearchText: (newSearchText: string) => void
 }) {
     const context = React.useContext(reactContext);
-    const indexCards = imagesOnly ? context.cards.filter(card => card.questionImage?.url) : context.cards;
-    const groups = context.groups(true, indexCards);
-    const groupIndex = group ? groups.indexOf(group) : -1;
-    const activeGroup = group || groups[groupIndex !== -1 ? groupIndex : 0];
-    const groupCards = activeGroup ? indexCards.filter(card => (context.getCard(card)?.groups.indexOf(activeGroup) || 0) >= 0) : [];
-    const groupCardsWithoutSubgroup = groupCards.filter(card => card.groups.length === 1);
-    const rest = "...";
-    const subgroups = (groupCardsWithoutSubgroup.length > 0 ? [rest] : []).concat(
-        Array.from(new Set(context.groups(false, groupCards).filter(subgroup => subgroup !== activeGroup)).values()));
-    const subgroupIndex = subgroup ? subgroups.indexOf(subgroup) : -1;
-    const activeSubgroup = subgroup || subgroups[subgroupIndex !== -1 ? subgroupIndex : 0];
+    const allCards = imagesOnly ? context.cards.filter(card => card.questionImage?.url) : context.cards;
+    const cardsBelowGroupPath = allCards.filter(card => groupMatches(card.groups, groupPath, true));
+    const soughtCards = searchText ? cardsBelowGroupPath.filter(card => containsSearchText(searchText,
+        card.question,
+        card.groups.join("; "),
+        card.answers.join("; "),
+        card.description,
+    )) : cardsBelowGroupPath;
+    const groupCards = !searchText || soughtCards.length > 6 ? soughtCards.filter(card => groupMatches(card.groups, groupPath, false)) : soughtCards;
+    const subgroups = Array.from(new Set(soughtCards.filter(card => card.groups.length > groupPath.length)
+        .flatMap(card => card.groups[groupPath.length])),
+    ).sort((a, b) => a.localeCompare(b));
+    const superGroup = groupPath.length > 0 ? groupPath.slice(0, groupPath.length - 1) : undefined;
     return (
         <>
-            <ResizeDetector
-                handleWidth
-                render={({width}) => (
-                    <Box width={1}
-                         style={{marginBottom: 8, width, position: "absolute"}}>
-                        <AppBar position="static"><Tabs value={groupIndex >= 0 ? groupIndex : 0}
-                                                        onChange={(event, newTab) => navigate(groups[newTab])}
-                                                        aria-label="tabs"
-                                                        variant="scrollable"
-                                                        scrollButtons="auto"
-                                                        color="primary"
-                        >
-                            {groups.map(group => (
-                                <Tab label={group} id={`${group}-tab`} aria-label={group} key={group}/>
-                            ))}
-                        </Tabs></AppBar>
-                        <Box width={1} height={48} style={{backgroundColor: "white"}}>
-                            <Tabs value={subgroupIndex >= 0 ? subgroupIndex : 0}
-                                  onChange={(event, newTab) => navigate(activeGroup, subgroups[newTab] !== rest ? subgroups[newTab] : "")}
-                                  aria-label="tabs"
-                                  variant="scrollable"
-                                  scrollButtons="auto"
-                            >
-                                {subgroups.map(subgroup => (
-                                    <Tab label={subgroup} id={`${subgroup}-tab`} aria-label={subgroup} key={subgroup}/>
-                                ))}
-                            </Tabs>
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    <Box display="flex" alignItems="center" marginTop={1}>
+                        {superGroup && <>
+                            <Box m={1}>
+                                <Breadcrumbs aria-label="breadcrumb">
+                                    <Link color="inherit" href=""
+                                          onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+                                              event.preventDefault();
+                                              navigate([]);
+                                          }}>
+                                        <Tooltip title="Zur obersten Ebene"><ArrowUpward/></Tooltip>
+                                    </Link>
+                                    {groupPath.slice(0, groupPath.length - 1).map((group, index) =>
+                                        <Link color="inherit" href=""
+                                              key={group}
+                                              onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+                                                  event.preventDefault();
+                                                  navigate(groupPath.slice(0, index + 1));
+                                              }}>
+                                            {group}
+                                        </Link>)}
+                                    <Typography color="textPrimary">{groupPath[groupPath.length - 1]}</Typography>
+                                </Breadcrumbs>
+                            </Box></>}
+                        {create && <Tooltip title="Neue Karte anlegen">
+                            <IconButton onClick={() => create(groupPath)}>
+                                <AddBox/>
+                            </IconButton>
+                        </Tooltip>}
+                        <Box flexGrow={1}>
+                            <TextField variant="outlined"
+                                       fullWidth
+                                       autoFocus
+                                       label={<Box display="flex" alignItems="center"
+                                                   marginTop="-4px"><SearchIcon/> Suchen</Box>}
+                                       value={searchText}
+                                       onChange={event => setSearchText(event.target.value)}
+                                       InputProps={{
+                                           endAdornment: (
+                                               <Tooltip title="Suchtext löschen">
+                                                   <IconButton onClick={() => setSearchText("")}>
+                                                       <Close/>
+                                                   </IconButton>
+                                               </Tooltip>
+                                           ),
+                                       }}
+                            />
                         </Box>
                     </Box>
-                )}
-            />
-            <div style={{height: 128}}/>
-            <Grid container spacing={2}>
-                {create &&
-                <Grid item {...cardBreakpoints}>
-                    <IndexCardVisual text="+"
-                                     description="Hier klicken, um eine neue Karte anzulegen."
-                                     onClick={() => create(activeGroup)}
-                    />
-                </Grid>}
-                {indexCards.filter(card => {
-                    return card.groups.indexOf(activeGroup) === 0 && (
-                        subgroups.length === 1 || (activeSubgroup === rest ? card.groups.length === 1 : card.groups.indexOf(activeSubgroup || "") > 0
-                        ));
-                }).map(card => (
+                </Grid>
+                {subgroups.map(subgroup => (
+                    <Grid item {...cardBreakpoints} key={subgroup}>
+                        <IndexCardVisual
+                            text={subgroup}
+                            image={<FolderOpen style={{width: 64, height: 64, color: "grey"}}/>}
+                            onClick={() => navigate(groupPath.concat(subgroup))}/>
+                    </Grid>
+                ))}
+                {groupCards.map(card => (
                     <Grid item {...cardBreakpoints} key={card.id}>
                         <Front card={card}
                                onClick={() => onClick(card)}/>
                     </Grid>
                 ))}
-                {/*<Grid item xs={12}>
-                            <Typography variant="h6">Tiere</Typography>
-                        </Grid>
-                        {[
-                            "https://commons.wikimedia.org/wiki/File:FMIB_52669_Pagurus_bernhardus,_the_hermit-crab-retouched.svg",
-                            "https://commons.wikimedia.org/wiki/File:Sad_panda.svg",
-                            "https://commons.wikimedia.org/wiki/File:Pig_icon_05.svg",
-                            "https://commons.wikimedia.org/wiki/File:Pig_cartoon_04.svg",
-                            "https://commons.wikimedia.org/wiki/File:Turtle_clip_art.svg",
-                            "https://commons.wikimedia.org/wiki/File:Yorgia.svg",
-                            "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg",
-                        ].map(link => <>
-                            <Grid item xs={12} sm={12} md={6} lg={4} xl={3}>
-                                <IndexCardVisual image={link}/>
-                            </Grid>
-                        </>)
-                        }
-                        <Grid item xs={12}>
-                            <Typography variant="h6">Pflanzen</Typography>
-                        </Grid>
-                        {[
-                            "https://commons.wikimedia.org/wiki/File:Apple_unbitten.svg",
-                            "https://commons.wikimedia.org/wiki/File:Cactus_chandelle.svg",
-                        ].map(link => <>
-                            <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-                                <IndexCardVisual image={link}/>
-                            </Grid>
-                        </>)
-                        }*/}
             </Grid>
         </>);
 }

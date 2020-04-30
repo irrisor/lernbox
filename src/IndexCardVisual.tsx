@@ -59,11 +59,15 @@ export function IndexCardVisual(props:
                                         category?: string,
                                         text?: string,
                                         description?: string,
-                                        image?: Image,
+                                        image?: Image | React.ReactElement,
                                         onClick?: () => void
                                     }) {
     const {category, text, description, onClick} = props;
-    const {parameters, url, infoURL} = props.image || {parameters: undefined, url: undefined, infoURL: undefined};
+    const {parameters, url, infoURL} = props.image && !("type" in props.image) ? props.image : {
+        parameters: undefined,
+        url: undefined,
+        infoURL: undefined,
+    };
     const [forceSnapSVG, setForceSnapSVG] = React.useState(false);
     const classes = useStyles();
     const svg = React.useMemo(() => {
@@ -136,6 +140,18 @@ export function IndexCardVisual(props:
                 color="primary"
             >Bildquelle</Typography></a> : null;
     const [hovered, setHovered] = React.useState(false);
+    const imageComponent = props.image && ("type" in props.image ? props.image : url && (
+        forceSnapSVG || parameters ?
+            <SnapSVG width={text ? "100%" : "80%"} height="100%">
+                {svg}
+            </SnapSVG> :
+            <img src={url}
+                 style={text ? {maxHeight: 175, width: "100%"} : {height: 175, maxWidth: "80%"}}
+                 alt="Bild nicht geladen"
+                 onError={() => setForceSnapSVG(true)}
+            />
+
+    ));
     return (
         <>
             <Card className={classes.root}
@@ -159,19 +175,9 @@ export function IndexCardVisual(props:
                             flexGrow={1}
                         >
                             <Grid container spacing={1}>
-                                {url && text &&
-                                <Grid item xs={2}>
-                                    {forceSnapSVG || parameters ? <SnapSVG width="100%" height="100%">
-                                            {svg}
-                                        </SnapSVG> :
-                                        <img src={url}
-                                             style={{maxHeight: 175, width: "100%"}}
-                                             alt="Bild nicht geladen"
-                                             onError={() => setForceSnapSVG(true)}
-                                        />
-                                    }
-                                </Grid>}
-                                {text ? <Grid item xs={text && url ? 8 : 12}
+                                {imageComponent && text &&
+                                <Grid item xs={2}>{imageComponent}</Grid>}
+                                {text ? <Grid item xs={text && imageComponent ? 8 : 12}
                                               style={{
                                                   justifyContent: "center",
                                                   display: "flex",
@@ -181,18 +187,8 @@ export function IndexCardVisual(props:
                                             {text}
                                         </Typography>
                                     </Grid> :
-                                    url && <Grid item xs={12}>
-                                        {forceSnapSVG || parameters ? <SnapSVG width="80%" height="100%">
-                                                {svg}
-                                            </SnapSVG> :
-                                            <img src={url}
-                                                 style={{height: 175, maxWidth: "80%"}}
-                                                 alt="Bild nicht geladen"
-                                                 onError={() => setForceSnapSVG(true)}
-                                            />
-                                        }
-                                    </Grid>}
-                                {text && url && <Grid item xs={2}/>}
+                                    imageComponent && <Grid item xs={12}>{imageComponent}</Grid>}
+                                {text && imageComponent && <Grid item xs={2}/>}
                             </Grid>
                         </Box>
                         <Typography className={classes.pos} color="textSecondary"/>
