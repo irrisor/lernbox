@@ -376,6 +376,7 @@ export function EditCard() {
                                     groups: card.groups,
                                     answers: [""],
                                     time_s: card.time_s,
+                                    description: card.description
                                 });
                             }}
                     >
