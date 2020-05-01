@@ -13,7 +13,6 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import ListIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import SyncIcon from "@material-ui/icons/Sync";
-import ImageIcon from "@material-ui/icons/Image";
 import LogoffIcon from "@material-ui/icons/ExitToApp";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -51,7 +50,7 @@ const useStyles = makeStyles((theme: Theme) =>
         toolbar: theme.mixins.toolbar,
         drawerPaper: {
             width: drawerWidth,
-            zIndex: 800
+            zIndex: 800,
         },
         content: {
             flexGrow: 1,
@@ -105,11 +104,6 @@ const Menu = (props: { onClick: () => true }) => {
                           onClick={() => props.onClick() && context.history.push(`/login`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
-                </ListItem>
-                <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/search`)}>
-                    <ListItemIcon><ImageIcon/></ListItemIcon>
-                    <ListItemText primary="Bilder suchen"/>
                 </ListItem>
                 <ListItem button
                           disabled={context.activePupilName === undefined}

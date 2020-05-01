@@ -14,7 +14,6 @@ import {Late} from "./Late";
 import {Login, synchronize} from "./Login";
 import {EditCard} from "./EditCard";
 import {Yay} from "./Yay";
-import {Search} from "./Search";
 import {ListCards} from "./ListCards";
 
 function PupilRoute() {
@@ -25,7 +24,7 @@ function PupilRoute() {
             context.activePupilName = pupilName;
         }, [pupilName, context.activePupilName],
     );
-    if ( !context.pupil ) return <span style={{display: "none"}}>Kein Schüler</span>;
+    if (!context.pupil) return <span style={{display: "none"}}>Kein Schüler</span>;
     return (
         <Switch>
             <Route path={`${path}/right`}>
@@ -82,16 +81,18 @@ export default function App() {
     const ContextProvider = reactContext.Provider;
     const history = useHistory();
     const [context, setContext] = React.useState(() => new Context(history));
-    React.useEffect(()=>{(async ()=>{
-        if ( !context.touched ) {
-            context.touched = true;
-            await synchronize(context, true).catch(e => console.error("Error synchronizing data", e));
-            context.setContext = setContext;
-            setContext(new Context(history, context));
-            await synchronize(context, false).catch(e => console.error("Error synchronizing data", e));
-        }
-    })();});
-    if ( !context.initialized ) return <span style={{display: "none"}}>context not initialized</span>;
+    React.useEffect(() => {
+        (async () => {
+            if (!context.touched) {
+                context.touched = true;
+                await synchronize(context, true).catch(e => console.error("Error synchronizing data", e));
+                context.setContext = setContext;
+                setContext(new Context(history, context));
+                await synchronize(context, false).catch(e => console.error("Error synchronizing data", e));
+            }
+        })();
+    });
+    if (!context.initialized) return <span style={{display: "none"}}>context not initialized</span>;
     return (
         <ContextProvider value={context}>
             <Switch>
@@ -118,11 +119,6 @@ export default function App() {
                 <Route path={["/list/:groups", "/list"]}>
                     <ScreenBox fullScreen>
                         <ListCards/>
-                    </ScreenBox>
-                </Route>
-                <Route path="/search">
-                    <ScreenBox>
-                        <Search/>
                     </ScreenBox>
                 </Route>
                 <Route path="/">

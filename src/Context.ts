@@ -49,6 +49,7 @@ export class Context {
     private _currentInstances: IndexCardInstance[] = [];
     private _cards: IndexCard[] = predefinedCards;
     private _pupils: PupilSet = {};
+    public lastShownList: IndexCard[] = [];
     public touched: boolean = false;
 
     public get initialized(): boolean {

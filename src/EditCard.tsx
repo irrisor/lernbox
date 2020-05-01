@@ -23,7 +23,7 @@ import {createStyles} from "@material-ui/styles";
 import {BottomGridContainer} from "./layout/BottomGridContainer";
 import {Image, IndexCard} from "./cards";
 import {Front} from "./Front";
-import {useParams} from "react-router";
+import {useLocation, useParams} from "react-router";
 import {reactContext} from "./Context";
 import {v4 as uuidv4} from "uuid";
 import {Back} from "./Back";
@@ -165,20 +165,33 @@ function ImageField({label, image, set, setGroupPath, ...passthroughProps}: {
 }
 
 export function EditCard() {
-    const {cardId, group} = useParams();
+    const {cardId} = useParams();
+    const location = useLocation();
     const context = React.useContext(reactContext);
     const isCreate = !cardId || cardId === "new";
+    const groups = isCreate ? location.pathname.split("/").slice(3).filter(fragment => !!fragment.trim()) : [];
+
     const [card, setCard] = React.useState<IndexCard>(() => {
         const contextCard = context.getCard(cardId);
         const originalCard: IndexCard = contextCard || {
             id: isCreate ? uuidv4() : (cardId as string),
             question: "",
             answers: [""],
-            groups: group ? [group] : [],
+            groups: groups,
             time_s: 15,
         };
         return Object.assign({}, originalCard);
     });
+
+    React.useEffect(() => {
+        if (!isCreate && cardId !== card.id) {
+            const existingCard = context.getCard(cardId);
+            if (existingCard) {
+                setCard(existingCard)
+            }
+        }
+    }, [card, cardId, isCreate, context]);
+
     const advancedMode = true /*TODO advanced mode*/;
     React.useEffect(lookupImageSync(card.questionImage, newImage => {
         setCard(Object.assign({}, card,
@@ -370,13 +383,18 @@ export function EditCard() {
                                 context.cards = cards.slice(0, oldIndex >= 0 ? oldIndex : undefined).concat(
                                     Object.assign({}, card),
                                 ).concat(oldIndex >= 0 ? cards.slice(oldIndex + 1) : []);
-                                context.history.push("/edit/new");
+                                const index = context.lastShownList.findIndex(listCard => listCard.id === card.id);
+                                if (index >= 0 && index < context.lastShownList.length - 1) {
+                                    context.history.push("/edit/" + context.lastShownList[index + 1].id);
+                                } else {
+                                    context.history.push("/edit/new");
+                                }
                                 setCard({
                                     id: uuidv4(),
                                     groups: card.groups,
                                     answers: [""],
                                     time_s: card.time_s,
-                                    description: card.description
+                                    description: card.description,
                                 });
                             }}
                     >

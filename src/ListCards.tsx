@@ -6,7 +6,7 @@ import {useLocation} from "react-router";
 import {IndexCardVisual} from "./IndexCardVisual";
 import {IndexCard} from "./cards";
 import SearchIcon from "@material-ui/icons/Search";
-import {AddBox, ArrowUpward, Close, FolderOpen} from "@material-ui/icons";
+import {AddBox, ArrowUpward, Close, FolderOpen, Public} from "@material-ui/icons";
 
 export const cardBreakpoints = {xs: 12 as 12, sm: 12 as 12, md: 6 as 6, lg: 4 as 4, xl: 3 as 3};
 
@@ -60,6 +60,7 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
         card.description,
     )) : cardsBelowGroupPath;
     const groupCards = !searchText || soughtCards.length > 6 ? soughtCards.filter(card => groupMatches(card.groups, groupPath, false)) : soughtCards;
+    context.lastShownList = groupCards;
     const subgroups = Array.from(new Set(soughtCards.filter(card => card.groups.length > groupPath.length)
         .flatMap(card => card.groups[groupPath.length])),
     ).sort((a, b) => a.localeCompare(b));
@@ -115,6 +116,17 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
                                        }}
                             />
                         </Box>
+                        <Tooltip
+                            title="Mit Google in Wikimedia Commons SVG Bildern nach diesen Begriffen suchen (Englisch)">
+                            <div><IconButton
+                                disabled={!searchText}
+                                onClick={() => {
+                                    const url = "https://www.google.com/search?tbm=isch&q=site%3Acommons.wikimedia.org+svg+" + searchText.replace(/ /g, "+");
+                                    window.open(url, "svg-search");
+                                }}>
+                                <Public/>
+                            </IconButton></div>
+                        </Tooltip>
                     </Box>
                 </Grid>
                 {subgroups.map(subgroup => (
