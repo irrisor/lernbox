@@ -60,7 +60,7 @@ export function Overview() {
                 return activeOrder;
             }
             return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
-        }), [pupil?.instances, context]);
+        }), [pupil, context]);
 
     if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
 
