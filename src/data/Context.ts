@@ -280,8 +280,8 @@ export class Context {
             context._pupils = Object.assign({}, this.pupils, {
                 [name]: newPupil,
             });
-            context._activePupilName = name;
-            context.back();
+            // context._activePupilName = name;
+            // context.back();
         });
     }
 

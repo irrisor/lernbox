@@ -88,8 +88,12 @@ const Menu = (props: { onClick: () => true }) => {
             <Divider/>
             <List>
                 <ListItem button onClick={() => props.onClick() && context.back()}>
-                    <ListItemIcon><AccountCircle/></ListItemIcon>
+                    <ListItemIcon><Logo/></ListItemIcon>
                     <ListItemText primary="Lernen"/>
+                </ListItem>
+                <ListItem button onClick={() => props.onClick() && context.history.push("/")}>
+                    <ListItemIcon><AccountCircle/></ListItemIcon>
+                    <ListItemText primary="Schülerliste"/>
                 </ListItem>
                 <ListItem button
                           onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
