@@ -97,17 +97,21 @@ async function synchronizeFile(filename: string, localData: any, skipRemote?: bo
         if (remoteData !== null) {
             const lastRemoteData = localStorage.getItem(remoteKey);
             if (lastRemoteData !== null) {
-                const deltaToLastRemote = jsondiffpatch.diff(JSON.parse(lastRemoteData), localData);
+                const deltaToLastRemote = jsondiffpatch.diff(JSON.parse(lastRemoteData), remoteData);
                 if (deltaToLastRemote) {
-                    jsondiffpatch.patch(remoteData, deltaToLastRemote);
+                    jsondiffpatch.patch(localData, deltaToLastRemote);
                 } else {
                     const deltaToRemote = jsondiffpatch.diff(remoteData, localData);
-                    if (!deltaToRemote) {
-                        remoteData = localData;
+                    if (deltaToRemote) {
+                        console.warn("Even though the remote does not seem to have changed, we have a delta " +
+                            "to the local structure. Using the local data!", deltaToRemote);
                     }
+                    remoteData = localData;
                 }
             } else {
-                remoteData = Object.assign(remoteData, localData);
+                console.warn("There is a remote version of the data and we don't know about changes to it. " +
+                    "Using it with precedence.");
+                remoteData = Object.assign(localData, remoteData);
             }
         } else {
             remoteData = localData;
@@ -139,9 +143,9 @@ export async function synchronize(context: Context, init?: boolean) {
     }
     inSynchronize = true;
     try {
-        context.currentPasswordHash = await synchronizeFile("security_current.json", init ? undefined : context.currentPasswordHash, true) || "";
+        context.currentPasswordHash = (await synchronizeFile("security_current.json", init ? undefined : {hash: context.currentPasswordHash}, true))?.hash || "";
         context.teacherPasswordHash =
-            await synchronizeFile("security.json", init ? undefined : context.teacherPasswordHash, init) || "";
+            (await synchronizeFile("security.json", init ? undefined : {hash: context.teacherPasswordHash}, init))?.hash || "";
 
         let remoteCards = await synchronizeFile("cards.json", init ? undefined : context.cards, init);
         if (context.cards !== remoteCards && remoteCards) {

@@ -20,7 +20,7 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
     const [error, setError] = React.useState("");
     const okPressed = () => {
         const hash = context.passwordHash(password);
-        if (currentPasswordHash && hash !== currentPasswordHash) {
+        if (!override && currentPasswordHash && hash !== currentPasswordHash) {
             setError("Das Passwort stimmt nicht mit dem aktuell gesetzten überein.");
             setPassword("");
             return;
