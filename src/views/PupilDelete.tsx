@@ -1,11 +1,13 @@
 import * as React from "react";
 import {Button, Grid, Typography} from "@material-ui/core";
-import {reactContext} from "./Context";
-import {Main} from "./layout/Main";
+import {reactContext} from "../data/Context";
+import {Main} from "../layout/Main";
+import {TeacherPasswordView} from "./PasswordView";
 
 export function PupilDelete() {
     const context = React.useContext(reactContext);
     const name = context.pupil ? context.pupil.name : "Alle";
+    if (!context.isTeacher) return <TeacherPasswordView/>;
     return (<>
         <Main>
             <Grid container spacing={2}>

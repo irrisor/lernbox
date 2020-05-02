@@ -1,8 +1,8 @@
 import * as React from "react";
-import {Context, reactContext} from "./Context";
+import {Context, reactContext} from "../data/Context";
 import {Box, Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
-import {Main} from "./layout/Main";
-import {BottomGridContainer} from "./layout/BottomGridContainer";
+import {Main} from "../layout/Main";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -10,14 +10,14 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import {positiveSVGs} from "./svgs";
+import {positiveSVGs} from "../img/svgs";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import moment from "moment";
 import "moment/locale/de";
 import Typography from "@material-ui/core/Typography";
 import {makeStyles} from "@material-ui/core/styles";
-import {IndexCard, IndexCardInstance} from "./cards";
+import {IndexCard, IndexCardInstance} from "../data/cards";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 
@@ -84,6 +84,7 @@ export function Overview() {
         </TableRow>;
     }
 
+    // noinspection JSUnusedLocalSymbols
     return (
         <>
             <Main>

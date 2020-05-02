@@ -1,5 +1,5 @@
 import * as React from "react";
-import {reactContext} from "./Context";
+import {reactContext} from "../data/Context";
 import {createStyles, makeStyles, Theme, useTheme} from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -68,12 +68,12 @@ function toggleFullScreen() {
         // current working methods
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(
-                e => console.warn("Switching to fullscreen failed."));
+                () => console.warn("Switching to fullscreen failed."));
         }
     } else {
         if (document.exitFullscreen) {
             document.exitFullscreen().catch(
-                e => console.warn("Exiting fullscreen failed."));
+                () => console.warn("Exiting fullscreen failed."));
         }
     }
 }
@@ -89,10 +89,10 @@ const Menu = (props: { onClick: () => true }) => {
             <List>
                 <ListItem button onClick={() => props.onClick() && context.back()}>
                     <ListItemIcon><AccountCircle/></ListItemIcon>
-                    <ListItemText primary="Übersicht"/>
+                    <ListItemText primary="Lernen"/>
                 </ListItem>
                 <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/list`)}>
+                          onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
                     <ListItemIcon><ListIcon/></ListItemIcon>
                     <ListItemText primary="Karten bearbeiten"/>
                 </ListItem>
@@ -101,7 +101,7 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
                 <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/login`)}>
+                          onClick={() => props.onClick() && context.history.push(`/teacher/login`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
                 </ListItem>
@@ -112,10 +112,15 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>
                 <ListItem button
-                          disabled={context.activePupilName === undefined}
-                          onClick={() => props.onClick() && context.history.push("/")}>
+                          disabled={context.activePupilName === undefined && !context.isTeacher}
+                          onClick={() => props.onClick() && context.update(newContext => {
+                              newContext.currentPasswordHash = "";
+                              newContext.activePupilName = undefined;
+                              newContext.history.push("/");
+                          })}
+                >
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
-                    <ListItemText primary="Schüler wechseln"/>
+                    <ListItemText primary="Abmelden"/>
                 </ListItem>
             </List>
         </div>

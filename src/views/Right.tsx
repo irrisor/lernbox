@@ -1,10 +1,10 @@
 import * as React from "react";
 import {Button, Grid} from "@material-ui/core";
-import {Back} from "./Back";
-import {randomPositiveSVG} from "./svgs";
-import {Main} from "./layout/Main";
-import {BottomGridContainer} from "./layout/BottomGridContainer";
-import {reactContext} from "./Context";
+import {Back} from "../components/Back";
+import {randomPositiveSVG} from "../img/svgs";
+import {Main} from "../layout/Main";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
+import {reactContext} from "../data/Context";
 
 export function Right() {
     const context = React.useContext(reactContext);

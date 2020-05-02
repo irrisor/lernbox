@@ -1,4 +1,4 @@
-import {houseSVG} from "./svgs";
+import {houseSVG} from "../img/svgs";
 import {v5 as uuidv5} from 'uuid';
 
 type ImageParameters = {

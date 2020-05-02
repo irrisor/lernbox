@@ -1,6 +1,6 @@
-import {SnapSVG} from "./SnapSVG";
+import {SnapSVG} from "../components/SnapSVG";
 import Snap, {sin} from "snapsvg-cjs";
-import {positiveSVGs, randomPositiveSVG} from "./svgs";
+import {positiveSVGs, randomPositiveSVG} from "../img/svgs";
 import * as React from "react";
 
 export function Yay() {

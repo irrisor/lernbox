@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Main} from "./layout/Main";
+import {Main} from "../layout/Main";
 import {
     Box,
     Button,
@@ -14,19 +14,18 @@ import {
     MenuItem,
     Select,
     TextField,
-    Theme,
     Typography,
     useMediaQuery,
     useTheme,
 } from "@material-ui/core";
 import {createStyles} from "@material-ui/styles";
-import {BottomGridContainer} from "./layout/BottomGridContainer";
-import {Image, IndexCard} from "./cards";
-import {Front} from "./Front";
-import {useLocation, useParams} from "react-router";
-import {reactContext} from "./Context";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
+import {Image, IndexCard} from "../data/cards";
+import {Front} from "../components/Front";
+import {useLocation, useParams, useRouteMatch} from "react-router";
+import {reactContext} from "../data/Context";
 import {v4 as uuidv4} from "uuid";
-import {Back} from "./Back";
+import {Back} from "../components/Back";
 import PermMediaIcon from "@material-ui/icons/PermMedia";
 import {CardList} from "./ListCards";
 import {makeStyles} from "@material-ui/core/styles";
@@ -103,7 +102,7 @@ function ImageParametersField({image, set}: { image: Image | undefined, set: (ne
     );
 }
 
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles(() =>
     createStyles({
         dialogPaper: {
             minHeight: 'calc(100vh - 64px)',
@@ -166,10 +165,11 @@ function ImageField({label, image, set, setGroupPath, ...passthroughProps}: {
 
 export function EditCard() {
     const {cardId} = useParams();
+    const {path} = useRouteMatch();
     const location = useLocation();
     const context = React.useContext(reactContext);
     const isCreate = !cardId || cardId === "new";
-    const groups = isCreate ? location.pathname.split("/").slice(3).filter(fragment => !!fragment.trim()) : [];
+    const groups = isCreate ? location.pathname.split("/").slice(path.split("/").length).filter(fragment => !!fragment.trim()) : [];
 
     const [card, setCard] = React.useState<IndexCard>(() => {
         const contextCard = context.getCard(cardId);
@@ -353,7 +353,7 @@ export function EditCard() {
                     <Button variant="contained"
                             fullWidth
                             onClick={() => {
-                                context.history.push(`/list/${card.groups.join("/")}`);
+                                context.history.push(`/teacher/list/${card.groups.join("/")}`);
                             }}
                     >
                         Zurück
@@ -364,7 +364,7 @@ export function EditCard() {
                         fullWidth
                         color="secondary"
                         onClick={() => {
-                            context.history.push(`/list/${card.groups.join("/")}`);
+                            context.history.push(`/teacher/list/${card.groups.join("/")}`);
                             context.cards = context.cards.filter(existingCard => existingCard.id !== card.id);
                         }}
                     >
@@ -385,9 +385,9 @@ export function EditCard() {
                                 ).concat(oldIndex >= 0 ? cards.slice(oldIndex + 1) : []);
                                 const index = context.lastShownList.findIndex(listCard => listCard.id === card.id);
                                 if (index >= 0 && index < context.lastShownList.length - 1) {
-                                    context.history.push("/edit/" + context.lastShownList[index + 1].id);
+                                    context.history.push("/teacher/edit/" + context.lastShownList[index + 1].id);
                                 } else {
-                                    context.history.push("/edit/new");
+                                    context.history.push("/teacher/edit/new");
                                 }
                                 setCard({
                                     id: uuidv4(),

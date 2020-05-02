@@ -2,8 +2,8 @@ import * as React from "react";
 import {useEffect} from "react";
 import * as msal from "@azure/msal-browser";
 import {Button, Grid, Typography} from "@material-ui/core";
-import {Context, reactContext} from "./Context";
-import {Main} from "./layout/Main";
+import {Context, reactContext} from "../data/Context";
+import {Main} from "../layout/Main";
 import * as jsondiffpatch from "jsondiffpatch";
 
 /*
@@ -85,7 +85,7 @@ function saveToken(newToken: string | null) {
 }
 
 async function synchronizeFile(filename: string, localData: any, skipRemote?: boolean) {
-    if (localData) {
+    if (localData !== undefined && localData !== null) {
         localStorage.setItem(filename, JSON.stringify(localData));
     } else {
         localData = JSON.parse(localStorage.getItem(filename) || "null");
@@ -139,6 +139,10 @@ export async function synchronize(context: Context, init?: boolean) {
     }
     inSynchronize = true;
     try {
+        context.currentPasswordHash = await synchronizeFile("security_current.json", init ? undefined : context.currentPasswordHash, true) || "";
+        context.teacherPasswordHash =
+            await synchronizeFile("security.json", init ? undefined : context.teacherPasswordHash, init) || "";
+
         let remotePupils = await synchronizeFile("pupils.json", init ? undefined : context.pupils, init);
         if (context.pupils !== remotePupils && remotePupils) {
             context.pupils = remotePupils;
@@ -313,6 +317,7 @@ export function Login() {
                         </Grid>
                         <Grid item xs={12}>
                             Synchronisation ist aktiv.
+                            <Button fullWidth onClick={() => synchronize(context)}>Jetzt ausführen</Button>
                         </Grid>
                     </Grid>
                 </div>

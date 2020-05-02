@@ -1,11 +1,11 @@
 import * as React from "react";
 import {useEffect} from "react";
 import {Button, Grid} from "@material-ui/core";
-import {Back} from "./Back";
-import {randomNegativeSVG} from "./svgs";
-import {Main} from "./layout/Main";
-import {BottomGridContainer} from "./layout/BottomGridContainer";
-import {reactContext} from "./Context";
+import {Back} from "../components/Back";
+import {randomNegativeSVG} from "../img/svgs";
+import {Main} from "../layout/Main";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
+import {reactContext} from "../data/Context";
 
 export function Wrong({text = "Das ist leider nicht richtig. Lerne noch einmal von der Karte."}: { text?: string }) {
     const context = React.useContext(reactContext);

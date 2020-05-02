@@ -1,0 +1,110 @@
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import * as React from "react";
+import {reactContext} from "../data/Context";
+import AccountCircle from "@material-ui/icons/AccountCircle";
+import {Main} from "../layout/Main";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
+import {Box, Button, Chip, Grid, TextField} from "@material-ui/core";
+import {onEnterPressed} from "./Question";
+import {Pupil} from "../data/Pupil";
+import {Lock, LockOpen} from "@material-ui/icons";
+import {randomFrom} from "../img/svgs";
+import {words} from "../data/words";
+
+export function PupilList() {
+    const context = React.useContext(reactContext);
+    React.useEffect(() => context.activePupilName = undefined, [context.activePupilName]);
+    const [newName, setNewName] = React.useState("");
+    const [password, setPassword] = React.useState(randomFrom(words) + Math.floor(Math.random() * 90 + 10));
+    const createPupil = () => {
+        if (newName !== "" && password !== "") {
+            context.createPupil(newName, password);
+            setNewName("");
+        }
+    };
+    let onPasswordChip = false;
+    return (
+        <>
+            <Main>
+                <List component="nav" aria-label="main mailbox folders" style={{width: "100%"}}>
+                    {context.pupilsList.map((pupil: Pupil, index) => (
+                        <ListItem button key={pupil.name + index}
+                                  onClick={() => {
+                                      if (!onPasswordChip) context.history.push(`/pupil/${pupil.name}/`);
+                                  }}>
+                            <ListItemIcon>
+                                <AccountCircle/>
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={<Box display="flex" alignItems="center">{pupil.name}<Box flexGrow={1}/>
+                                    {context.isTeacher && (pupil.password ?
+                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/password`)}
+                                                  onMouseEnter={() => onPasswordChip = true}
+                                                  onMouseLeave={() => onPasswordChip = false}
+                                                  icon={<Lock/>} label={pupil.password}/>
+                                            :
+                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/password`)}
+                                                  onMouseEnter={() => onPasswordChip = true}
+                                                  onMouseLeave={() => onPasswordChip = false}
+                                                  icon={<LockOpen/>} label="kein Passwort"/>
+                                    )}</Box>}
+                            />
+                        </ListItem>
+                    ))}
+                    {context.isTeacher &&
+                    <ListItem button key="new">
+                        <ListItemIcon>
+                            <AccountCircle/>
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={<Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <TextField label={"neuen Namen eingeben"}
+                                               value={newName}
+                                               onChange={event => setNewName(event.target.value)}
+                                               onKeyPress={onEnterPressed(createPupil)}
+                                               fullWidth/>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <TextField label={"Passwort"}
+                                               value={password}
+                                               onChange={event => setPassword(event.target.value)}
+                                               onKeyPress={onEnterPressed(createPupil)}
+                                               fullWidth/>
+                                </Grid>
+                            </Grid>}/>
+                    </ListItem>}
+                </List>
+                <div>
+                </div>
+            </Main>
+            <BottomGridContainer>
+                {!context.isTeacher &&
+                <Grid item xs={12}>
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => context.history.push("/teacher")}
+                    >
+                        Lehrermodus
+                    </Button>
+                </Grid>
+                }
+                {context.isTeacher &&
+                <Grid item xs={12}>
+                    <Button disabled={newName === ""}
+                            variant="contained"
+                            fullWidth
+                            onClick={createPupil}
+                    >
+                        Neu anlegen
+                    </Button>
+                </Grid>
+                }
+            </BottomGridContainer>
+        </>
+    );
+}

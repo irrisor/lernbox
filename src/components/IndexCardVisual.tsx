@@ -6,7 +6,7 @@ import Typography from "@material-ui/core/Typography";
 import {Box, Grid} from "@material-ui/core";
 import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
-import {Image} from "./cards";
+import {Image} from "../data/cards";
 
 const useStyles = makeStyles({
     root: {

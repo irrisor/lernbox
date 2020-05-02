@@ -1,6 +1,6 @@
 import * as React from "react";
 import {useEffect} from "react";
-import {reactContext} from "./Context";
+import {reactContext} from "../data/Context";
 import {useHistory} from "react-router-dom";
 import {
     Button,
@@ -12,9 +12,9 @@ import {
     TextField,
     Typography,
 } from "@material-ui/core";
-import {Main} from "./layout/Main";
-import {BottomGridContainer} from "./layout/BottomGridContainer";
-import {Front} from "./Front";
+import {Main} from "../layout/Main";
+import {BottomGridContainer} from "../layout/BottomGridContainer";
+import {Front} from "../components/Front";
 
 
 export function onEnterPressed(call: () => void): React.KeyboardEventHandler {

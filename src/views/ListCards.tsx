@@ -1,10 +1,10 @@
 import * as React from "react";
 import {Box, Breadcrumbs, Grid, IconButton, Link, TextField, Tooltip, Typography} from "@material-ui/core";
-import {reactContext} from "./Context";
-import {Front} from "./Front";
-import {useLocation} from "react-router";
-import {IndexCardVisual} from "./IndexCardVisual";
-import {IndexCard} from "./cards";
+import {reactContext} from "../data/Context";
+import {Front} from "../components/Front";
+import {useLocation, useRouteMatch} from "react-router";
+import {IndexCardVisual} from "../components/IndexCardVisual";
+import {IndexCard} from "../data/cards";
 import SearchIcon from "@material-ui/icons/Search";
 import {AddBox, ArrowUpward, Close, FolderOpen, Public} from "@material-ui/icons";
 
@@ -13,12 +13,13 @@ export const cardBreakpoints = {xs: 12 as 12, sm: 12 as 12, md: 6 as 6, lg: 4 as
 export function ListCards() {
     const context = React.useContext(reactContext);
     const location = useLocation();
-    const groupPath = location.pathname.split("/").slice(2).filter(fragment => !!fragment.trim());
+    const {path} = useRouteMatch();
+    const groupPath = location.pathname.split("/").slice(path.split("/").length).filter(fragment => !!fragment.trim());
     const [searchText, setSearchText] = React.useState("");
     return <CardList
-        navigate={(groupPath) => context.history.push(`/list/${groupPath.join("/")}`)}
-        create={groupPath => context.history.push(`/edit/new/${groupPath.join("/")}`)}
-        onClick={card => context.history.push(`/edit/${card.id}`)}
+        navigate={(groupPath) => context.history.push(`/teacher/list/${groupPath.join("/")}`)}
+        create={groupPath => context.history.push(`/teacher/edit/new/${groupPath.join("/")}`)}
+        onClick={card => context.history.push(`/teacher/edit/${card.id}`)}
         {...{groupPath, searchText, setSearchText}}
     />;
 }
