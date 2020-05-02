@@ -5,7 +5,7 @@ import {ScreenBox} from "../layout/Screenbox";
 import {TeacherPasswordView} from "../views/PasswordView";
 import {Login} from "../views/Login";
 import {EditCard} from "../views/EditCard";
-import {ListCards} from "../views/ListCards";
+import {CardListView} from "../views/CardListView";
 import {PupilList} from "../views/PupilList";
 
 export function TeacherRoute() {
@@ -26,7 +26,7 @@ export function TeacherRoute() {
             </Route>
             <Route path={`${path}/list`}>
                 <ScreenBox fullScreen>
-                    <ListCards/>
+                    <CardListView/>
                 </ScreenBox>
             </Route>
             <Route>

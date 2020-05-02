@@ -10,7 +10,7 @@ import {AddBox, ArrowUpward, Close, FolderOpen, Public} from "@material-ui/icons
 
 export const cardBreakpoints = {xs: 12 as 12, sm: 12 as 12, md: 6 as 6, lg: 4 as 4, xl: 3 as 3};
 
-export function ListCards() {
+export function CardListView() {
     const context = React.useContext(reactContext);
     const location = useLocation();
     const {path} = useRouteMatch();

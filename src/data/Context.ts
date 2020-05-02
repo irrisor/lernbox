@@ -115,35 +115,54 @@ export class Context {
             console.error("Refraining to use value as pupils: ", value);
             value = {};
         }
+        const questionCards = this.getQuestionCardIds();
+        const valueWithFixedPropertyNames: { [name: string]: Pupil } = {};
         Object.keys(value).forEach(name => {
-            const pupil = value[name] as any;
-            if (pupil.cards) {
-                // old data we need to convert
-                pupil.instances = pupil.cards.map((old: any): IndexCardInstance => {
-                    const candidates = this.cards.filter(card =>
-                        card.question === old.question);
-                    let id;
-                    if (candidates.length === 1) {
-                        id = candidates[0].id;
-                    } else if (candidates.length > 1) {
-                        id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
-                            || candidates[0].id;
-                    } else {
-                        console.error("Error converting old data: No canditate found for card ", old);
-                        id = "";
-                    }
-                    return {
-                        id,
-                        slot: old.slot,
-                        previousSlot: old.previousSlot,
-                        slotChanged: old.slotChanged,
-                    };
-                }).filter((instance: IndexCardInstance) => instance.id);
-                delete pupil.cards;
+            const pupil = value[name];
+            if (pupil.name) {
+                const anyPupil: any = pupil;
+                if (anyPupil.cards) {
+                    // old data we need to convert
+                    pupil.instances = anyPupil.cards.map((old: any): IndexCardInstance => {
+                        const candidates = this.cards.filter(card =>
+                            card.question === old.question);
+                        let id;
+                        if (candidates.length === 1) {
+                            id = candidates[0].id;
+                        } else if (candidates.length > 1) {
+                            id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
+                                || candidates[0].id;
+                        } else {
+                            console.error("Error converting old data: No canditate found for card ", old);
+                            id = "";
+                        }
+                        return {
+                            id,
+                            slot: old.slot,
+                            previousSlot: old.previousSlot,
+                            slotChanged: old.slotChanged,
+                        };
+                    }).filter((instance: IndexCardInstance) => instance.id);
+                    delete anyPupil.cards;
+                }
+
+                if (questionCards.length !== pupil.instances.length) {
+                    const questionCardIds = new Set(questionCards);
+                    // remove instances we don't know the card for
+                    pupil.instances = pupil.instances.filter(instance => questionCardIds.delete(instance.id));
+                    // add instances for currently unused cards
+                    pupil.instances = pupil.instances.concat(Array.from(questionCardIds.values()).map(id => ({id})));
+                }
+
+                if (valueWithFixedPropertyNames[pupil.name]) {
+                    console.warn("Found duplicate pupil name in imported data, ignoring", pupil.name);
+                } else {
+                    valueWithFixedPropertyNames[pupil.name] = pupil;
+                }
             }
         });
         this.update(context => {
-            context._pupils = value;
+            context._pupils = valueWithFixedPropertyNames;
         });
     }
 
@@ -256,9 +275,7 @@ export class Context {
             const newPupil: Pupil = {
                 name,
                 password,
-                instances: this.cards.filter(card => card.answers?.length > 0 && card.answers[0]).map(card => ({
-                    id: card.id,
-                })),
+                instances: this.getQuestionCardIds().map(id => ({id})),
             };
             context._pupils = Object.assign({}, this.pupils, {
                 [name]: newPupil,
@@ -332,6 +349,10 @@ export class Context {
         } else {
             updateFunction(this);
         }
+    }
+
+    private getQuestionCardIds() {
+        return this.cards.filter(card => card.answers?.length > 0 && card.answers.join("") !== "").map(card => card.id);
     }
 
     private groupCards(...groups: string[]) {

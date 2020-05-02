@@ -7,20 +7,24 @@ import {reactContext} from "../data/Context";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
-import {Box, Button, Chip, Grid, TextField} from "@material-ui/core";
+import {Box, Button, Chip, Grid, TextField, Tooltip} from "@material-ui/core";
 import {onEnterPressed} from "./Question";
 import {Pupil} from "../data/Pupil";
-import {Lock, LockOpen} from "@material-ui/icons";
+import {Lock, LockOpen, Refresh} from "@material-ui/icons";
 import {randomFrom} from "../img/svgs";
 import {words} from "../data/words";
+
+function randomPupilPassword() {
+    return randomFrom(words) + Math.floor(Math.random() * 90 + 10);
+}
 
 export function PupilList() {
     const context = React.useContext(reactContext);
     React.useEffect(() => context.activePupilName = undefined, [context.activePupilName]);
     const [newName, setNewName] = React.useState("");
-    const [password, setPassword] = React.useState(randomFrom(words) + Math.floor(Math.random() * 90 + 10));
+    const [password, setPassword] = React.useState(randomPupilPassword());
     const createPupil = () => {
-        if (newName !== "" && password !== "") {
+        if (newName !== "") {
             context.createPupil(newName, password);
             setNewName("");
         }
@@ -73,7 +77,18 @@ export function PupilList() {
                                                value={password}
                                                onChange={event => setPassword(event.target.value)}
                                                onKeyPress={onEnterPressed(createPupil)}
-                                               fullWidth/>
+                                               fullWidth
+                                               InputProps={{
+                                                   endAdornment: (
+                                                       <Tooltip title="Neues Passwort generieren">
+                                                           <Refresh
+                                                               onClick={() => setPassword(randomPupilPassword())}
+                                                               style={{cursor: "pointer"}}
+                                                           />
+                                                       </Tooltip>
+                                                   ),
+                                               }}
+                                    />
                                 </Grid>
                             </Grid>}/>
                     </ListItem>}

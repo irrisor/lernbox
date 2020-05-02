@@ -93,15 +93,6 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
             </form>
         </Main>
         <BottomGridContainer>
-            {!change && <Grid item xs={12}>
-                <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={() => setChange(true)}
-                >
-                    Passwort ändern
-                </Button>
-            </Grid>}
             <Grid item xs={12}>
                 <Button
                     variant="contained"
@@ -112,6 +103,24 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
                     Eingeben
                 </Button>
             </Grid>
+            {!change && <Grid item xs={12}>
+                <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={() => setChange(true)}
+                >
+                    Passwort ändern
+                </Button>
+            </Grid>}
+            {!override && <Grid item xs={12}>
+                <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={() => context.history.push("/")}
+                >
+                    Schüler wechseln
+                </Button>
+            </Grid>}
         </BottomGridContainer>
     </>);
 }
@@ -146,7 +155,7 @@ export function PupilPasswordView() {
                 newContext.currentPasswordHash = newHash;
             });
         }}
-        who={context.pupil?.name||"der Schüler"}
+        who={context.pupil?.name || "der Schüler"}
         override={context.isTeacher}
     />;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Context, reactContext} from "../data/Context";
-import {Box, Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
+import {Box, Button, Checkbox, Grid, IconButton, Link, TextField} from "@material-ui/core";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import Table from '@material-ui/core/Table';
@@ -41,6 +41,8 @@ export function Overview() {
     const [expandedGroup, setExpandedGroup] = React.useState<string | undefined>();
     const groups = context.groups(true, pupil?.instances || []);
     const [selectedGroups, setSelectedGroups] = React.useState<string[]>([]);
+    const [selectedInstances, setSelectedInstances] = React.useState<string[]>([]);
+    const [slotInput, setSlotInput] = React.useState<number | undefined>(1);
 
     const activeInstances = context.activeInstances;
     const maxHeight = "500px";
@@ -97,7 +99,7 @@ export function Overview() {
                 >
                     <Tab label="Gruppen" id="groups-tab" aria-label="nach Gruppen"/>
                     <Tab label="Fächer" id="slots-tab" aria-label="nach Fach"/>
-                    <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>
+                    {context.isTeacher && <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>}
                 </Tabs>
                 <TableContainer component={Paper} style={{
                     maxHeight: maxHeight,
@@ -164,13 +166,14 @@ export function Overview() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                {context.isTeacher && activeTab === 2 &&
                 <TableContainer component={Paper} style={{
                     maxHeight: maxHeight,
-                    display: activeTab === 2 ? undefined : "none",
                 }}>
                     <Table aria-label="Karten" stickyHeader>
                         <TableHead>
                             <TableRow>
+                                <TableCell/>
                                 <TableCell>Karte</TableCell>
                                 <TableCell align="right">Fach</TableCell>
                                 <TableCell align="right">Aktiv</TableCell>
@@ -180,7 +183,7 @@ export function Overview() {
                             {(pupil.instances.map(instance => [instance, context.getCard(instance)])
                                 .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
                                 .sort(([a, aCard], [b, bCard]) => {
-                                    const slotOrder = ((a.slot as number+1) || 0) - ((b.slot as number+1) || 0);
+                                    const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
                                     if (slotOrder !== 0) {
                                         return slotOrder;
                                     }
@@ -192,9 +195,25 @@ export function Overview() {
                                 }).map(([instance, card], index) => {
                                     const nextTryDate = Context.getNextTryDate(instance);
                                     return <TableRow key={index}>
-                                        <TableCell component="th" scope="row">
+                                        <TableCell padding="checkbox">
+
+                                            <Checkbox
+                                                checked={selectedInstances.indexOf(instance.id) >= 0}
+                                                inputProps={{'aria-labelledby': instance.id}}
+                                                onChange={(event, checked) => {
+                                                    if (checked) {
+                                                        setSelectedInstances(selectedInstances.concat(instance.id));
+                                                    } else {
+                                                        setSelectedInstances(selectedInstances.filter(selectedInstance => selectedInstance !== instance.id));
+                                                    }
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" id={instance.id}>
                                             <Box display="flex">
-                                                {card.question || JSON.stringify(card.questionImage?.parameters)}
+                                                {card.question || JSON.stringify(card.questionImage?.parameters)
+                                                    ?.replace(/[{}"#]/g, "")
+                                                    ?.replace(/:/g, " ")}
                                                 <Typography
                                                     className={classes.groups}
                                                     color="textSecondary"
@@ -212,18 +231,38 @@ export function Overview() {
                                 })}
                         </TableBody>
                     </Table>
-                </TableContainer>
+                </TableContainer>}
             </Main>
             <BottomGridContainer>
-                {/*<Grid item xs={12}>
-                    <Button
-                        variant="contained"
-                        onClick={() => context.history.push("/")}
-                        fullWidth
-                    >
-                        Abmelden
-                    </Button>
-                </Grid>*/}
+                {context.isTeacher && selectedInstances.length > 0 && <>
+                    <Grid item xs={6}>
+                        <TextField
+                            type="number"
+                            value={slotInput !== undefined ? slotInput + 1 : ""}
+                            onChange={event => setSlotInput(Number(event.target.value) > 1 &&
+                            Number(event.target.value) <= 5 ? Number(event.target.value) - 1 : undefined)}
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button
+                            variant="contained"
+                            onClick={() => {
+                                context.update(() =>
+                                    // essentially this is not proper context replacement, but as we don't detect
+                                    // unchanged root elements, it will work
+                                    pupil.instances.forEach(instance => {
+                                        if (selectedInstances.indexOf(instance.id) >= 0) {
+                                            instance.slot = slotInput;
+                                        }
+                                    }));
+                                setSelectedInstances([]);
+                            }}
+                            fullWidth
+                        >
+                            Fach ändern
+                        </Button>
+                    </Grid>
+                </>}
                 <Grid item xs={12}>
                     <Button
                         variant="contained"

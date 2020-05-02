@@ -143,13 +143,13 @@ export async function synchronize(context: Context, init?: boolean) {
         context.teacherPasswordHash =
             await synchronizeFile("security.json", init ? undefined : context.teacherPasswordHash, init) || "";
 
-        let remotePupils = await synchronizeFile("pupils.json", init ? undefined : context.pupils, init);
-        if (context.pupils !== remotePupils && remotePupils) {
-            context.pupils = remotePupils;
-        }
         let remoteCards = await synchronizeFile("cards.json", init ? undefined : context.cards, init);
         if (context.cards !== remoteCards && remoteCards) {
             context.cards = remoteCards;
+        }
+        let remotePupils = await synchronizeFile("pupils.json", init ? undefined : context.pupils, init);
+        if (context.pupils !== remotePupils && remotePupils) {
+            context.pupils = remotePupils;
         }
     } finally {
         inSynchronize = false;

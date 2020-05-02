@@ -27,7 +27,7 @@ import {reactContext} from "../data/Context";
 import {v4 as uuidv4} from "uuid";
 import {Back} from "../components/Back";
 import PermMediaIcon from "@material-ui/icons/PermMedia";
-import {CardList} from "./ListCards";
+import {CardList} from "./CardListView";
 import {makeStyles} from "@material-ui/core/styles";
 
 export const fieldBreakpoints = {xs: 12 as 12, lg: 6 as 6};
