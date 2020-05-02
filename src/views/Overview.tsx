@@ -20,6 +20,7 @@ import {makeStyles} from "@material-ui/core/styles";
 import {IndexCard, IndexCardInstance} from "../data/cards";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
+import {VirtualizedTable} from "../components/VirtualizedTable";
 
 moment.locale("de");
 
@@ -45,7 +46,21 @@ export function Overview() {
     const [slotInput, setSlotInput] = React.useState<number | undefined>(1);
 
     const activeInstances = context.activeInstances;
-    const maxHeight = "500px";
+    const maxHeight = 500;
+
+    const instancesAndCards = React.useMemo(()=>(pupil?.instances.map(instance => [instance, context.getCard(instance)])
+        .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
+        .sort(([a, aCard], [b, bCard]) => {
+            const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
+            if (slotOrder !== 0) {
+                return slotOrder;
+            }
+            const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
+            if (activeOrder !== 0) {
+                return activeOrder;
+            }
+            return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
+        }), [pupil?.instances, context]);
 
     if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
 
@@ -102,7 +117,7 @@ export function Overview() {
                     {context.isTeacher && <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>}
                 </Tabs>
                 <TableContainer component={Paper} style={{
-                    maxHeight: maxHeight,
+                    maxHeight: maxHeight+"px",
                     display: activeTab === 0 ? undefined : "none",
                 }}>
                     <Table aria-label="Gruppen" stickyHeader>
@@ -129,7 +144,7 @@ export function Overview() {
                     </Table>
                 </TableContainer>
                 <TableContainer component={Paper} style={{
-                    maxHeight: maxHeight,
+                    maxHeight: maxHeight+"px",
                     display: activeTab === 1 ? undefined : "none",
                 }}>
                     <Table aria-label="Fächer" stickyHeader>
@@ -167,71 +182,65 @@ export function Overview() {
                     </Table>
                 </TableContainer>
                 {context.isTeacher && activeTab === 2 &&
-                <TableContainer component={Paper} style={{
-                    maxHeight: maxHeight,
-                }}>
-                    <Table aria-label="Karten" stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell/>
-                                <TableCell>Karte</TableCell>
-                                <TableCell align="right">Fach</TableCell>
-                                <TableCell align="right">Aktiv</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {(pupil.instances.map(instance => [instance, context.getCard(instance)])
-                                .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
-                                .sort(([a, aCard], [b, bCard]) => {
-                                    const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
-                                    if (slotOrder !== 0) {
-                                        return slotOrder;
-                                    }
-                                    const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
-                                    if (activeOrder !== 0) {
-                                        return activeOrder;
-                                    }
-                                    return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
-                                }).map(([instance, card], index) => {
-                                    const nextTryDate = Context.getNextTryDate(instance);
-                                    return <TableRow key={index}>
-                                        <TableCell padding="checkbox">
 
-                                            <Checkbox
-                                                checked={selectedInstances.indexOf(instance.id) >= 0}
-                                                inputProps={{'aria-labelledby': instance.id}}
-                                                onChange={(event, checked) => {
-                                                    if (checked) {
-                                                        setSelectedInstances(selectedInstances.concat(instance.id));
-                                                    } else {
-                                                        setSelectedInstances(selectedInstances.filter(selectedInstance => selectedInstance !== instance.id));
-                                                    }
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell component="th" scope="row" id={instance.id}>
-                                            <Box display="flex">
-                                                {card.question || JSON.stringify(card.questionImage?.parameters)
-                                                    ?.replace(/[{}"#]/g, "")
-                                                    ?.replace(/:/g, " ")}
-                                                <Typography
-                                                    className={classes.groups}
-                                                    color="textSecondary"
-                                                    gutterBottom
-                                                >{card.groups.join(", ")}</Typography>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {instance.slot !== undefined ? instance.slot + 1 : "-"}
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"}
-                                        </TableCell>
-                                    </TableRow>
-                                })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>}
+                <VirtualizedTable
+                    rowCount={instancesAndCards.length}
+                    columns={[
+                        {
+                            width: 64,
+                            label: "",
+                            dataKey: "selected",
+                        },
+                        {
+                            width: 400,
+                            label: "Karte",
+                            dataKey: "text",
+                        },
+                        {
+                            width: 64,
+                            label: "Fach",
+                            dataKey: "slot",
+                            numeric: true,
+                        },
+                        {
+                            width: 64,
+                            label: "Aktiv",
+                            dataKey: "active",
+                            numeric: true,
+                        }
+                    ]}
+                    rowGetter={({ index }) => {
+                        const [instance, card] = instancesAndCards[index];
+                        const nextTryDate = Context.getNextTryDate(instance);
+                        return {
+                            selected: <Checkbox
+                                checked={selectedInstances.indexOf(instance.id) >= 0}
+                                inputProps={{'aria-labelledby': instance.id}}
+                                onChange={(event, checked) => {
+                                    if (checked) {
+                                        setSelectedInstances(selectedInstances.concat(instance.id));
+                                    } else {
+                                        setSelectedInstances(selectedInstances.filter(selectedInstance => selectedInstance !== instance.id));
+                                    }
+                                }}
+                            />,
+                            text: <Box display="flex" width={1}>
+                                <Box flexGrow={1}>{card.question || JSON.stringify(card.questionImage?.parameters)
+                                    ?.replace(/[{}"#]/g, "")
+                                    ?.replace(/:/g, " ")}
+                                </Box>
+                                <Typography
+                                    className={classes.groups}
+                                    color="textSecondary"
+                                    gutterBottom
+                                >{card.groups.join(", ")}</Typography>
+                            </Box>,
+                            slot: instance.slot !== undefined ? instance.slot + 1 : "-",
+                            active: Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie",
+                        };
+                    }}
+                    height={maxHeight}
+                />}
             </Main>
             <BottomGridContainer>
                 {context.isTeacher && selectedInstances.length > 0 && <>
