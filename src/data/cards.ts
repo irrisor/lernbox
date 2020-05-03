@@ -1,5 +1,6 @@
 import {houseSVG} from "../img/svgs";
 import {v5 as uuidv5} from 'uuid';
+import {sha256} from "js-sha256";
 
 type ImageParameters = {
     [seletector: string]: string | { [attribute: string]: string }
@@ -25,7 +26,10 @@ export interface IndexCard {
     groups: string[];
     inputType?: "text" | "number" | "number_or_nan" | "select";
     inputOptions?: string[];
+    owner: string | undefined;
 }
+
+export const officialOwner = "lernbox";
 
 export interface IndexCardInstance {
     id: string;
@@ -56,25 +60,7 @@ export const slots: Slot[] = [
     {durationInDays: 180},
 ];
 
-export const predefinedCards: IndexCard[] = [
-    {
-        id: uuidv5(`A`, uuidNamespace),
-        question: "Fach 1 jeden Tag bis leer, nicht gewusst ____ hinten; gewusst in nächstes Fach nach hinten.",
-        time_s: 30,
-        groups: ["Test"],
-        answers: ["nach"],
-        description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
-    },
-    {
-        id: uuidv5(`B`, uuidNamespace),
-        question: "anderen Text",
-        questionImage: {image: "https://commons.wikimedia.org/wiki/File:Lemmling_walrus.svg"},
-        time_s: 30,
-        groups: ["Test"],
-        answers: ["nach"],
-        description: "Hier steht auch noch ein längerer Text über mehrere Zeilen, oder so...",
-    },
-];
+export const predefinedCards: IndexCard[] = [];
 
 /** 1-mal-1 */
 for (let x = 0; x <= 10; x++) {
@@ -87,15 +73,17 @@ for (let x = 0; x <= 10; x++) {
             time_s: 4,
             groups: ["1•1", `1•1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1 Kern"] : []),
             inputType: "number_or_nan",
+            owner: officialOwner,
         });
         predefinedCards.push({
             id: uuidv5(`${x}:${y}`, uuidNamespace),
-            question: `${x * y} : ${y}`,
+            question: `${y !== 0 ? x * y : x} : ${y}`,
             description: "Wie lautet das Ergebnis?",
-            answers: [`${x * y} : ${y} = ${x}`, y !== 0 ? `${x}` : "NaN" ],
+            answers: [`${y !== 0 ? x * y : x} : ${y} = ${x}`, y !== 0 ? `${x}` : "NaN"],
             time_s: 4,
             groups: ["1:1", `1:1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1:1 Kern"] : []),
             inputType: "number_or_nan",
+            owner: officialOwner,
         });
     }
 }
@@ -118,6 +106,7 @@ for (let x = 0; x <= 10; x++) {
             time_s: 6,
             groups: ["Zahlzerlegung"],
             inputType: "number",
+            owner: officialOwner,
         });
     }
 }
@@ -139,10 +128,6 @@ for (let x = 0; x <= 10; x++) {
         "der Hund",
         "die Maus",
         "das Schwein",
-        "der Junge",
-        "die Pizza",
-        "der Luftballon",
-        "die Fraktur",
     ],
 },
 ]).forEach(({words, group}) => {
@@ -159,6 +144,7 @@ for (let x = 0; x <= 10; x++) {
             description: "Der? Die? Das?",
             inputType: "select",
             inputOptions: ["der", "die", "das"],
+            owner: officialOwner,
         };
         let existingCard = predefinedCards.find(someCard => someCard.question === card.question
             && JSON.stringify(someCard.groups) === JSON.stringify(card.groups));
@@ -169,3 +155,5 @@ for (let x = 0; x <= 10; x++) {
         }
     });
 });
+
+export const predefinedCardsHash = sha256(JSON.stringify(predefinedCards));

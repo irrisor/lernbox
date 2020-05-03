@@ -20,7 +20,7 @@ function randomPupilPassword() {
 
 export function PupilList() {
     const context = React.useContext(reactContext);
-    React.useEffect(() => context.activePupilName = undefined, [context.activePupilName]);
+    React.useEffect(() => context.currentPupilId = undefined, [context.currentPupilId]);
     const [newName, setNewName] = React.useState("");
     const [password, setPassword] = React.useState(randomPupilPassword());
     const createPupil = () => {
@@ -34,10 +34,10 @@ export function PupilList() {
         <>
             <Main>
                 <List component="nav" aria-label="main mailbox folders" style={{width: "100%"}}>
-                    {context.pupilsList.map((pupil: Pupil, index) => (
-                        <ListItem button key={pupil.name + index}
+                    {context.pupilsList.map((pupil: Pupil) => (
+                        <ListItem button key={pupil.id}
                                   onClick={() => {
-                                      if (!onPasswordChip) context.history.push(`/pupil/${pupil.name}/`);
+                                      if (!onPasswordChip) context.history.push(`/pupil/${pupil.name}/${pupil.id}`);
                                   }}>
                             <ListItemIcon>
                                 <AccountCircle/>
@@ -45,12 +45,12 @@ export function PupilList() {
                             <ListItemText
                                 primary={<Box display="flex" alignItems="center">{pupil.name !== "default" ? pupil.name : "Standardschüler"}<Box flexGrow={1}/>
                                     {context.isTeacher && (pupil.password ?
-                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/password`)}
+                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
                                                   onMouseEnter={() => onPasswordChip = true}
                                                   onMouseLeave={() => onPasswordChip = false}
                                                   icon={<Lock/>} label={pupil.password}/>
                                             :
-                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/password`)}
+                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
                                                   onMouseEnter={() => onPasswordChip = true}
                                                   onMouseLeave={() => onPasswordChip = false}
                                                   icon={<LockOpen/>} label="kein Passwort"/>

@@ -3,7 +3,7 @@ import {reactContext} from "../data/Context";
 import {Route, Switch, useRouteMatch} from "react-router";
 import {ScreenBox} from "../layout/Screenbox";
 import {TeacherPasswordView} from "../views/PasswordView";
-import {Login} from "../views/Login";
+import {SynchronizationView} from "../views/SynchronizationView";
 import {EditCard} from "../views/EditCard";
 import {CardListView} from "../views/CardListView";
 import {PupilList} from "../views/PupilList";
@@ -15,8 +15,8 @@ export function TeacherRoute() {
     return (
         <Switch>
             <Route path={`${path}/login`}>
-                <ScreenBox>
-                    <Login/>
+                <ScreenBox fullScreen>
+                    <SynchronizationView/>
                 </ScreenBox>
             </Route>
             <Route path={[`${path}/edit/new`, `${path}/edit/:cardId`, `${path}/edit`]}>

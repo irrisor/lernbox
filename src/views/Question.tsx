@@ -45,7 +45,7 @@ export function Question() {
     const maxPassSeconds = card && card.time_s > 0 ? card.time_s : Number.MAX_VALUE;
     const [secondsPassed, setSecondsPassed] = React.useState(0);
     useEffect(() => {
-        if (!context.cardInstance && context.activePupilName !== undefined) context.next();
+        if (!context.cardInstance && context.currentPupilId !== undefined) context.next();
     }, [context]);
 
     function check(value: string = input) {
@@ -55,14 +55,14 @@ export function Question() {
         if (card.answers.filter(answer => !!answer.trim()).indexOf(value.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
                 instance.slot = (instance.slot || 0) + 1;
-                history.push(`/pupil/${context.activePupilName}/right`);
+                history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/right`);
             } else {
                 instance.slot = 0;
-                history.push(`/pupil/${context.activePupilName}/late`);
+                history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/late`);
             }
         } else {
             instance.slot = 0;
-            history.push(`/pupil/${context.activePupilName}/wrong`);
+            history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/wrong`);
         }
     }
 

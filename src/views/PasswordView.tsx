@@ -26,7 +26,7 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
             return;
         }
         if (change) {
-            if (newPassword !== confirmedPassword) {
+            if (!override && newPassword !== confirmedPassword) {
                 setError("Das neue Passwort und dessen Wiederholung stimmen nicht überein. Bitte gebe beide " +
                     "nocheinmal ein.");
                 setNewPassword("");
@@ -71,22 +71,22 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
                     }
                     {change && <>
                         <Grid item xs={12}><TextField label={"Neues " + passwordName}
-                                                      autoFocus={!currentPasswordHash}
-                                                      type="password"
+                                                      autoFocus={!currentPasswordHash || override}
+                                                      type={override ? "text" : "password"}
                                                       value={newPassword}
                                                       onChange={event => setNewPassword(event.target.value)}
                                                       onKeyPress={onEnterPressed(okPressed)}
                                                       fullWidth
                                                       autoComplete="new-password"
                         /></Grid>
-                        <Grid item xs={12}><TextField label={`Neues ${passwordName} wiederholt`}
+                        {!override && <Grid item xs={12}><TextField label={`Neues ${passwordName} wiederholt`}
                                                       type="password"
                                                       value={confirmedPassword}
                                                       onChange={event => setConfirmedPassword(event.target.value)}
                                                       onKeyPress={onEnterPressed(okPressed)}
                                                       fullWidth
                                                       autoComplete="confirmed-password"
-                        /></Grid>
+                        /></Grid>}
                     </>
                     }
                 </Grid>
@@ -144,7 +144,7 @@ export function TeacherPasswordView() {
 export function PupilPasswordView() {
     const context = React.useContext(reactContext);
     return <PasswordView
-        passwordName="Schülerpasswort"
+        passwordName={context.pupil?.name ? `Passwort von ${context.pupil.name}` : "Schülerpasswort"}
         currentPasswordHash={context.passwordHash(context.pupil?.password)}
         apply={newPassword => {
             context.update(newContext => {
@@ -152,7 +152,11 @@ export function PupilPasswordView() {
                 if (newContext.pupil) {
                     newContext.pupil.password = newPassword;
                 }
-                newContext.currentPasswordHash = newHash;
+                if (!context.isTeacher) {
+                    newContext.currentPasswordHash = newHash;
+                } else {
+                    context.history.push("/teacher");
+                }
             });
         }}
         who={context.pupil?.name || "der Schüler"}

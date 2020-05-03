@@ -12,10 +12,10 @@ import {PupilPasswordView} from "../views/PasswordView";
 export function PupilRoute() {
     const context = React.useContext(reactContext);
     const {path} = useRouteMatch();
-    const {pupilName} = useParams();
+    const {pupilId} = useParams();
     React.useEffect(() => {
-            context.activePupilName = pupilName;
-        }, [pupilName, context.activePupilName],
+            context.currentPupilId = pupilId;
+        }, [pupilId, context.currentPupilId],
     );
     const pupil = context.pupil;
     if (!pupil) return <span>Die Schülerdaten konnten nicht geladen werden.</span>;

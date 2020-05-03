@@ -48,6 +48,7 @@ export function Overview() {
     const activeInstances = context.activeInstances;
     const maxHeight = 500;
 
+    // noinspection JSUnusedLocalSymbols
     const instancesAndCards = React.useMemo(()=>(pupil?.instances.map(instance => [instance, context.getCard(instance)])
         .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
         .sort(([a, aCard], [b, bCard]) => {
@@ -62,7 +63,7 @@ export function Overview() {
             return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
         }), [pupil, context]);
 
-    if (!pupil) return <>Schüler "{context.activePupilName}" fehlt.</>;
+    if (!pupil) return <>Schüler mit der ID "{context.currentPupilId}" fehlt.</>;
 
     function tableRowForGroup(group: string, subgroups: string[], activeCount: number) {
         return <TableRow key={group}>
@@ -101,7 +102,6 @@ export function Overview() {
         </TableRow>;
     }
 
-    // noinspection JSUnusedLocalSymbols
     return (
         <>
             <Main>

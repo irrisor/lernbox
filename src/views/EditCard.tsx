@@ -14,13 +14,14 @@ import {
     MenuItem,
     Select,
     TextField,
+    Tooltip,
     Typography,
     useMediaQuery,
     useTheme,
 } from "@material-ui/core";
 import {createStyles} from "@material-ui/styles";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
-import {Image, IndexCard} from "../data/cards";
+import {Image, IndexCard, officialOwner} from "../data/cards";
 import {Front} from "../components/Front";
 import {useLocation, useParams, useRouteMatch} from "react-router";
 import {reactContext} from "../data/Context";
@@ -68,7 +69,7 @@ export async function lookupImage(imageDataset: Image | undefined, set: (newImag
 
 function lookupImageSync(imageDataset: Image | undefined, set: (newImage: Image) => void) {
     return () => {
-        lookupImage(imageDataset, set);
+        lookupImage(imageDataset, set).catch(e => console.error("looking up image failed", e));
     };
 }
 
@@ -179,6 +180,7 @@ export function EditCard() {
             answers: [""],
             groups: groups,
             time_s: 15,
+            owner: undefined,
         };
         return Object.assign({}, originalCard);
     });
@@ -203,6 +205,7 @@ export function EditCard() {
     }), [card.answerImage?.image]);
     const [groupPath, setGroupPath] = React.useState<string[]>(["Bilder"]);
     const [searchText, setSearchText] = React.useState("");
+    const isPredefinedCard = card.owner === officialOwner;
     return (
         <>
             <Main>
@@ -360,48 +363,56 @@ export function EditCard() {
                         Zurück
                     </Button>
                 </Grid>
-                <Grid item xs={12} md={4}>
-                    <Button
-                        fullWidth
-                        color="secondary"
-                        onClick={() => {
-                            context.history.push(`/teacher/list/${card.groups.join("/")}`);
-                            context.cards = context.cards.filter(existingCard => existingCard.id !== card.id);
-                        }}
-                    >
-                        Karte löschen
-                    </Button>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                    <Button variant="contained" color="primary"
+                <Tooltip title={isPredefinedCard ?
+                    "Diese Karte kann nicht gelöscht werden, da sie mit dem Programm geliefert wurde" : ""}>
+                    <Grid item xs={12} md={4}>
+                        <Button
+                            disabled={isPredefinedCard}
                             fullWidth
-                            disabled={!(card.question || card.questionImage?.url) ||
-                            card.answers.length === 0 ||
-                            card.groups.length === 0}
+                            color="secondary"
                             onClick={() => {
-                                const cards = context.cards;
-                                const oldIndex = cards.findIndex(existingCard => existingCard.id === card.id);
-                                context.cards = cards.slice(0, oldIndex >= 0 ? oldIndex : undefined).concat(
-                                    Object.assign({}, card),
-                                ).concat(oldIndex >= 0 ? cards.slice(oldIndex + 1) : []);
-                                const index = context.lastShownList.findIndex(listCard => listCard.id === card.id);
-                                if (index >= 0 && index < context.lastShownList.length - 1) {
-                                    context.history.push("/teacher/edit/" + context.lastShownList[index + 1].id);
-                                } else {
-                                    context.history.push("/teacher/edit/new");
-                                }
-                                setCard({
-                                    id: uuidv4(),
-                                    groups: card.groups,
-                                    answers: [""],
-                                    time_s: card.time_s,
-                                    description: card.description,
-                                });
+                                context.history.push(`/teacher/list/${card.groups.join("/")}`);
+                                context.cards = context.cards.filter(existingCard => existingCard.id !== card.id);
                             }}
-                    >
-                        Speichern
-                    </Button>
-                </Grid>
+                        >
+                            Karte löschen
+                        </Button>
+                    </Grid>
+                </Tooltip>
+                <Tooltip title={isPredefinedCard ?
+                    "Diese Karte kann nicht bearbeitet werden, da sie mit dem Programm geliefert wurde" : ""}>
+                    <Grid item xs={12} md={4}>
+                        <Button variant="contained" color="primary"
+                                fullWidth
+                                disabled={isPredefinedCard || !(card.question || card.questionImage?.url) ||
+                                card.answers.length === 0 ||
+                                card.groups.length === 0}
+                                onClick={() => {
+                                    const cards = context.cards;
+                                    const oldIndex = cards.findIndex(existingCard => existingCard.id === card.id);
+                                    context.cards = cards.slice(0, oldIndex >= 0 ? oldIndex : undefined).concat(
+                                        Object.assign({}, card),
+                                    ).concat(oldIndex >= 0 ? cards.slice(oldIndex + 1) : []);
+                                    const index = context.lastShownList.findIndex(listCard => listCard.id === card.id);
+                                    if (index >= 0 && index < context.lastShownList.length - 1) {
+                                        context.history.push("/teacher/edit/" + context.lastShownList[index + 1].id);
+                                    } else {
+                                        context.history.push("/teacher/edit/new");
+                                    }
+                                    setCard({
+                                        id: uuidv4(),
+                                        groups: card.groups,
+                                        answers: [""],
+                                        time_s: card.time_s,
+                                        description: card.description,
+                                        owner: card.owner,
+                                    });
+                                }}
+                        >
+                            Speichern
+                        </Button>
+                    </Grid>
+                </Tooltip>
             </BottomGridContainer>
         </>);
 }

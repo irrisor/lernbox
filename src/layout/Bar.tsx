@@ -21,6 +21,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import {LOCAL_STORAGE_KEY_MENU_OPEN} from "../sync/synchronize";
 
 const drawerWidth = 220;
 
@@ -110,16 +111,16 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Synchronisieren"/>
                 </ListItem>
                 <ListItem button
-                          disabled={context.activePupilName === undefined}
-                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.activePupilName}/delete`)}>
+                          disabled={context.currentPupilId === undefined}
+                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>
                 <ListItem button
-                          disabled={context.activePupilName === undefined && !context.isTeacher}
+                          disabled={context.currentPupilId === undefined && !context.isTeacher}
                           onClick={() => props.onClick() && context.update(newContext => {
                               newContext.currentPasswordHash = "";
-                              newContext.activePupilName = undefined;
+                              newContext.currentPupilId = undefined;
                               newContext.history.push("/");
                           })}
                 >
@@ -136,10 +137,10 @@ export function Bar(props: { children: React.ReactNode }) {
     const classes = useStyles();
     const theme = useTheme();
     const isWideScreen = useMediaQuery(theme.breakpoints.up('sm'));
-    const [menuOpen, setMenuOpen] = React.useState(localStorage.getItem("menuOpen") === "true");
+    const [menuOpen, setMenuOpen] = React.useState(localStorage.getItem(LOCAL_STORAGE_KEY_MENU_OPEN) === "true");
 
     const handleDrawerToggle = (): true => {
-        localStorage.setItem("menuOpen", "" + !menuOpen);
+        localStorage.setItem(LOCAL_STORAGE_KEY_MENU_OPEN, "" + !menuOpen);
         setMenuOpen(!menuOpen);
         return true;
     };
@@ -158,7 +159,8 @@ export function Bar(props: { children: React.ReactNode }) {
                         <MenuIcon/>
                     </IconButton>
                     <Typography variant="h6" className={classes.title}>
-                        <Logo style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
+                        <Logo
+                            style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
                     </Typography>
                     <IconButton
                         color="inherit"

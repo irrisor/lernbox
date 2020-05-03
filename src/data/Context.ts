@@ -1,17 +1,30 @@
 import * as React from "react";
-import {IndexCard, IndexCardInstance, predefinedCards, slots} from "./cards";
+import {
+    IndexCard,
+    IndexCardInstance,
+    officialOwner,
+    predefinedCards,
+    predefinedCardsHash,
+    slots,
+    uuidNamespace,
+} from "./cards";
 import {Pupil} from "./Pupil";
 import {History, LocationState} from "history";
-import {synchronize} from "../views/Login";
 import {lookupImage} from "../views/EditCard";
 import {sha256} from "js-sha256";
+import {v4 as uuidv4, v5 as uuidv5} from 'uuid';
+import {SynchronizationInfo} from "../sync/SynchronizationInfo";
+import {synchronize} from "../sync/synchronize";
 
 export type PupilSet = Readonly<{ [name: string]: Pupil }>;
+
+const defaultPupilId = uuidv5("default-pupil", uuidNamespace);
 
 export class Context {
     public lastShownList: IndexCard[] = [];
     public touched: boolean = false;
     readonly history: History<LocationState>;
+    private predefinedCardsHash: string = "";
 
     constructor(history: History<LocationState>, originalContext?: Context, init?: boolean) {
         this.history = history;
@@ -36,16 +49,41 @@ export class Context {
         }
     }
 
-    private _activePupilName?: string;
-
-    public get activePupilName() {
-        return this._activePupilName;
+    get cardsStored(): { cards: IndexCard[]; predefinedCardsHash: string } {
+        return {cards: this.cards, predefinedCardsHash: this.predefinedCardsHash};
     }
 
-    public set activePupilName(value: string | undefined) {
-        if (value !== this._activePupilName) {
+    set cardsStored(value: { cards: IndexCard[]; predefinedCardsHash: string }) {
+        if (value.predefinedCardsHash !== predefinedCardsHash) {
+            const predefinedIds = new Set<string>();
+            predefinedCards.forEach(predefinedCard => {
+                predefinedIds.add(predefinedCard.id);
+                const cardIndex = value.cards.findIndex(card => card.id === predefinedCard.id);
+                if (cardIndex >= 0) {
+                    value.cards[cardIndex] = predefinedCard;
+                } else {
+                    value.cards.push(predefinedCard);
+                }
+            });
+            // finally remove official cards which were removed from the program
+            value.cards = value.cards.filter(card => (card.owner !== officialOwner) || predefinedIds.has(card.id));
+            this.predefinedCardsHash = predefinedCardsHash;
+        } else {
+            this.predefinedCardsHash = value.predefinedCardsHash;
+        }
+        this.cards = value.cards;
+    }
+
+    private _currentPupilId?: string;
+
+    public get currentPupilId() {
+        return this._currentPupilId;
+    }
+
+    public set currentPupilId(value: string | undefined) {
+        if (value !== this._currentPupilId) {
             this.update(context => {
-                context._activePupilName = value;
+                context._currentPupilId = value;
                 context._currentInstances = [];
                 context._currentGroups = [];
             });
@@ -105,7 +143,8 @@ export class Context {
     }
 
     private _pupils: PupilSet = {
-        "default": {
+        [defaultPupilId]: {
+            id: defaultPupilId,
             name: "default",
             password: "",
             instances: this.getQuestionCardIds().map(id => ({id})),
@@ -160,10 +199,13 @@ export class Context {
                     pupil.instances = pupil.instances.concat(Array.from(questionCardIds.values()).map(id => ({id})));
                 }
 
-                if (valueWithFixedPropertyNames[pupil.name]) {
-                    console.warn("Found duplicate pupil name in imported data, ignoring", pupil.name);
+                if (!pupil.id) {
+                    pupil.id = uuidv4();
+                }
+                if (valueWithFixedPropertyNames[pupil.id]) {
+                    console.warn("Found duplicate pupil id in imported data, ignoring", pupil.name, pupil.id);
                 } else {
-                    valueWithFixedPropertyNames[pupil.name] = pupil;
+                    valueWithFixedPropertyNames[pupil.id] = pupil;
                 }
             }
         });
@@ -224,7 +266,7 @@ export class Context {
     }
 
     public get pupil(): Pupil | undefined {
-        return this.activePupilName !== undefined ? this.pupils[this.activePupilName] : undefined;
+        return this.currentPupilId !== undefined ? this.pupils[this.currentPupilId] : undefined;
     }
 
     public get pupilsList() {
@@ -242,6 +284,18 @@ export class Context {
 
     get isTeacher(): boolean {
         return !!this.teacherPasswordHash && this.currentPasswordHash === this.teacherPasswordHash;
+    }
+
+    private _synchronizationInfo: SynchronizationInfo = new SynchronizationInfo([]);
+
+    get synchronizationInfo(): SynchronizationInfo {
+        return this._synchronizationInfo;
+    }
+
+    set synchronizationInfo(value: SynchronizationInfo) {
+        this.update(context =>
+            context._synchronizationInfo = value,
+        );
     }
 
     public static isCardActive(instance: IndexCardInstance) {
@@ -262,38 +316,29 @@ export class Context {
     }
 
     deletePupil(): void {
-        const name = this.activePupilName;
-        if (name !== undefined) {
-            this.update(context => {
-                const {[name]: pupil, ...otherPupils} = context._pupils;
-                context._pupils = Object.assign({}, otherPupils);
-            });
+        const id = this.currentPupilId;
+        if (id !== undefined) {
+            const {[id]: pupil, ...otherPupils} = this.pupils;
+            this.pupils = Object.assign({}, otherPupils);
         } else {
-            this.update(context => {
-                context._pupils = {};
-            });
+            this.pupils = {};
         }
         this.history.push("/");
     }
 
     createPupil(name: string, password: string) {
-        this.update(context => {
-            const newPupil: Pupil = {
-                name,
-                password,
-                instances: this.getQuestionCardIds().map(id => ({id})),
-            };
-            context._pupils = Object.assign({}, this.pupils, {
-                [name]: newPupil,
-            });
-            // context._activePupilName = name;
-            // context.back();
-        });
+        const newPupil: Pupil = {
+            id: uuidv4(),
+            name,
+            password,
+            instances: this.getQuestionCardIds().map(id => ({id})),
+        };
+        this.setPupil(newPupil.id, newPupil);
     }
 
     back() {
         this.currentInstances = [];
-        this.history.push(this.activePupilName !== undefined ? `/pupil/${this.activePupilName}/` : "/");
+        this.history.push(this.currentPupilId !== undefined ? `/pupil/${this.pupil?.name || "-"}/${this.currentPupilId}/` : "/");
     }
 
     readonly next = (...groups: string[]) => {
@@ -327,7 +372,7 @@ export class Context {
             context._currentGroups = currentGroups;
             context._currentInstances = nextInstances;
         });
-        this.history.push(`/pupil/${this.activePupilName}/${nextInstances.length > 0 ? "question" : ""}`);
+        this.history.push(`/pupil/${this.pupil?.name || "-"}/${this.currentPupilId}/${nextInstances.length > 0 ? "question" : ""}`);
     };
 
     public getCard(idOrInstance: string | IndexCardInstance | undefined): IndexCard | undefined {
@@ -355,6 +400,13 @@ export class Context {
         } else {
             updateFunction(this);
         }
+    }
+
+    setPupil(id: string, newPupil: Pupil) {
+        if (newPupil.id !== id) {
+            throw new Error("Pupil id and given id do not match: " + JSON.stringify(newPupil) + " vs. " + id);
+        }
+        this.pupils = Object.assign({}, this.pupils, {[id]: newPupil});
     }
 
     private getQuestionCardIds() {
