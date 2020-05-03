@@ -31,13 +31,6 @@ export interface IndexCard {
 
 export const officialOwner = "lernbox";
 
-export interface IndexCardInstance {
-    id: string;
-    slot?: number;
-    previousSlot?: number;
-    slotChanged?: number;
-}
-
 export interface Slot {
     durationInDays: number;
 }

@@ -1,14 +1,13 @@
 import * as React from "react";
 import {
     IndexCard,
-    IndexCardInstance,
     officialOwner,
     predefinedCards,
     predefinedCardsHash,
     slots,
     uuidNamespace,
 } from "./cards";
-import {Pupil} from "./Pupil";
+import {IndexCardInstance, Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 import {lookupImage} from "../views/EditCard";
 import {sha256} from "js-sha256";

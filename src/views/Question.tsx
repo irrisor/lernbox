@@ -15,6 +15,7 @@ import {
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {Front} from "../components/Front";
+import {Activity, addActivity} from "../data/Pupil";
 
 
 export function onEnterPressed(call: () => void): React.KeyboardEventHandler {
@@ -47,6 +48,14 @@ export function Question() {
     useEffect(() => {
         if (!context.cardInstance && context.currentPupilId !== undefined) context.next();
     }, [context]);
+    useEffect(() => {
+        if (instance) {
+            const lastEntry = instance.activityEntries && instance.activityEntries.length > 0 && instance.activityEntries[instance.activityEntries.length - 1];
+            if (!lastEntry || lastEntry.activity !== Activity.VIEW || lastEntry.timestamp < Date.now() - 1000 * 60) {
+                addActivity(instance, Activity.VIEW);
+            }
+        }
+    }, [instance]);
 
     function check(value: string = input) {
         if (!instance || !card) return;
@@ -55,14 +64,17 @@ export function Question() {
         if (card.answers.filter(answer => !!answer.trim()).indexOf(value.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
                 instance.slot = (instance.slot || 0) + 1;
-                history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/right`);
+                addActivity(instance, Activity.RIGHT);
+                history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/right`);
             } else {
                 instance.slot = 0;
-                history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/late`);
+                addActivity(instance, Activity.LATE);
+                history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/late`);
             }
         } else {
             instance.slot = 0;
-            history.push(`/pupil/${context.pupil?.name||"-"}/${context.currentPupilId}/wrong`);
+            addActivity(instance, Activity.WRONG);
+            history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/wrong`);
         }
     }
 

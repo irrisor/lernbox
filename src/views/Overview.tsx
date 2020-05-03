@@ -17,10 +17,11 @@ import moment from "moment";
 import "moment/locale/de";
 import Typography from "@material-ui/core/Typography";
 import {makeStyles} from "@material-ui/core/styles";
-import {IndexCard, IndexCardInstance} from "../data/cards";
+import {IndexCard} from "../data/cards";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import {VirtualizedTable} from "../components/VirtualizedTable";
+import {IndexCardInstance} from "../data/Pupil";
 
 moment.locale("de");
 
