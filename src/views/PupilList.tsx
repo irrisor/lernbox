@@ -15,7 +15,7 @@ import {randomFrom} from "../img/svgs";
 import {words} from "../data/words";
 
 function randomPupilPassword() {
-    return randomFrom(words) + Math.floor(Math.random() * 90 + 10);
+    return randomFrom(words).toLowerCase() + Math.floor(Math.random() * 90 + 10);
 }
 
 export function PupilList() {
@@ -43,7 +43,7 @@ export function PupilList() {
                                 <AccountCircle/>
                             </ListItemIcon>
                             <ListItemText
-                                primary={<Box display="flex" alignItems="center">{pupil.name}<Box flexGrow={1}/>
+                                primary={<Box display="flex" alignItems="center">{pupil.name !== "default" ? pupil.name : "Standardschüler"}<Box flexGrow={1}/>
                                     {context.isTeacher && (pupil.password ?
                                             <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/password`)}
                                                   onMouseEnter={() => onPasswordChip = true}

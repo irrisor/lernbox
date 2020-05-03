@@ -23,7 +23,7 @@ export interface IndexCard {
     answerImage?: Image;
     time_s: number;
     groups: string[];
-    inputType?: "text" | "number" | "select";
+    inputType?: "text" | "number" | "number_or_nan" | "select";
     inputOptions?: string[];
 }
 
@@ -77,8 +77,8 @@ export const predefinedCards: IndexCard[] = [
 ];
 
 /** 1-mal-1 */
-for (let x = 1; x <= 10; x++) {
-    for (let y = 1; y <= 10; y++) {
+for (let x = 0; x <= 10; x++) {
+    for (let y = 0; y <= 10; y++) {
         predefinedCards.push({
             id: uuidv5(`${x}*${y}`, uuidNamespace),
             question: `${x} • ${y}`,
@@ -86,16 +86,16 @@ for (let x = 1; x <= 10; x++) {
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 4,
             groups: ["1•1", `1•1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1 Kern"] : []),
-            inputType: "number",
+            inputType: "number_or_nan",
         });
         predefinedCards.push({
             id: uuidv5(`${x}:${y}`, uuidNamespace),
             question: `${x * y} : ${y}`,
             description: "Wie lautet das Ergebnis?",
-            answers: [`${x * y} : ${y} = ${x}`, `${x}`],
+            answers: [`${x * y} : ${y} = ${x}`, y !== 0 ? `${x}` : "NaN" ],
             time_s: 4,
             groups: ["1:1", `1:1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1:1 Kern"] : []),
-            inputType: "number",
+            inputType: "number_or_nan",
         });
     }
 }

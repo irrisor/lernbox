@@ -158,7 +158,7 @@ export function Bar(props: { children: React.ReactNode }) {
                         <MenuIcon/>
                     </IconButton>
                     <Typography variant="h6" className={classes.title}>
-                        <Logo style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && ` von ${context.pupil.name}`}
+                        <Logo style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
                     </Typography>
                     <IconButton
                         color="inherit"

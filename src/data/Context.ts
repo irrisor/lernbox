@@ -104,7 +104,13 @@ export class Context {
         this.update(context => (context._cards = value));
     }
 
-    private _pupils: PupilSet = {};
+    private _pupils: PupilSet = {
+        "default": {
+            name: "default",
+            password: "",
+            instances: this.getQuestionCardIds().map(id => ({id})),
+        },
+    };
 
     public get pupils() {
         return this._pupils;
@@ -180,7 +186,7 @@ export class Context {
         }
     }
 
-    private _teacherPasswordHash: string = "";
+    private _teacherPasswordHash: string = "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e";
 
     get teacherPasswordHash(): string {
         return this._teacherPasswordHash;

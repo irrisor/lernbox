@@ -48,11 +48,11 @@ export function Question() {
         if (!context.cardInstance && context.activePupilName !== undefined) context.next();
     }, [context]);
 
-    function check() {
+    function check(value: string = input) {
         if (!instance || !card) return;
         instance.slotChanged = Date.now();
         instance.previousSlot = instance.slot;
-        if (card.answers.filter(answer => !!answer.trim()).indexOf(input.trim()) >= 0) {
+        if (card.answers.filter(answer => !!answer.trim()).indexOf(value.trim()) >= 0) {
             if (maxPassSeconds >= secondsPassed) {
                 instance.slot = (instance.slot || 0) + 1;
                 history.push(`/pupil/${context.activePupilName}/right`);
@@ -93,14 +93,14 @@ export function Question() {
                                                       key={option}
                                                       control={<Radio/>}
                                                       label={option}
-                                                      onDoubleClick={check}
+                                                      onDoubleClick={() => check()}
                                     />)}
                             </RadioGroup>
                             :
                             <TextField
                                 autoFocus
                                 label="Antwort"
-                                type={inputType}
+                                type={inputType === "number_or_nan" ? "number" : inputType}
                                 value={input}
                                 onChange={event => setInput(event.target.value)}
                                 onKeyPress={onEnterPressed(checkIfInputOrNoWait)}
@@ -118,8 +118,15 @@ export function Question() {
                                     color={secondsPassed <= maxPassSeconds ? "primary" : "secondary"}
                     />
                 </Grid>
-                <Grid item xs={12}>
-                    <Button variant="contained" color="primary" onClick={check}
+                {inputType === "number_or_nan" && <Grid item xs={6}>
+                    <Button variant="contained" onClick={() => check("NaN")}
+                            fullWidth
+                    >
+                        geht nicht
+                    </Button>
+                </Grid>}
+                <Grid item xs={inputType === "number_or_nan" ? 6 : 12}>
+                    <Button variant="contained" color="primary" onClick={() => check()}
                             fullWidth
                             disabled={(secondsPassed < minWaitSeconds) && !input}
                     >

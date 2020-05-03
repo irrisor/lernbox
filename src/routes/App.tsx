@@ -1,5 +1,5 @@
 import {Context, reactContext} from "../data/Context";
-import {Route, Switch, useHistory} from "react-router";
+import {Route, Switch, useHistory, useRouteMatch} from "react-router";
 import * as React from "react";
 import {synchronize} from "../views/Login";
 import {ErrorBoundary} from "../util/ErrorBoundary";
@@ -13,6 +13,7 @@ export default function App() {
     const ContextProvider = reactContext.Provider;
     const history = useHistory();
     const [context, setContext] = React.useState(() => new Context(history));
+    const {path} = useRouteMatch();
     React.useEffect(() => {
         (async () => {
             if (!context.touched) {
@@ -22,9 +23,15 @@ export default function App() {
                 const newContext = new Context(history, context);
                 setContext(newContext);
                 await synchronize(newContext, false).catch(e => console.error("Error synchronizing data", e));
+                if (path === "/" &&
+                    context.activePupilName === undefined &&
+                    context.pupilsList.length === 1 &&
+                    context.pupils["default"]) {
+                    context.history.push("/pupil/default")
+                }
             }
         })();
-    });
+    }, [context, path]);
     if (!context.initialized) return <span style={{display: "none"}}>context not initialized</span>;
     return (
         <ErrorBoundary>
