@@ -1,33 +1,44 @@
 import * as React from "react";
-import {
-    IndexCard,
-    officialOwner,
-    predefinedCards,
-    predefinedCardsHash,
-    slots,
-    uuidNamespace,
-} from "./cards";
+import {IndexCard, officialOwner, predefinedCards, predefinedCardsHash, slots, uuidNamespace} from "./cards";
 import {IndexCardInstance, Pupil} from "./Pupil";
 import {History, LocationState} from "history";
-import {lookupImage} from "../views/EditCard";
 import {sha256} from "js-sha256";
 import {v4 as uuidv4, v5 as uuidv5} from 'uuid';
 import {SynchronizationInfo} from "../sync/SynchronizationInfo";
 import {synchronize} from "../sync/synchronize";
-
-export type PupilSet = Readonly<{ [name: string]: Pupil }>;
+import {PersistentObject} from "./PersistentObject";
+import _ from "lodash";
 
 const defaultPupilId = uuidv5("default-pupil", uuidNamespace);
+
+type CardsData = { predefinedCardsHash: string, cards: IndexCard[] };
+
+type TeacherData = { teacherPasswordHash: string, pupilIds: string[] };
+
+type LocalData = { currentPasswordHash: string, menuOpen: boolean };
 
 export class Context {
     public lastShownList: IndexCard[] = [];
     public touched: boolean = false;
     readonly history: History<LocationState>;
-    private predefinedCardsHash: string = "";
+    private supersededAt?: Error;
+    private persistentCards: PersistentObject<CardsData>;
+    private persistentTeacher: PersistentObject<TeacherData>;
+    private persistentLocal: PersistentObject<LocalData>;
+    private persistentPupils: PersistentObject<Pupil>[] = [];
+    private _currentPupilId?: string;
+    private _currentGroups: string[] = [];
+    private _currentInstances: IndexCardInstance[] = [];
+    private _initialized: boolean = false;
+    private _synchronizationInfo: SynchronizationInfo;
 
     constructor(history: History<LocationState>, originalContext?: Context, init?: boolean) {
         this.history = history;
         if (originalContext) {
+            this._synchronizationInfo = originalContext._synchronizationInfo;
+            this.persistentCards = originalContext.persistentCards;
+            this.persistentTeacher = originalContext.persistentTeacher;
+            this.persistentLocal = originalContext.persistentLocal;
             for (const propertyName of Object.keys(originalContext)) {
                 const propertyDescriptor = Object.getOwnPropertyDescriptor(
                     originalContext,
@@ -45,35 +56,49 @@ export class Context {
                 this._initialized = false;
                 this._setContext = originalContext._setContext;
             }
-        }
-    }
-
-    get cardsStored(): { cards: IndexCard[]; predefinedCardsHash: string } {
-        return {cards: this.cards, predefinedCardsHash: this.predefinedCardsHash};
-    }
-
-    set cardsStored(value: { cards: IndexCard[]; predefinedCardsHash: string }) {
-        if (value.predefinedCardsHash !== predefinedCardsHash) {
-            const predefinedIds = new Set<string>();
-            predefinedCards.forEach(predefinedCard => {
-                predefinedIds.add(predefinedCard.id);
-                const cardIndex = value.cards.findIndex(card => card.id === predefinedCard.id);
-                if (cardIndex >= 0) {
-                    value.cards[cardIndex] = predefinedCard;
-                } else {
-                    value.cards.push(predefinedCard);
-                }
-            });
-            // finally remove official cards which were removed from the program
-            value.cards = value.cards.filter(card => (card.owner !== officialOwner) || predefinedIds.has(card.id));
-            this.predefinedCardsHash = predefinedCardsHash;
         } else {
-            this.predefinedCardsHash = value.predefinedCardsHash;
+            this._synchronizationInfo = new SynchronizationInfo();
+            this.persistentTeacher = new PersistentObject<TeacherData>({
+                teacherPasswordHash: "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e",
+                pupilIds: [defaultPupilId],
+            }, "teacher.json", this.synchronizationInfo);
+            this.persistentLocal = new PersistentObject<LocalData>({
+                currentPasswordHash: "",
+                menuOpen: false as boolean,
+            }, "local.json", this.synchronizationInfo);
+            this.persistentCards = new PersistentObject<CardsData>({
+                predefinedCardsHash,
+                cards: predefinedCards,
+            }, "cards.json", this.synchronizationInfo);
+            this.persistentPupils = this.persistentTeacher.content.pupilIds.map(id => this.newPersistentPupil(id));
         }
-        this.cards = value.cards;
-    }
 
-    private _currentPupilId?: string;
+        this.persistentCards.onChange = (object, value) => {
+            if (!value.cards && Array.isArray(value)) {
+                value = {cards: value, predefinedCardsHash: ""};
+            }
+            if (value.predefinedCardsHash !== predefinedCardsHash) {
+                const predefinedIds = new Set<string>();
+                predefinedCards.forEach(predefinedCard => {
+                    predefinedIds.add(predefinedCard.id);
+                    const cardIndex = value.cards.findIndex(card => card.id === predefinedCard.id);
+                    if (cardIndex >= 0) {
+                        value.cards[cardIndex] = predefinedCard;
+                    } else {
+                        value.cards.push(predefinedCard);
+                    }
+                });
+                // finally remove official cards which were removed from the program
+                return {
+                    cards: value.cards.filter(card => (card.owner !== officialOwner) || predefinedIds.has(card.id)),
+                    predefinedCardsHash,
+                };
+            } else {
+                return value;
+            }
+        };
+        this.persistentCards.afterChange = () => this.update();
+    }
 
     public get currentPupilId() {
         return this._currentPupilId;
@@ -89,8 +114,6 @@ export class Context {
         }
     }
 
-    private _currentGroups: string[] = [];
-
     public get currentGroups() {
         return this._currentGroups;
     }
@@ -98,8 +121,6 @@ export class Context {
     public set currentGroups(value: string[]) {
         this.update(context => (context._currentGroups = value));
     }
-
-    private _currentInstances: IndexCardInstance[] = [];
 
     get currentInstances(): IndexCardInstance[] {
         return this._currentInstances;
@@ -109,19 +130,18 @@ export class Context {
         this.update(context => (context._currentInstances = value));
     }
 
-    private _cards: IndexCard[] = predefinedCards;
-
-    get cards(): IndexCard[] {
-        return this._cards;
+    get cards(): Readonly<IndexCard[]> {
+        return this.persistentCards.content.cards;
     }
 
-    set cards(value: IndexCard[]) {
+    set cards(value: Readonly<IndexCard[]>) {
+        let mutableValue = _.clone(value) as IndexCard[];
         for (let i = 0; i < value.length; i++) {
             const anyCard: any = value[i];
             if (anyCard.image) {
                 // convert old image data
                 const {image, answerImage, imageParameters, answerImageParameters, ...other} = anyCard;
-                value[i] = Object.assign(other, {
+                mutableValue[i] = Object.assign(other, {
                     questionImage: image || imageParameters ? {
                         image: image,
                         parameters: imageParameters,
@@ -132,116 +152,45 @@ export class Context {
                     } : undefined,
                 });
             }
-            const card = value[i];
-            if (card.questionImage?.image && !card.questionImage?.url) {
-                lookupImage(card.questionImage, newImage => card.questionImage = newImage);
-                lookupImage(card.answerImage, newImage => card.answerImage = newImage);
-            }
         }
-        this.update(context => (context._cards = value));
+        this.persistentCards.content = Object.assign({}, this.persistentCards.content, {cards: mutableValue});
     }
 
-    private _pupils: PupilSet = {
-        [defaultPupilId]: {
-            id: defaultPupilId,
-            name: "default",
-            password: "",
-            instances: this.getQuestionCardIds().map(id => ({id})),
-        },
-    };
-
-    public get pupils() {
-        return this._pupils;
+    get menuOpen(): boolean {
+        return this.persistentLocal.content.menuOpen;
     }
 
-    public set pupils(value: PupilSet) {
-        if (typeof value !== "object") {
-            console.error("Refraining to use value as pupils: ", value);
-            value = {};
+    set menuOpen(value: boolean) {
+        if (value !== this.menuOpen) {
+            this.persistentLocal.content = Object.assign({}, this.persistentLocal.content, {
+                menuOpen: value,
+            });
         }
-        const questionCards = this.getQuestionCardIds();
-        const valueWithFixedPropertyNames: { [name: string]: Pupil } = {};
-        Object.keys(value).forEach(name => {
-            const pupil = value[name];
-            if (pupil.name) {
-                const anyPupil: any = pupil;
-                if (anyPupil.cards) {
-                    // old data we need to convert
-                    pupil.instances = anyPupil.cards.map((old: any): IndexCardInstance => {
-                        const candidates = this.cards.filter(card =>
-                            card.question === old.question);
-                        let id;
-                        if (candidates.length === 1) {
-                            id = candidates[0].id;
-                        } else if (candidates.length > 1) {
-                            id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
-                                || candidates[0].id;
-                        } else {
-                            console.error("Error converting old data: No canditate found for card ", old);
-                            id = "";
-                        }
-                        return {
-                            id,
-                            slot: old.slot,
-                            previousSlot: old.previousSlot,
-                            slotChanged: old.slotChanged,
-                        };
-                    }).filter((instance: IndexCardInstance) => instance.id);
-                    delete anyPupil.cards;
-                }
-
-                if (questionCards.length !== pupil.instances.length) {
-                    const questionCardIds = new Set(questionCards);
-                    // remove instances we don't know the card for
-                    pupil.instances = pupil.instances.filter(instance => questionCardIds.delete(instance.id));
-                    // add instances for currently unused cards
-                    pupil.instances = pupil.instances.concat(Array.from(questionCardIds.values()).map(id => ({id})));
-                }
-
-                if (!pupil.id) {
-                    pupil.id = uuidv4();
-                }
-                if (valueWithFixedPropertyNames[pupil.id]) {
-                    console.warn("Found duplicate pupil id in imported data, ignoring", pupil.name, pupil.id);
-                } else {
-                    valueWithFixedPropertyNames[pupil.id] = pupil;
-                }
-            }
-        });
-        this.update(context => {
-            context._pupils = valueWithFixedPropertyNames;
-        });
     }
-
-    private _currentPasswordHash: string = "";
 
     get currentPasswordHash(): string {
-        return this._currentPasswordHash;
+        return this.persistentLocal.content.currentPasswordHash;
     }
 
     set currentPasswordHash(value: string) {
-        if (value !== this._currentPasswordHash) {
-            this.update(context => {
-                context._currentPasswordHash = value;
+        if (value !== this.currentPasswordHash) {
+            this.persistentLocal.content = Object.assign({}, this.persistentLocal.content, {
+                currentPasswordHash: value,
             });
         }
     }
 
-    private _teacherPasswordHash: string = "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e";
-
     get teacherPasswordHash(): string {
-        return this._teacherPasswordHash;
+        return this.persistentTeacher.content.teacherPasswordHash;
     }
 
     set teacherPasswordHash(value: string) {
-        if (value !== this._teacherPasswordHash) {
-            this.update(context => {
-                context._teacherPasswordHash = value;
+        if (value !== this.teacherPasswordHash) {
+            this.persistentTeacher.content = Object.assign({}, this.persistentTeacher.content, {
+                teacherPasswordHash: value,
             });
         }
     }
-
-    private _initialized: boolean = false;
 
     public get initialized(): boolean {
         return this._initialized;
@@ -265,16 +214,13 @@ export class Context {
     }
 
     public get pupil(): Pupil | undefined {
-        return this.currentPupilId !== undefined ? this.pupils[this.currentPupilId] : undefined;
+        return this.currentPupilId !== undefined ?
+            this.pupilsList.find(pupil => pupil.id === this.currentPupilId) : undefined;
     }
 
     public get pupilsList() {
-        return (Object.keys(this.pupils) || []).map(name => this.pupils[name]);
+        return this.persistentPupils.map(persistentPupil => persistentPupil.content);
     }
-
-    private _setContext: (newContext: Context) => void = () => {
-        throw new Error("setContext not initialized");
-    };
 
     public set setContext(value: (newContext: Context) => void) {
         this._initialized = true;
@@ -284,8 +230,6 @@ export class Context {
     get isTeacher(): boolean {
         return !!this.teacherPasswordHash && this.currentPasswordHash === this.teacherPasswordHash;
     }
-
-    private _synchronizationInfo: SynchronizationInfo = new SynchronizationInfo([]);
 
     get synchronizationInfo(): SynchronizationInfo {
         return this._synchronizationInfo;
@@ -316,12 +260,20 @@ export class Context {
 
     deletePupil(): void {
         const id = this.currentPupilId;
-        if (id !== undefined) {
-            const {[id]: pupil, ...otherPupils} = this.pupils;
-            this.pupils = Object.assign({}, otherPupils);
-        } else {
-            this.pupils = {};
-        }
+        this.update(context => {
+            context.persistentPupils = context.persistentPupils.filter(persistentPupil => {
+                if (id === undefined || persistentPupil.content.id === id) {
+                    persistentPupil.delete();
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+            context.persistentTeacher.content = Object.assign({}, context.persistentTeacher.content, {
+                pupilIds: context.persistentTeacher.content.pupilIds
+                    .filter(pupilId => !(id === undefined || pupilId === id)),
+            });
+        });
         this.history.push("/");
     }
 
@@ -389,24 +341,58 @@ export class Context {
         ).sort((a, b) => a.localeCompare(b));
     }
 
-    public async update(updateFunction: (newContext: Context) => void) {
+    public update(updateFunction?: (newContext: Context) => void) {
+        if (this.supersededAt) {
+            console.error("Context was superseded at", this.supersededAt);
+            throw new Error("Already superseded context is updated");
+        }
         if (this._initialized) {
             const newContext = new Context(this.history, this, false);
-            updateFunction(newContext);
+            this.supersededAt = new Error("superseded");
+            updateFunction && updateFunction(newContext);
+            synchronize(newContext);
             newContext._initialized = true;
             this._setContext(newContext);
-            await synchronize(newContext);
         } else {
-            updateFunction(this);
+            updateFunction && updateFunction(this);
         }
     }
 
-    setPupil(id: string, newPupil: Pupil) {
-        if (newPupil.id !== id) {
-            throw new Error("Pupil id and given id do not match: " + JSON.stringify(newPupil) + " vs. " + id);
+    setPupil(id: string, newPupilContent: Pupil) {
+        if (newPupilContent.id !== id) {
+            throw new Error("Pupil id and given id do not match: " + JSON.stringify(newPupilContent) + " vs. " + id);
         }
-        this.pupils = Object.assign({}, this.pupils, {[id]: newPupil});
+        this.update(context => {
+            const pupilIds = context.persistentTeacher.content.pupilIds;
+            if (pupilIds.indexOf(id) === -1) {
+                context.persistentTeacher.content = Object.assign({}, context.persistentTeacher.content, {
+                    pupilIds: pupilIds.concat(id),
+                });
+            }
+            let persistentPupil = context.persistentPupils.find(pupil => pupil.content.id === id);
+            if (persistentPupil) {
+
+            } else {
+                persistentPupil = this.newPersistentPupil(id);
+                context.persistentPupils = context.persistentPupils.concat(persistentPupil);
+            }
+            persistentPupil.content = newPupilContent;
+        });
     }
+
+    private newPersistentPupil(id: string) {
+        return new PersistentObject<Pupil>(
+            {
+                id,
+                name: "default",
+                password: "",
+                instances: this.getQuestionCardIds().map(cardId => ({id: cardId})),
+            }, `pupil-${id}.json`, this.synchronizationInfo);
+    }
+
+    private _setContext: (newContext: Context) => void = () => {
+        throw new Error("setContext not initialized");
+    };
 
     private getQuestionCardIds() {
         return this.cards.filter(card => card.answers?.length > 0 && card.answers.join("") !== "").map(card => card.id);

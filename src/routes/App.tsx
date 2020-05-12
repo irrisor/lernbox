@@ -18,16 +18,15 @@ export default function App() {
         (async () => {
             if (!context.touched) {
                 context.touched = true;
-                await synchronize(context, true).catch(e => console.error("Error synchronizing data", e));
+                synchronize(context, true);
                 context.setContext = setContext;
                 const newContext = new Context(history, context);
                 setContext(newContext);
-                await synchronize(newContext, false).catch(e => console.error("Error synchronizing data", e));
                 if (path === "/" &&
                     context.currentPupilId === undefined &&
                     context.pupilsList.length === 1 &&
-                    context.pupils["default"]) {
-                    context.history.push("/pupil/default")
+                    context.pupilsList[0].name === "default") {
+                    context.history.push(`/pupil/default/${context.pupilsList[0].id}`)
                 }
             }
         })();

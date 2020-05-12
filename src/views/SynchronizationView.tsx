@@ -7,7 +7,6 @@ import {VirtualizedTable} from "../components/VirtualizedTable";
 import moment from "moment";
 import {
     authHeaderFunction,
-    download,
     graphURL,
     isShareActive,
     loadToken,
@@ -16,7 +15,6 @@ import {
     saveToken,
     setLoginPageOpened,
     synchronize,
-    upload,
 } from "../sync/synchronize";
 
 export function SynchronizationView() {
@@ -123,14 +121,14 @@ export function SynchronizationView() {
                         {localStorage.getItem("uploadButtons") && <>
                             <Grid item xs={6}>
                                 <Button variant="contained" fullWidth onClick={async () => {
-                                    await upload("pupils.json", context.pupils, token, setAndSaveToken);
+                                    // await upload("pupils.json", context.pupilsList, token, setAndSaveToken);
                                 }}>
                                     Hochladen
                                 </Button>
                             </Grid>
                             <Grid item xs={6}>
                                 <Button variant="contained" fullWidth onClick={async () => {
-                                    context.pupils = await download("pupils.json", token, setAndSaveToken);
+                                    // context.pupils = await download("pupils.json", token, setAndSaveToken);
                                 }}>
                                     Herunterladen
                                 </Button>
@@ -156,13 +154,13 @@ export function SynchronizationView() {
             </Grid>
             <Box flexGrow={1}>
                 <VirtualizedTable
-                    rowCount={context.synchronizationInfo.entries().length}
+                    rowCount={context.synchronizationInfo.objects().length}
                     rowGetter={row => {
-                        const entry = context.synchronizationInfo.entries()[row.index];
+                        const entry = context.synchronizationInfo.objects()[row.index].meta;
                         return {
                             key: entry.key,
-                            localDate: entry.localDate ? moment(entry.localDate).fromNow() : "",
-                            remoteDate: entry.remoteDate ? moment(entry.remoteDate).fromNow() : "",
+                            localDate: entry.localTimestamp ? moment(entry.localTimestamp).fromNow() : "",
+                            remoteDate: entry.remoteTimestamp ? moment(entry.remoteTimestamp).fromNow() : "",
                         };
                     }}
                     columns={[

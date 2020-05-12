@@ -9,7 +9,7 @@ https://docs.microsoft.com/de-de/onedrive/developer/rest-api/concepts/special-fo
 management: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
 */
 import {Context} from "../data/Context";
-import {SynchronizationInfo} from "./SynchronizationInfo";
+import {SynchronizationInfo, SynchronizationState} from "./SynchronizationInfo";
 import * as jsondiffpatch from "jsondiffpatch";
 import * as msal from "@azure/msal-browser";
 
@@ -87,7 +87,7 @@ export function saveToken(newToken: string | null) {
 
 const REMOTE_PREFIX = "remote-";
 
-async function synchronizeFile(
+function synchronizeFile(
     filename: string,
     localData: any,
     usedStorageNames: Set<string>,
@@ -107,15 +107,19 @@ async function synchronizeFile(
         usedStorageNames.add(remoteKey);
         if (token) {
             let shouldUpload = false;
-            const synchronizationEntry = synchronizationInfo.get(filename);
+            const persistentObject = synchronizationInfo.get(filename);
+            if (!persistentObject) {
+                console.error("Skipping file without synchronization entry: " + filename);
+                return;
+            }
             const lastRemoteDataString = localStorage.getItem(remoteKey);
-            const remoteUnchanged = synchronizationEntry.remoteDate && synchronizationEntry.remoteSyncDate &&
-                (Date.parse(synchronizationEntry.remoteDate) === Date.parse(synchronizationEntry.remoteSyncDate));
+            const remoteUnchanged = persistentObject.meta.remoteTimestamp && persistentObject.meta.remoteSyncTimestamp &&
+                (persistentObject.meta.remoteTimestamp === persistentObject.meta.remoteSyncTimestamp);
             let remoteData: any;
             if (remoteUnchanged && lastRemoteDataString) {
                 remoteData = JSON.parse(lastRemoteDataString);
             } else {
-                remoteData = await download(filename, token, saveToken);
+                remoteData = persistentObject.remoteContent;
             }
             if (remoteData !== null) {
                 if (lastRemoteDataString !== null) {
@@ -125,29 +129,28 @@ async function synchronizeFile(
                     } else {
                         const deltaToRemote = jsondiffpatch.diff(remoteData, localData);
                         if (deltaToRemote) {
-                            synchronizationEntry.localDate = new Date().toISOString();
+                            persistentObject.meta.localTimestamp = Date.now();
                             shouldUpload = true;
                         }
                         remoteData = localData;
                     }
                 } else {
                     console.warn("There is a remote version of the data and we don't know about changes to it. " +
-                        "Using it with precedence.");
-                    remoteData = Object.assign(localData, remoteData);
-                    shouldUpload = true;
+                        "Using it with precedence.", filename, localData, remoteData);
                 }
             } else {
                 remoteData = localData;
                 shouldUpload = true;
             }
-            if ( shouldUpload ) {
+            if (shouldUpload) {
                 try {
-                    const uploadResult = await upload(filename, remoteData, token, saveToken);
-                    localStorage.setItem(remoteKey, JSON.stringify(remoteData));
                     localStorage.setItem(filename, JSON.stringify(remoteData));
-                    synchronizationEntry.localDate = new Date().toISOString();
-                    synchronizationEntry.remoteDate = uploadResult.lastModifiedDateTime;
-                    synchronizationEntry.remoteSyncDate = synchronizationEntry.remoteDate;
+                    persistentObject.meta.localTimestamp = Date.now();
+                    upload(filename, remoteData, token, saveToken).then(uploadResult => {
+                        localStorage.setItem(remoteKey, JSON.stringify(remoteData));
+                        persistentObject.meta.remoteTimestamp = Date.parse(uploadResult.lastModifiedDateTime);
+                        persistentObject.meta.remoteSyncTimestamp = persistentObject.meta.remoteTimestamp;
+                    });
                     return remoteData;
                 } catch (error) {
                     if (error.status === 409 /*Conflict*/) {
@@ -164,79 +167,98 @@ async function synchronizeFile(
 }
 
 let inSynchronize: boolean;
+let intervalId: number;
+let synchronizationInfo: SynchronizationInfo;
 
-export async function synchronize(context: Context, init?: boolean) {
+export function synchronize(context: Context, init?: boolean) {
+    if (localStorage.getItem("syncEnabled") === null) return;
     if (inSynchronize) {
         console.error(new Error("Cannot start another synchronization while synchronizing"));
         return;
     }
     inSynchronize = true;
 
-    async function syncInfo(usedStorageNames: Set<string>) {
-        const existingSynchronizationEntries = init ? undefined : context.synchronizationInfo.entries();
-        const synchronizationEntries = (await synchronizeFile(
+    function syncInfo(usedStorageNames: Set<string>) {
+        const existingSynchronizationEntries = init ? undefined : context.synchronizationInfo.objects().map(object => object.meta);
+        const synchronizationEntries = (synchronizeFile(
             LOCAL_STORAGE_KEY_SYNC_INFO,
             existingSynchronizationEntries,
             usedStorageNames,
             undefined,
         )) || [];
 
-        let synchronizationInfo: SynchronizationInfo;
         if (existingSynchronizationEntries !== synchronizationEntries) {
-            synchronizationInfo = new SynchronizationInfo(synchronizationEntries);
-            context.synchronizationInfo = synchronizationInfo;
-        } else {
-            synchronizationInfo = context.synchronizationInfo;
+            for (const entry of synchronizationEntries) {
+                const contextEntry = context.synchronizationInfo.get(entry.key)?.meta;
+                if (contextEntry) {
+                    Object.assign(contextEntry, entry);
+                }
+            }
         }
-        return synchronizationInfo;
+        return context.synchronizationInfo;
     }
 
     try {
         const usedStorageNames = new Set<string>([LOCAL_STORAGE_KEY_MENU_OPEN, LOCAL_STORAGE_KEY_TOKEN]);
 
-        let synchronizationInfo = await syncInfo(usedStorageNames);
+        synchronizationInfo = syncInfo(usedStorageNames);
 
         if (!synchronizationInfo) throw new Error("SynchronizationInfo not found");
 
-        if (!init) {
-            const listing = await list(loadToken(), saveToken);
-            console.debug("list=", listing);
-            if (listing) {
-                for (const entry of listing.value) {
-                    synchronizationInfo.get(entry.name).remoteDate = entry.lastModifiedDateTime;
+        if (!init && !intervalId) {
+            intervalId = window.setInterval(async () => {
+                const listing = await list(loadToken(), saveToken);
+                console.debug("list=", listing);
+                if (listing) {
+                    for (const entry of listing.value) {
+                        const persistentObject = synchronizationInfo.get(entry.name);
+                        if (persistentObject && persistentObject.meta.state === SynchronizationState.OK) {
+                            download(entry.name, loadToken(), saveToken).then(data => {
+                                    persistentObject.remoteContent = data;
+                                    persistentObject.meta.state = SynchronizationState.OK;
+                                    persistentObject.meta.remoteTimestamp = Date.parse(entry.lastModifiedDateTime);
+                                },
+                            ).catch(e => {
+                                console.error("Download of file failed: ", e);
+                                persistentObject.meta.state = SynchronizationState.ERROR;
+                            });
+                        } else {
+                            console.warn("Found a remote file without synchronization entry: " + entry.name)
+                        }
+                    }
                 }
-            }
+            }, 1000 * 60 * 5 /*every 5 minutes*/);
         }
 
-        context.currentPasswordHash = (await synchronizeFile(
+        context.currentPasswordHash = (synchronizeFile(
             "security_current.json",
             init ? undefined : {hash: context.currentPasswordHash},
             usedStorageNames,
             undefined,
         ))?.hash || "";
         context.teacherPasswordHash =
-            (await synchronizeFile(
+            (synchronizeFile(
                 "security.json",
                 init ? undefined : {hash: context.teacherPasswordHash},
                 usedStorageNames,
                 init ? undefined : synchronizationInfo,
             ))?.hash || "";
 
-        const cardsStored = context.cardsStored;
-        let remoteCards = await synchronizeFile(
-            "cards.json",
-            init ? undefined : cardsStored,
-            usedStorageNames,
-            init ? undefined : synchronizationInfo,
-        );
-        if (cardsStored !== remoteCards && remoteCards) {
-            if (!remoteCards.cards && Array.isArray(remoteCards)) {
-                remoteCards = {cards: remoteCards};
+        for (const persistentObject of context.synchronizationInfo.objects()) {
+            const currentValue = persistentObject.content;
+            let syncedValue = synchronizeFile(
+                persistentObject.meta.key,
+                init ? undefined : currentValue,
+                usedStorageNames,
+                init ? undefined : synchronizationInfo,
+            );
+            if (currentValue !== syncedValue && syncedValue) {
+                persistentObject.content = syncedValue;
             }
-            context.cardsStored = remoteCards;
         }
+
         const localPupilIds = context.pupilsList.map(pupil => pupil.id);
-        let pupilIds = await synchronizeFile(
+        let pupilIds = synchronizeFile(
             "pupil-ids.json",
             init ? undefined : localPupilIds,
             usedStorageNames,
@@ -244,8 +266,8 @@ export async function synchronize(context: Context, init?: boolean) {
         );
         if (Array.isArray(pupilIds)) {
             for (const pupilId of pupilIds) {
-                const localPupil = context.pupils[pupilId];
-                let remotePupil = await synchronizeFile(
+                const localPupil = context.pupilsList.find(pupil => pupil.id === pupilId);
+                let remotePupil = synchronizeFile(
                     `pupil-${pupilId}.json`,
                     init ? undefined : localPupil,
                     usedStorageNames,
@@ -257,26 +279,28 @@ export async function synchronize(context: Context, init?: boolean) {
             }
         }
         if (init && !pupilIds) {
-            let legacyPupils = init && await synchronizeFile(
+            let legacyPupils = init && synchronizeFile(
                 "pupils.json",
                 undefined,
                 usedStorageNames,
                 undefined,
             );
             if (legacyPupils) {
-                context.pupils = legacyPupils;
+                // context.pupils = legacyPupils;
             }
         }
         if (!init) {
+            const token = loadToken();
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key && !usedStorageNames.has(key)) {
                     console.debug("unused local storage key: " + key);
-                    if (key.indexOf("pupil-") === 0) {
+                    if (key.indexOf("pupil-") === 0 && token) {
                         try {
-                            await remove(key, loadToken(), saveToken);
-                            localStorage.removeItem(key);
-                            localStorage.removeItem(REMOTE_PREFIX + key);
+                            remove(key, token, saveToken).then(() => {
+                                localStorage.removeItem(key);
+                                localStorage.removeItem(REMOTE_PREFIX + key);
+                            }).catch(e => console.error("Failed to remove storage file " + key, e));
                         } catch (e) {
                             console.error("Failed to remove file remotely", key, e);
                         }
@@ -284,7 +308,7 @@ export async function synchronize(context: Context, init?: boolean) {
                 }
             }
         }
-        await syncInfo(usedStorageNames);
+        syncInfo(usedStorageNames);
     } finally {
         inSynchronize = false;
     }

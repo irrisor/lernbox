@@ -21,7 +21,6 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import {LOCAL_STORAGE_KEY_MENU_OPEN} from "../sync/synchronize";
 
 const drawerWidth = 220;
 
@@ -137,10 +136,10 @@ export function Bar(props: { children: React.ReactNode }) {
     const classes = useStyles();
     const theme = useTheme();
     const isWideScreen = useMediaQuery(theme.breakpoints.up('sm'));
-    const [menuOpen, setMenuOpen] = React.useState(localStorage.getItem(LOCAL_STORAGE_KEY_MENU_OPEN) === "true");
+    const [menuOpen, setMenuOpen] = React.useState(context.menuOpen);
 
     const handleDrawerToggle = (): true => {
-        localStorage.setItem(LOCAL_STORAGE_KEY_MENU_OPEN, "" + !menuOpen);
+        context.menuOpen = !menuOpen;
         setMenuOpen(!menuOpen);
         return true;
     };

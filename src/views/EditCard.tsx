@@ -380,7 +380,8 @@ export function EditCard() {
                     </Grid>
                 </Tooltip>
                 <Tooltip title={isPredefinedCard ?
-                    "Diese Karte kann nicht bearbeitet werden, da sie mit dem Programm geliefert wurde" : ""}>
+                    "Diese Karte kann nicht bearbeitet werden, da sie mit dem Programm geliefert wurde" :
+                    "Die Karte braucht mindestens Frage und Antwort sowie eine Gruppe."}>
                     <Grid item xs={12} md={4}>
                         <Button variant="contained" color="primary"
                                 fullWidth
