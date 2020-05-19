@@ -53,4 +53,4 @@ jobs:
         # Local directory
         localDir: build/
         # Remote directory
-        remoteDir: .
+        remoteDir: ./web/

@@ -45,6 +45,7 @@
   "scripts": {
     "start": "react-scripts start",
     "postinstall": "copyfiles -u 3 node_modules/@types/snapsvg/* node_modules/@types/snapsvg-cjs/ && patch-package",
+    "copy-public": "copyfiles -u 1 public/.htaccess public/api/* build/",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

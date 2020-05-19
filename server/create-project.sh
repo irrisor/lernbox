@@ -1,1 +1,0 @@
-mvn archetype:generate -DarchetypeGroupId=com.microsoft.azure -DarchetypeArtifactId=azure-functions-archetype -DappName=lernbox -DappRegion=centralus -DresourceGroup=Lernbox -DgroupId=com.lernbox.group -DartifactId=lernbox-functions -Dpackage=com.lernbox -DinteractiveMode=false

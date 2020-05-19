@@ -358,6 +358,35 @@ export class Context {
         }
     }
 
+    convertPupilCardsToInstances(pupil: Pupil) {
+        const anyPupil: any = pupil;
+        if (anyPupil.cards) {
+            // old data we need to convert
+            pupil.instances = anyPupil.cards.map((old: any): IndexCardInstance => {
+                const candidates = this.cards.filter(card =>
+                    card.question === old.question);
+                let id;
+                if (candidates.length === 1) {
+                    id = candidates[0].id;
+                } else if (candidates.length > 1) {
+                    id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
+                        || candidates[0].id;
+                } else {
+                    console.error("Error converting old data: No canditate found for card ", old);
+                    id = "";
+                }
+                return {
+                    id,
+                    slot: old.slot,
+                    previousSlot: old.previousSlot,
+                    slotChanged: old.slotChanged,
+                };
+            }).filter((instance: IndexCardInstance) => instance.id);
+            delete anyPupil.cards;
+        }
+        return pupil;
+    }
+
     setPupil(id: string, newPupilContent: Pupil) {
         if (newPupilContent.id !== id) {
             throw new Error("Pupil id and given id do not match: " + JSON.stringify(newPupilContent) + " vs. " + id);
