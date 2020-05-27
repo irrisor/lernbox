@@ -24,12 +24,14 @@ Dateistruktur
     * access.json
     * /lehrer-id/
         * access.json
+        * teacher.json
         * cards.json
         * /pupil-id/
             * access.json
-            * data.json
+            * pupil.json
             
 access.json
+* Passworthash zum Administrieren (insb. Löschen)
 * Passworthash zum Schreiben
 * Passworthash zum Lesen
     

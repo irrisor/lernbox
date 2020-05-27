@@ -1,5 +1,6 @@
 export interface Pupil {
     id: string;
+    teacherId: string;
     name: string;
     password: string;
     instances: IndexCardInstance[];

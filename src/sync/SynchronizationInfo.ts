@@ -1,18 +1,30 @@
 import {PersistentObject} from "../data/PersistentObject";
 
-export enum SynchronizationState {
-    OK = "ok",
+export enum RemoteState {
+    NON_EXISTENT = "no",
+    IN_SYNC = "ok",
+    MODIFIED = "downloaded",
     ERROR = "error",
     CONFLICT = "conflict",
 }
 
+export enum LocalState {
+    IN_SYNC = "ok",
+    MODIFIED = "modified",
+    UPLOADING = "uploading",
+    ERROR = "error",
+}
+
 export interface SynchronizationEntry {
-    state: SynchronizationState;
+    localState: LocalState;
+    remoteState: RemoteState;
     readonly key: string;
     remoteTimestamp?: number;
     remoteSyncTimestamp?: number;
     localTimestamp?: number;
     version: number;
+    remoteHash?: string;
+    remoteConflictHash?: string;
 }
 
 export class SynchronizationInfo {
@@ -36,8 +48,7 @@ export class SynchronizationInfo {
 
     public remove(persistentObject: PersistentObject<any>) {
         const index = this.persistentObjects.indexOf(persistentObject);
-        if ( index !== -1 )
-        {
+        if (index !== -1) {
             this.persistentObjects.splice(index, 1);
         }
     }

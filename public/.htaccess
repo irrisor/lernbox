@@ -1,2 +1,14 @@
-RewriteEngine On
-RewriteRule "^api/.*$" "api/api.php" [L]
+<IfModule mod_rewrite.c>
+
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteRule "^api/.*$" "api/api.php" [L]
+
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+
+</IfModule>

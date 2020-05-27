@@ -4,18 +4,29 @@ import {IndexCardInstance, Pupil} from "./Pupil";
 import {History, LocationState} from "history";
 import {sha256} from "js-sha256";
 import {v4 as uuidv4, v5 as uuidv5} from 'uuid';
-import {SynchronizationInfo} from "../sync/SynchronizationInfo";
-import {synchronize} from "../sync/synchronize";
+import {LocalState, RemoteState, SynchronizationInfo} from "../sync/SynchronizationInfo";
 import {PersistentObject} from "./PersistentObject";
 import _ from "lodash";
 
 const defaultPupilId = uuidv5("default-pupil", uuidNamespace);
 
-type CardsData = { predefinedCardsHash: string, cards: IndexCard[] };
+interface CardsData {
+    predefinedCardsHash: string;
+    cards: IndexCard[];
+}
 
-type TeacherData = { teacherPasswordHash: string, pupilIds: string[] };
+interface TeacherData {
+    teacherPasswordHash: string;
+    pupilIds: string[];
+    id: string;
+}
 
-type LocalData = { currentPasswordHash: string, menuOpen: boolean };
+interface LocalData {
+    currentPasswordHash: string;
+    menuOpen: boolean;
+    schoolId: string;
+    teacherId: string;
+}
 
 export class Context {
     public lastShownList: IndexCard[] = [];
@@ -58,18 +69,36 @@ export class Context {
             }
         } else {
             this._synchronizationInfo = new SynchronizationInfo();
-            this.persistentTeacher = new PersistentObject<TeacherData>({
-                teacherPasswordHash: "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e",
-                pupilIds: [defaultPupilId],
-            }, "teacher.json", this.synchronizationInfo);
             this.persistentLocal = new PersistentObject<LocalData>({
-                currentPasswordHash: "",
-                menuOpen: false as boolean,
-            }, "local.json", this.synchronizationInfo);
+                    currentPasswordHash: "",
+                    menuOpen: false as boolean,
+                    schoolId: "schule1",
+                    teacherId: uuidv4(),
+                },
+                "local.json",
+                this.synchronizationInfo,
+                () => "Lokale Daten",
+            );
+            const teacherId = this.persistentLocal.content.teacherId;
+            this.persistentTeacher = new PersistentObject<TeacherData>({
+                    teacherPasswordHash: "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e",
+                    pupilIds: [defaultPupilId],
+                    id: teacherId,
+                },
+                `${this.persistentLocal.content.schoolId}/${teacherId}/teacher.json`,
+                this.synchronizationInfo,
+                () => "Lehrerdaten",
+                () => "abc",
+            );
             this.persistentCards = new PersistentObject<CardsData>({
-                predefinedCardsHash,
-                cards: predefinedCards,
-            }, "cards.json", this.synchronizationInfo);
+                    predefinedCardsHash,
+                    cards: predefinedCards,
+                },
+                `${this.persistentLocal.content.schoolId}/${teacherId}/cards.json`,
+                this.synchronizationInfo,
+                () => "Kartendefinitionen",
+                () => "abc",
+            );
             this.persistentPupils = this.persistentTeacher.content.pupilIds.map(id => this.newPersistentPupil(id));
         }
 
@@ -98,6 +127,8 @@ export class Context {
             }
         };
         this.persistentCards.afterChange = () => this.update();
+        this.synchronizationInfo.objects().forEach(object => object.onStateChange =
+            object => this.onPersistentObjectChange(object));
     }
 
     public get currentPupilId() {
@@ -218,6 +249,11 @@ export class Context {
             this.pupilsList.find(pupil => pupil.id === this.currentPupilId) : undefined;
     }
 
+    public set pupil(value: Pupil | undefined) {
+        // TODO change pupil
+        throw new Error("not implemented");
+    }
+
     public get pupilsList() {
         return this.persistentPupils.map(persistentPupil => persistentPupil.content);
     }
@@ -280,6 +316,7 @@ export class Context {
     createPupil(name: string, password: string) {
         const newPupil: Pupil = {
             id: uuidv4(),
+            teacherId: this.persistentTeacher.content.id,
             name,
             password,
             instances: this.getQuestionCardIds().map(id => ({id})),
@@ -350,7 +387,6 @@ export class Context {
             const newContext = new Context(this.history, this, false);
             this.supersededAt = new Error("superseded");
             updateFunction && updateFunction(newContext);
-            synchronize(newContext);
             newContext._initialized = true;
             this._setContext(newContext);
         } else {
@@ -399,9 +435,7 @@ export class Context {
                 });
             }
             let persistentPupil = context.persistentPupils.find(pupil => pupil.content.id === id);
-            if (persistentPupil) {
-
-            } else {
+            if (!persistentPupil) {
                 persistentPupil = this.newPersistentPupil(id);
                 context.persistentPupils = context.persistentPupils.concat(persistentPupil);
             }
@@ -409,14 +443,32 @@ export class Context {
         });
     }
 
+    private onPersistentObjectChange<T>(object: PersistentObject<T>) {
+        if (object.meta.remoteState === RemoteState.MODIFIED &&
+            object.meta.localState === LocalState.IN_SYNC) {
+            this.update(context => {
+                object.content = object.remoteContent as T /*just to remove Readonly*/;
+            });
+        }
+    }
+
     private newPersistentPupil(id: string) {
+        const teacherId = this.persistentTeacher.content.id;
         return new PersistentObject<Pupil>(
             {
                 id,
+                teacherId,
                 name: "default",
                 password: "",
                 instances: this.getQuestionCardIds().map(cardId => ({id: cardId})),
-            }, `pupil-${id}.json`, this.synchronizationInfo);
+            },
+            `${this.persistentLocal.content.schoolId}/${teacherId}/${id}/pupil.json`,
+            this.synchronizationInfo,
+            object => {
+                return object.content.name === "default" ? "Standardschülerdaten" : "Schülerdaten von " + object.content.name
+            },
+            () => "abc",
+        );
     }
 
     private _setContext: (newContext: Context) => void = () => {

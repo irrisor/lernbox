@@ -27,6 +27,7 @@ export function PupilList() {
         if (newName !== "") {
             context.createPupil(newName, password);
             setNewName("");
+            setPassword(randomPupilPassword());
         }
     };
     let onPasswordChip = false;

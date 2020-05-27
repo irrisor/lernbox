@@ -150,7 +150,7 @@ export function PupilPasswordView() {
             context.update(newContext => {
                 const newHash = newContext.passwordHash(newPassword);
                 if (newContext.pupil) {
-                    newContext.pupil.password = newPassword;
+                    newContext.pupil = Object.assign({}, newContext.pupil, {password: newPassword});
                 }
                 if (!context.isTeacher) {
                     newContext.currentPasswordHash = newHash;
@@ -162,4 +162,4 @@ export function PupilPasswordView() {
         who={context.pupil?.name || "der Schüler"}
         override={context.isTeacher}
     />;
-}
+};
