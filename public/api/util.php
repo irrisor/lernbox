@@ -41,7 +41,7 @@ function replaceFileExclusive(string $filename, object $content, bool $with_meta
                 $previous_body = json_decode(fread($handle, MAX_FILE_SIZE));
                 if ($with_metadata && $previous_body !== NULL) {
                     $expected_tag = array_key_exists('If-Match', getallheaders()) ? getallheaders()['If-Match'] : NULL;
-                    header("ETag", $previous_body->tag);
+                    header("ETag: $previous_body->tag");
                     if ($expected_tag === NULL) {
                         throw new MissingETagButExistentFileException("Can only replace content if If-Match header is given.");
                     }

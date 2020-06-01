@@ -11,7 +11,7 @@ function read(string $path)
         header("HTTP/1.1 404 Not Found");
         print "Cannot access '$path'";
     } else if (property_exists($file_object, "content")) {
-        header("ETag", $file_object->tag);
+        header("ETag: $file_object->tag");
         $expected_tag = array_key_exists('If-None-Match', getallheaders()) ? getallheaders()['If-None-Match'] : NULL;
         if ($expected_tag == $file_object->tag) {
             header("HTTP/1.1 304 Not Modified");

@@ -7,6 +7,7 @@ import {PupilRoute} from "./PupilRoute";
 import {TeacherRoute} from "./TeacherRoute";
 import {Yay} from "../views/Yay";
 import {PupilList} from "../views/PupilList";
+import {LoginView} from "../views/LoginView";
 
 export default function App() {
     const ContextProvider = reactContext.Provider;
@@ -33,6 +34,16 @@ export default function App() {
         <ErrorBoundary>
             <ContextProvider value={context}>
                 <Switch>
+                    <Route path={[
+                        `/login/:schoolId/none/:key`,
+                        `/login/:schoolId/:teacherId/:key`,
+                        `/login/:schoolId/:teacherId`,
+                        `/login`,
+                    ]}>
+                        <ScreenBox>
+                            <LoginView/>
+                        </ScreenBox>
+                    </Route>
                     <Route path="/pupil/:pupilName/:pupilId">
                         <ScreenBox>
                             <PupilRoute/>

@@ -55,7 +55,7 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
             </Box>
             <form noValidate autoComplete="off">
                 <Grid container spacing={2}>
-                    <input type="text" name="username" autoComplete={"username"} value={passwordName}
+                    <input type="text" name="username" autoComplete={"username"} value={who}
                            style={{display: "none"}} readOnly/>
 
                     {currentPasswordHash && !override &&

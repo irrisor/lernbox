@@ -83,7 +83,8 @@ export function SynchronizationView() {
                             key: entry.key,
                             localDate: entry.localTimestamp ? moment(entry.localTimestamp).fromNow() : "",
                             remoteDate: entry.remoteTimestamp ? moment(entry.remoteTimestamp).fromNow() : "",
-                            state: entry.remoteState,
+                            localState: entry.localState,
+                            remoteState: entry.remoteState,
                             description: object.description,
                         };
                     }}
@@ -99,13 +100,18 @@ export function SynchronizationView() {
                             width: 200,
                         },
                         {
+                            label: "Status",
+                            dataKey: "localState",
+                            width: 200,
+                        },
+                        {
                             label: "Remote",
                             dataKey: "remoteDate",
                             width: 200,
                         },
                         {
                             label: "Status",
-                            dataKey: "state",
+                            dataKey: "remoteState",
                             width: 200,
                         },
                     ]}

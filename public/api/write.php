@@ -33,10 +33,11 @@ function write(string $path, object $body)
         if (property_exists($body, 'access')) {
             // create a directory with new access policy
             mkdir($local_path);
+            $access = $body->access;
             replaceFileExclusive("{$data_directory}$path/access.json", (object)[
                 "admin_key" => request_key(),
-                "write_key" => property_exists($body, "write_key") ? $body->write_key : NULL,
-                "read_key" => property_exists($body, "read_key") ? $body->read_key : NULL,
+                "write_key" => property_exists($access, "write_key") ? $access->write_key : NULL,
+                "read_key" => property_exists($access, "read_key") ? $access->read_key : NULL,
             ]);
         } else {
             // write contents to a file and print new hash

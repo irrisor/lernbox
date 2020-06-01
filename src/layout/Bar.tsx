@@ -105,7 +105,7 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
                 <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/teacher/login`)}>
+                          onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
                 </ListItem>
@@ -124,7 +124,7 @@ const Menu = (props: { onClick: () => true }) => {
                           })}
                 >
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
-                    <ListItemText primary="Abmelden"/>
+                    <ListItemText primary="Nutzer wechseln"/>
                 </ListItem>
             </List>
         </div>
