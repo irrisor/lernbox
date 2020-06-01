@@ -15,7 +15,7 @@ try {
     $path_secured = "/" . join("/", array_merge(array_map(function ($segment) {
             return preg_replace("/[^a-zA-Z0-9]/", "_", $segment);
         }, array_slice($path_exploded, 2, $path_exploded_length - 3)),
-            [preg_replace("/[^a-zA-Z0-9.]/", "_", $path_exploded[$path_exploded_length - 1])]));
+            [preg_replace("/[^a-zA-Z0-9]/", "_", $path_exploded[$path_exploded_length - 1])]));
     if (strpos($path, '/api') === 0) {
         $path = substr($path, 4);
     }
