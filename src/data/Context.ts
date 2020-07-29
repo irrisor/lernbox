@@ -406,11 +406,11 @@ export class Context {
     }
 
     public update(updateFunction?: (newContext: Context) => void): Context {
-        if (this.supersededAt) {
-            console.error("Context was superseded at", this.supersededAt);
-            throw new Error("Already superseded context is updated");
-        }
         if (this._initialized) {
+            if (this.supersededAt) {
+                console.error("Context was superseded at", this.supersededAt);
+                throw new Error("Already superseded context is updated");
+            }
             const newContext = new Context(this.history, this, false);
             this.supersededAt = new Error("superseded");
             updateFunction && updateFunction(newContext);

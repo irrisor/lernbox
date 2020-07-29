@@ -50,7 +50,7 @@ export function Overview() {
     const maxHeight = 500;
 
     // noinspection JSUnusedLocalSymbols
-    const instancesAndCards = React.useMemo(()=>(pupil?.instances.map(instance => [instance, context.getCard(instance)])
+    const instancesAndCards = React.useMemo(() => (pupil?.instances.map(instance => [instance, context.getCard(instance)])
         .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
         .sort(([a, aCard], [b, bCard]) => {
             const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
@@ -118,7 +118,7 @@ export function Overview() {
                     {context.isTeacher && <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>}
                 </Tabs>
                 <TableContainer component={Paper} style={{
-                    maxHeight: maxHeight+"px",
+                    maxHeight: maxHeight + "px",
                     display: activeTab === 0 ? undefined : "none",
                 }}>
                     <Table aria-label="Gruppen" stickyHeader>
@@ -145,7 +145,7 @@ export function Overview() {
                     </Table>
                 </TableContainer>
                 <TableContainer component={Paper} style={{
-                    maxHeight: maxHeight+"px",
+                    maxHeight: maxHeight + "px",
                     display: activeTab === 1 ? undefined : "none",
                 }}>
                     <Table aria-label="Fächer" stickyHeader>
@@ -208,9 +208,9 @@ export function Overview() {
                             label: "Aktiv",
                             dataKey: "active",
                             numeric: true,
-                        }
+                        },
                     ]}
-                    rowGetter={({ index }) => {
+                    rowGetter={({index}) => {
                         const [instance, card] = instancesAndCards[index];
                         const nextTryDate = Context.getNextTryDate(instance);
                         return {
@@ -257,15 +257,21 @@ export function Overview() {
                         <Button
                             variant="contained"
                             onClick={() => {
-                                context.update(() =>
-                                    // essentially this is not proper context replacement, but as we don't detect
-                                    // unchanged root elements, it will work
-                                    pupil.instances.forEach(instance => {
-                                        if (selectedInstances.indexOf(instance.id) >= 0) {
-                                            instance.slot = slotInput;
-                                        }
-                                    }));
-                                setSelectedInstances([]);
+                                if (slotInput !== undefined) {
+                                    const slot = slotInput;
+                                    context.update(newContext =>
+                                        // essentially this is not proper context replacement, but as we don't detect
+                                        // unchanged root elements, it will work
+                                        pupil.instances.forEach(instance => {
+                                            if (selectedInstances.indexOf(instance.id) >= 0) {
+                                                newContext.modifyPupilsCardInstance(instance.id, modifiedInstance => {
+                                                    modifiedInstance.slot = slot;
+                                                    return modifiedInstance;
+                                                });
+                                            }
+                                        }));
+                                    setSelectedInstances([]);
+                                }
                             }}
                             fullWidth
                         >
