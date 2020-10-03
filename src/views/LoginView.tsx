@@ -83,7 +83,7 @@ export function LoginView() {
                     context.readPasswordHash = newReadKey;
                 }
                 context.currentPasswordHash = teacherKey;
-                context.history.push("/teacher/sync");
+                context.history.push("/");
             });
         }
 
