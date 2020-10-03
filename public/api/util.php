@@ -106,6 +106,60 @@ function readFileExclusive($filename)
     return "";
 }
 
+/**
+ * @return string|null key from the current request's Authorization header
+ */
+function requestKey()
+{
+    $key_exploded = getBearerExploded();
+    return $key_exploded[0];
+}
+
+/**
+ * @return array
+ */
+function getBearerExploded(): array
+{
+    $authorization_exploded = getAuthorizationHeaderExploded();
+    $key = count($authorization_exploded) === 2 && $authorization_exploded[0] == "Bearer" ? $authorization_exploded[1] : NULL;
+    $key_exploded = explode(":", $key);
+    return $key_exploded;
+}
+
+/**
+ * @return string|null key from the current request's Authorization header
+ */
+function requestAdditionalKey()
+{
+    $key_exploded = getBearerExploded();
+    return count($key_exploded) > 1 ? $key_exploded[1] : NULL;
+}
+
+/**
+ * @return string|null password from the current request's Authorization header
+ */
+function requestPassword()
+{
+    $authorization_exploded = getAuthorizationHeaderExploded();
+    $base64 = count($authorization_exploded) === 2 && $authorization_exploded[0] == "Basic" ? $authorization_exploded[1] : NULL;
+    $exploded = explode(":", base64_decode($base64));
+    return count($exploded) > 1 ? $exploded[1] : NULL;
+}
+
+/**
+ * @return array
+ */
+function getAuthorizationHeaderExploded(): array
+{
+    $authorization = array_key_exists('Authorization', getallheaders()) ? getallheaders()['Authorization'] : NULL;
+    if ($authorization === NULL) {
+        header("HTTP/1.1 401 Unauthorized");
+        print "No Authorization header found to check access to this file.";
+        die(1);
+    }
+    $authorization_exploded = explode(' ', $authorization, 2);
+    return $authorization_exploded;
+}
 
 /**
  * @param string $path string filename to ensure access to (relative to data dir, starts with a slash)
@@ -114,7 +168,7 @@ function readFileExclusive($filename)
 function ensureAccessOrDie(string $path, bool $write = true, bool $delete = false): void
 {
     global $data_directory;
-    $key = request_key();
+    $key = requestKey();
 
     $dir = dirname($path);
     $access_file = "{$data_directory}{$dir}/access.json";
@@ -135,6 +189,53 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
         die(1);
     }
     $access = $access->content;
+
+    if (!$key) {
+        $password = requestPassword();
+        $username = basename($path);
+        $url = property_exists($access, "webweaverUrl") ? $access->webweaverUrl : NULL;
+        if ($username && $password && $url) {
+
+            try {
+                $client = new SoapClient($url . 'soap.php?wsdl', array(
+                    'encoding' => 'UTF-8',
+                    'trace' => 1,
+                    'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
+                    'exceptions' => 0
+                ));
+
+                $result = $client->request([
+                    ['method' => 'login', 'login' => $username, 'password' => $password, 'get_properties' => [], 'is_online' => 0],
+                    ['method' => 'logout']
+                ]);
+                if ($result and is_array($result) and ($result[0]['return'] === 'OK')) {
+//                    print_r($result);
+//                    print "\n";
+                    $key = property_exists($access, "write_key") ? $access->write_key : NULL;
+                } else {
+                    header("HTTP/1.1 403 Access Denied");
+                    print "Login at WebWeaver failed.";
+                    print_r($result);
+                    die(1);
+                }
+            } catch (SoapFault $e) {
+                header("HTTP/1.1 500 Internal Server Error");
+                print("Error in soap client");
+                print_r($e);
+                die(1);
+            } catch (Exception $e) {
+                header("HTTP/1.1 500 Internal Server Error");
+                print("General error");
+                print_r($e);
+                die(1);
+            }
+        } else {
+            header("HTTP/1.1 403 Access Denied");
+            print "Neither key nor password is specified or cannot be checked.";
+            die(1);
+        }
+    }
+
     $properties = ['admin_key'];
     if (!$delete) {
         array_push($properties, 'write_key');
@@ -142,12 +243,14 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
             array_push($properties, 'read_key');
         }
     }
-    if (!array_reduce($properties, function (bool $previous, string $property) use ($access, $key): bool {
+    $access_key_matches = !array_reduce($properties, function (bool $previous, string $property) use ($access, $key): bool {
         return $previous || (property_exists($access, $property) && $key == $access->$property);
-    }, false)) {
+    }, false);
+    if ($access_key_matches) {
         header("HTTP/1.1 403 Access Denied");
         print "The key is not authorized to perform the operation on this file.";
         die(1);
     }
 }
+
 ?>

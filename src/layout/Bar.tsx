@@ -62,18 +62,25 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function toggleFullScreen() {
+    const anyDocument = document as any;
     if (
-        !document.fullscreenElement
+        document.fullscreenElement || anyDocument.webkitFullscreenElement
     ) {
-        // current working methods
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(
+                () => console.warn("Exiting fullscreen failed."));
+        }
+        if (anyDocument.webkitCancelFullScreen) {
+            anyDocument.webkitCancelFullScreen();
+        }
+    } else {
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(
                 () => console.warn("Switching to fullscreen failed."));
         }
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen().catch(
-                () => console.warn("Exiting fullscreen failed."));
+        const docElement: any = document.documentElement;
+        if (docElement.webkitRequestFullscreen) {
+            docElement.webkitRequestFullscreen((Element as any).ALLOW_KEYBOARD_INPUT);
         }
     }
 }

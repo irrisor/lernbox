@@ -226,7 +226,7 @@ export const words = [
     "Glückwunsch",
     "Glas",
     "Gleis",
-    "Die Grenze",
+    "Grenze",
     "Grippe",
     "Grundschule",
     "Gruppe",

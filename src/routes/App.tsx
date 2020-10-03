@@ -20,12 +20,12 @@ export default function App() {
                 context.setContext = setContext;
                 const newContext = new Context(history, context);
                 setContext(newContext);
-                if (history.location.pathname === "/" &&
-                    context.currentPupilId === undefined &&
-                    context.pupilsList.length === 1 &&
-                    context.pupilsList[0].name === "default") {
-                    context.history.push(`/pupil/default/${context.pupilsList[0].id}`)
-                }
+                // if (history.location.pathname === "/" &&
+                //     context.currentPupilId === undefined &&
+                //     context.pupilsList.length === 1 &&
+                //     context.pupilsList[0].name === "default") {
+                //     context.history.push(`/pupil/default/${context.pupilsList[0].id}`)
+                // }
             }
         })();
     });
@@ -36,8 +36,10 @@ export default function App() {
                 <Switch>
                     <Route path={[
                         `/login/:schoolId/none/:key`,
+                        `/login/:schoolId/:teacherId/:readKey/:pupilId/:key`,
                         `/login/:schoolId/:teacherId/:key`,
                         `/login/:schoolId/:teacherId`,
+                        `/login/:schoolId/`,
                         `/login`,
                     ]}>
                         <ScreenBox>

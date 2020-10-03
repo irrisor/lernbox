@@ -7,12 +7,13 @@ import {reactContext} from "../data/Context";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
-import {Box, Button, Chip, Grid, TextField, Tooltip} from "@material-ui/core";
+import {Box, Button, Chip, Grid, Link, TextField, Tooltip} from "@material-ui/core";
 import {onEnterPressed} from "./Question";
 import {Pupil} from "../data/Pupil";
 import {Lock, LockOpen, Refresh} from "@material-ui/icons";
 import {randomFrom} from "../img/svgs";
 import {words} from "../data/words";
+import {sha256} from "js-sha256";
 
 function randomPupilPassword() {
     return randomFrom(words).toLowerCase() + Math.floor(Math.random() * 90 + 10);
@@ -44,17 +45,27 @@ export function PupilList() {
                                 <AccountCircle/>
                             </ListItemIcon>
                             <ListItemText
-                                primary={<Box display="flex" alignItems="center">{pupil.name !== "default" ? pupil.name : "Standardschüler"}<Box flexGrow={1}/>
+                                primary={<Box display="flex"
+                                              alignItems="center">{pupil.name !== "default" ? pupil.name : "Standardschüler"}<Box
+                                    flexGrow={1}/>
                                     {context.isTeacher && (pupil.password ?
-                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
-                                                  onMouseEnter={() => onPasswordChip = true}
-                                                  onMouseLeave={() => onPasswordChip = false}
-                                                  icon={<Lock/>} label={pupil.password}/>
+                                            <>
+                                                <Link href={`/login/${context.schoolId}/${context.teacherId}/${
+                                                    context.readPasswordHash}/${pupil.id}/${sha256(pupil.password)}`}>
+                                                    Zugangslink&nbsp;
+                                                </Link>
+                                                <Chip
+                                                    onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
+                                                    onMouseEnter={() => onPasswordChip = true}
+                                                    onMouseLeave={() => onPasswordChip = false}
+                                                    icon={<Lock/>} label={pupil.password}/>
+                                            </>
                                             :
-                                            <Chip onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
-                                                  onMouseEnter={() => onPasswordChip = true}
-                                                  onMouseLeave={() => onPasswordChip = false}
-                                                  icon={<LockOpen/>} label="kein Passwort"/>
+                                            <Chip
+                                                onClick={() => context.history.push(`/pupil/${pupil.name}/${pupil.id}/password`)}
+                                                onMouseEnter={() => onPasswordChip = true}
+                                                onMouseLeave={() => onPasswordChip = false}
+                                                icon={<LockOpen/>} label="kein Passwort"/>
                                     )}</Box>}
                             />
                         </ListItem>

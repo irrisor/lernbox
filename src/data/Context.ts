@@ -19,6 +19,7 @@ interface TeacherData {
     teacherPasswordHash: string;
     pupilIds: string[];
     id: string;
+    readPasswordHash: string;
 }
 
 export const DEFAULT_TEACHER_ID = "default-teacher";
@@ -117,6 +118,18 @@ export class Context {
         this.setPersistentObjectListeners();
     }
 
+    public get readPasswordHash(): string {
+        return this.persistentTeacher.content.readPasswordHash;
+    }
+
+    public set readPasswordHash(value: string) {
+        if (value !== this.readPasswordHash) {
+            this.persistentTeacher.content = Object.assign({}, this.persistentTeacher.content, {
+                readPasswordHash: value,
+            });
+        }
+    }
+
     public get superseded(): boolean {
         return !!this.supersededAt;
     }
@@ -131,6 +144,19 @@ export class Context {
                 context._currentPupilId = value;
                 context._currentInstances = [];
                 context._currentGroups = [];
+                if (value && !context.isTeacher && context.persistentTeacher.content.pupilIds.indexOf(value) === -1) {
+                    console.log("Initializing single pupil data")
+                    const newPersistentPupil = this.newPersistentPupil(value);
+                    context.persistentPupils = [newPersistentPupil];
+                    context.persistentTeacher.content =  Object.assign({}, context.persistentTeacher.content, {
+                        pupilIds: context.persistentTeacher.content.pupilIds.concat(value),
+                    })
+                    context.setPersistentObjectListeners();
+                    this.persistentCards.loadRemote();
+                    newPersistentPupil.loadRemote();
+                } else {
+                    context.setPersistentObjectListeners();
+                }
             });
         }
     }
@@ -210,17 +236,17 @@ export class Context {
 
     set teacherId(value: string) {
         if (value !== this.teacherId) {
-            this.update(() => {
-                    this.persistentLocal.content = Object.assign({}, this.persistentLocal.content, {
+            this.update(context => {
+                    context.persistentLocal.content = Object.assign({}, context.persistentLocal.content, {
                         teacherId: value,
                     });
-                    this.persistentPupils.forEach(pupilObject => pupilObject.delete(false));
-                    this.persistentTeacher.delete(false);
-                    this.persistentTeacher = this.initializeTeacherObject(value);
-                    this.persistentCards.delete(false);
-                    this.persistentCards = this.initializeCardsObject(value);
-                    this.persistentPupils = this.initializePupilObjects();
-                    this.setPersistentObjectListeners();
+                    context.persistentPupils.forEach(pupilObject => pupilObject.delete(false));
+                    context.persistentTeacher.delete(false);
+                    context.persistentTeacher = context.initializeTeacherObject(value);
+                    context.persistentCards.delete(false);
+                    context.persistentCards = context.initializeCardsObject(value);
+                    context.persistentPupils = context.initializePupilObjects();
+                    context.setPersistentObjectListeners();
                 },
             );
         }
@@ -277,8 +303,10 @@ export class Context {
     }
 
     public set pupil(value: Pupil | undefined) {
-        // TODO change pupil
-        throw new Error("not implemented");
+        if (!value) return;
+        const persistentPupil = this.persistentPupils.find(persistentPupil => persistentPupil.content.id === this.currentPupilId);
+        if (!persistentPupil) throw new Error("current pupil not found");
+        persistentPupil.content = value;
     }
 
     public get pupilsList() {
@@ -468,6 +496,7 @@ export class Context {
                 persistentPupil = this.newPersistentPupil(id);
                 context.persistentPupils = context.persistentPupils.concat(persistentPupil);
             }
+            context.setPersistentObjectListeners();
             persistentPupil.content = newPupilContent;
         });
     }
@@ -503,11 +532,12 @@ export class Context {
     private setPersistentObjectListeners() {
         this.synchronizationInfo.objects().forEach(object => object.onStateChange =
             object => this.onPersistentObjectChange(object));
-        const teacherAuthKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
+        this.persistentTeacher.authKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
             this.currentPasswordHash : undefined;
-        this.persistentTeacher.authKey = teacherAuthKey;
-        this.persistentCards.authKey = teacherAuthKey;
-        this.persistentPupils.forEach(object => object.authKey = () => this.currentPasswordHash ? this.currentPasswordHash : undefined);
+        this.persistentCards.authKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
+            this.currentPasswordHash : this.persistentTeacher.content.readPasswordHash;
+        this.persistentPupils.forEach(object => object.authKey = () => this.currentPasswordHash ? (
+            this.currentPasswordHash + ":" + sha256(object.content.password)) : (this.readPasswordHash || undefined));
     }
 
     private initializeCardsObject(teacherId: string) {
@@ -526,6 +556,7 @@ export class Context {
                 teacherPasswordHash: DEFAULT_TEACHER_PASSWORD_HASH,
                 pupilIds: [defaultPupilId],
                 id: teacherId,
+                readPasswordHash: "",
             },
             this.apiFileNameTeacherData(teacherId),
             this.synchronizationInfo,

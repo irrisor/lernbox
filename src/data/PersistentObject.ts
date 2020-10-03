@@ -243,9 +243,15 @@ export class PersistentObject<T = unknown> {
     }
 
     private async storeRemote() {
-        if (!this.authKey) return;
+        if (!this.authKey) {
+            console.debug("not uploading because we have no authKey function", this.meta.key);
+            return;
+        }
         const authKeyValue = this.authKey(this);
-        if (!authKeyValue) return;
+        if (!authKeyValue) {
+            console.debug("not uploading because we have no authKey", this.meta.key);
+            return;
+        }
         this.remoteStoreState.perform(async () => {
             const headers: HeadersInit = {
                 "Authorization": "Bearer " + authKeyValue,

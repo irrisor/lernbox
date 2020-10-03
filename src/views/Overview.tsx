@@ -289,6 +289,19 @@ export function Overview() {
                         Lernen
                     </Button>
                 </Grid>
+                <Grid item xs={12}>
+                    <Button
+                        variant="contained"
+                        onClick={() => context.update(newContext => {
+                            newContext.currentPasswordHash = "";
+                            newContext.currentPupilId = undefined;
+                            newContext.history.push("/");
+                        })}
+                        fullWidth
+                    >
+                        Abmelden
+                    </Button>
+                </Grid>
             </BottomGridContainer>
         </>
     );

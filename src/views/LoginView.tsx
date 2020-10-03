@@ -7,18 +7,39 @@ import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {sha256} from "js-sha256";
 import {onEnterPressed} from "./Question";
+import {v4 as uuidv4} from 'uuid';
 
 export function LoginView() {
     const context = React.useContext(reactContext);
-    const {schoolId, teacherId, key} = useParams();
+    const {schoolId, teacherId, readKey, pupilId, key} = useParams();
     useEffect(() => {
-        if (schoolId) {
-            context.schoolId = schoolId;
+        if (
+            (schoolId && context.schoolId !== schoolId) ||
+            (teacherId && context.teacherId !== teacherId) ||
+            (key && context.currentPasswordHash !== key) ||
+            (pupilId && context.currentPupilId !== pupilId) ||
+            (readKey && context.readPasswordHash !== readKey)
+        ) {
+            context.update(newContext => {
+                if (schoolId) {
+                    newContext.schoolId = schoolId;
+                }
+                if (teacherId) {
+                    newContext.teacherId = teacherId;
+                }
+                if (key) {
+                    newContext.currentPasswordHash = key;
+                }
+                if (pupilId) {
+                    if (readKey) {
+                        newContext.readPasswordHash = readKey;
+                    }
+                    newContext.currentPupilId = pupilId;
+                    context.history.push("/pupil/logged-in/" + pupilId);
+                }
+            });
         }
-        if (teacherId) {
-            context.teacherId = teacherId;
-        }
-    }, [context, schoolId, teacherId]);
+    }, [context, schoolId, teacherId, key, pupilId, readKey]);
     const [id, setId] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [message, setMessage] = React.useState("Anmelden");
@@ -28,7 +49,7 @@ export function LoginView() {
         <p>Um Karten und Lernstandsdaten auf mehreren Geräten zu nutzen, können diese auf dem Server gespeichert
             werden.</p>
     </>);
-    if (context.schoolId === DEFAULT_SCHOOL_ID || (context.teacherId === DEFAULT_TEACHER_ID && !key)) {
+    if (context.schoolId === DEFAULT_SCHOOL_ID) {
         return (
             <Main>
                 {header}
@@ -44,6 +65,7 @@ export function LoginView() {
         setPassword("");
         setMessage("...");
         const teacherKey = sha256(password);
+        const newReadKey = sha256(uuidv4()).substring(0, 6);
         const headers: HeadersInit = {
             "Authorization": "Bearer " + teacherKey,
         };
@@ -58,6 +80,7 @@ export function LoginView() {
                 context.teacherId = id;
                 if (created) {
                     context.teacherPasswordHash = teacherKey;
+                    context.readPasswordHash = newReadKey;
                 }
                 context.currentPasswordHash = teacherKey;
                 context.history.push("/teacher/sync");
@@ -68,7 +91,8 @@ export function LoginView() {
             case 404: // Not Found
                 console.debug("teacher account not found - creating it", checkResponse);
                 const headers: HeadersInit = {
-                    "Authorization": "Bearer " + key,
+                    // "Authorization": "Bearer " + key,
+                    "Authorization": "Basic " + btoa(":" + password),
                 };
                 const directoryPath = fileName.substring(0, fileName.lastIndexOf("/"));
                 const createResponse = await fetch(directoryPath, {
@@ -77,6 +101,7 @@ export function LoginView() {
                     body: JSON.stringify({
                         access: {
                             write_key: teacherKey,
+                            read_key: newReadKey,
                         },
                     }),
                 });
@@ -86,9 +111,9 @@ export function LoginView() {
                         console.debug("teacher account created", createResponse);
                         loggedIn(true);
                         break;
-                    case 403: // Not Found
+                    case 403: // Access Denied
                         console.debug("create teacher account reports wrong key", createResponse);
-                        setMessage("Schulschlüssel nicht akzeptiert");
+                        setMessage("Passwort nicht akzeptiert");
                         break;
                     default:
                         console.debug("created teacher account failed", createResponse);
@@ -116,13 +141,14 @@ export function LoginView() {
         return (<>
             <Main>
                 {header}
-                <p>Gib bitte deine Emailadresse sowie ein Passwort für Lernbox ein, um dich einzuloggen bzw. ein Konto
+                <p>Gib bitte deinen WebWeaver Benutzernamen sowie dein Passwort dazu ein, um dich einzuloggen bzw. ein
+                    Konto
                     zu erstellen.</p>
 
                 <form noValidate autoComplete="off">
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
-                            <TextField label="Lernbox Login / Email Adresse"
+                            <TextField label="WebWeaver Login / Benutzername"
                                        autoFocus
                                        type="text"
                                        value={id}
@@ -135,7 +161,7 @@ export function LoginView() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Lernbox Serverpasswort"
+                            <TextField label="WebWeaver Serverpasswort"
                                        type="password"
                                        value={password}
                                        onChange={event => setPassword(event.target.value)}
@@ -165,6 +191,7 @@ export function LoginView() {
         </>);
     }
     return <>
-        Schule: {context.schoolId}, Lehrer: {context.teacherId}
+        Schule: {context.schoolId || "ohne"}, Lehrer/in: {context.teacherId||"ohne"},
+        Schüler/in: {(context.pupil && context.pupil.name) || context.currentPupilId || "ohne"}
     </>;
 }

@@ -24,7 +24,7 @@ function write(string $path, object $body)
         }
         if (!is_dir("{$data_directory}$dir")) {
             write($dir, (object)[
-                "access" => (object)["admin_key" => request_key()]
+                "access" => (object)["admin_key" => requestKey()]
             ]);
         }
         ensureAccessOrDie($path);
@@ -35,8 +35,8 @@ function write(string $path, object $body)
             mkdir($local_path);
             $access = $body->access;
             replaceFileExclusive("{$data_directory}$path/access.json", (object)[
-                "admin_key" => request_key(),
-                "write_key" => property_exists($access, "write_key") ? $access->write_key : NULL,
+                "admin_key" => requestKey(),
+                "write_key" => property_exists($access, "write_key") ? $access->write_key : requestAdditionalKey(),
                 "read_key" => property_exists($access, "read_key") ? $access->read_key : NULL,
             ]);
         } else {
@@ -58,22 +58,6 @@ function write(string $path, object $body)
         print $e->getMessage();
         die(1);
     }
-}
-
-/**
- * @return string|null key from the current request's Authorization header
- */
-function request_key()
-{
-    $authorization = array_key_exists('Authorization', getallheaders()) ? getallheaders()['Authorization'] : NULL;
-    if ($authorization === NULL) {
-        header("HTTP/1.1 401 Unauthorized");
-        print "No Authorization header found to check access to this file.";
-        die(1);
-    }
-    $authorization_exploded = explode(' ', $authorization, 2);
-    $key = count($authorization_exploded) === 2 && $authorization_exploded[0] == "Bearer" ? $authorization_exploded[1] : NULL;
-    return $key;
 }
 
 ?>
