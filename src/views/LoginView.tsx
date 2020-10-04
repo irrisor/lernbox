@@ -67,7 +67,8 @@ export function LoginView() {
         const teacherKey = sha256(password);
         const newReadKey = sha256(uuidv4()).substring(0, 6);
         const headers: HeadersInit = {
-            "Authorization": "Bearer " + teacherKey,
+            // "Authorization": "Bearer " + teacherKey,
+            "Authorization": "Basic " + btoa(id + ":" + password),
         };
         const fileName = "/api/" + context.apiFileNameTeacherData(id);
         const checkResponse = await fetch(fileName, {
@@ -91,8 +92,7 @@ export function LoginView() {
             case 404: // Not Found
                 console.debug("teacher account not found - creating it", checkResponse);
                 const headers: HeadersInit = {
-                    // "Authorization": "Bearer " + key,
-                    "Authorization": "Basic " + btoa(":" + password),
+                    "Authorization": "Basic " + btoa(id + ":" + password),
                 };
                 const directoryPath = fileName.substring(0, fileName.lastIndexOf("/"));
                 const createResponse = await fetch(directoryPath, {
@@ -191,7 +191,7 @@ export function LoginView() {
         </>);
     }
     return <>
-        Schule: {context.schoolId || "ohne"}, Lehrer/in: {context.teacherId||"ohne"},
+        Schule: {context.schoolId || "ohne"}, Lehrer/in: {context.teacherId || "ohne"},
         Schüler/in: {(context.pupil && context.pupil.name) || context.currentPupilId || "ohne"}
     </>;
 }

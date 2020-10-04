@@ -22,13 +22,14 @@ class TagDoesNotMatchException extends Exception
 /**
  * Replace contents of a file and return the previous contents.
  * @param $filename string short file name
- * @param $content object
+ * @param $content object|array content to be json encoded
+ * @param bool $with_metadata
  * @return string old file contents
  * @throws Exception if file cannot be written
  * @throws MissingETagButExistentFileException if the input parameters cannot be used
  * @throws TagDoesNotMatchException if the If-Match header does not match the files tag
  */
-function replaceFileExclusive(string $filename, object $content, bool $with_metadata = true): string
+function replaceFileExclusive(string $filename, $content, bool $with_metadata = true): string
 {
     $handle = fopen($filename, "c+");
     if (!$handle) {
@@ -136,14 +137,14 @@ function requestAdditionalKey()
 }
 
 /**
- * @return string|null password from the current request's Authorization header
+ * @return array with keys user and password from the current request's Authorization header
  */
-function requestPassword()
+function requestBasicAuth()
 {
     $authorization_exploded = getAuthorizationHeaderExploded();
     $base64 = count($authorization_exploded) === 2 && $authorization_exploded[0] == "Basic" ? $authorization_exploded[1] : NULL;
     $exploded = explode(":", base64_decode($base64));
-    return count($exploded) > 1 ? $exploded[1] : NULL;
+    return count($exploded) > 1 ? ['user' => $exploded[0], 'password' => $exploded[1]] : NULL;
 }
 
 /**
@@ -161,14 +162,9 @@ function getAuthorizationHeaderExploded(): array
     return $authorization_exploded;
 }
 
-/**
- * @param string $path string filename to ensure access to (relative to data dir, starts with a slash)
- * @param bool $write true to check write access (default), false to check read access
- */
-function ensureAccessOrDie(string $path, bool $write = true, bool $delete = false): void
+function readAccessFile(string $path)
 {
     global $data_directory;
-    $key = requestKey();
 
     $dir = dirname($path);
     $access_file = "{$data_directory}{$dir}/access.json";
@@ -178,6 +174,7 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
         die(1);
     }
     $access = json_decode(file_get_contents($access_file));
+
     if ($access == NULL) {
         header("HTTP/1.1 404 Not Found");
         print "Cannot read access policy for '$dir'.";
@@ -188,11 +185,23 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
         print "Cannot read access policy for '$dir'.";
         die(1);
     }
-    $access = $access->content;
+    return $access->content;
+}
+
+/**
+ * @param string $path string filename to ensure access to (relative to data dir, starts with a slash)
+ * @param bool $write true to check write access (default), false to check read access
+ */
+function ensureAccessOrDie(string $path, bool $write = true, bool $delete = false): void
+{
+    $key = requestKey();
+
+    $access = readAccessFile($path);
 
     if (!$key) {
-        $password = requestPassword();
-        $username = basename($path);
+        $auth = requestBasicAuth();
+        $password = $auth['password'];
+        $username = $auth['user'];
         $url = property_exists($access, "webweaverUrl") ? $access->webweaverUrl : NULL;
         if ($username && $password && $url) {
 
@@ -205,13 +214,55 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
                 ));
 
                 $result = $client->request([
-                    ['method' => 'login', 'login' => $username, 'password' => $password, 'get_properties' => [], 'is_online' => 0],
-                    ['method' => 'logout']
+                    ['method' => 'login', 'login' => $username, 'password' => $password, 'is_online' => 0],
                 ]);
                 if ($result and is_array($result) and ($result[0]['return'] === 'OK')) {
-//                    print_r($result);
-//                    print "\n";
                     $key = property_exists($access, "write_key") ? $access->write_key : NULL;
+
+                    $session_id = $result[1]['session_id'];
+                    $group_ids = array_map(fn($member) => $member['login'], array_filter($result[0]['member'],
+                        fn($member) => $member['type'] == 18));
+
+//                    error_log("Requesting group member of $username: " . json_encode($group_ids));
+                    $result = $client->request(array_merge([
+                            ['method' => 'set_session', 'session_id' => $session_id]
+                        ], call_user_func_array('array_merge', array_map(fn($group_id) => [
+                            ['method' => 'set_focus', 'object' => 'members', 'login' => $group_id],
+                            ['method' => 'get_users']
+                        ]
+                            , $group_ids)), [
+                            ['method' => 'logout']
+                        ])
+                    );
+
+                    if ($result and is_array($result) and ($result[0]['return'] === 'OK')) {
+                        $groups = array_map(
+                            fn($group_id, $index) => [
+                                'group_id' => $group_id,
+                                'group_name' => $result[1 + $index * 2]['user']['name_hr'],
+                                'pupils' => array_map(fn($user) => [
+                                    'user_id' => $user['login'],
+                                    'user_name' => $user['name_hr'],
+                                ],
+                                    array_values(array_filter($result[2 + $index * 2]['users'], fn($member) => $member['type'] == 1))
+                                ),
+                            ], $group_ids, array_keys($group_ids));
+                        $groups = array_values(array_filter($groups, fn($group) => count($group['pupils']) > 0));
+
+                        global $data_directory;
+                        if (basename($path) == $username) {
+                            $dir = $path;
+                            mkdir("{$data_directory}$dir");
+                        } else {
+                            $dir = dirname($path);
+                        }
+                        $groups_file = "{$data_directory}{$dir}/groups.json";
+
+//                        error_log("Writing group pupils of $username: " . json_encode($groups));
+                        replaceFileExclusive($groups_file, $groups, false);
+                    } else {
+                        error_log("Requesting user groups failed! Response is " . json_encode($result));
+                    }
                 } else {
                     header("HTTP/1.1 403 Access Denied");
                     print "Login at WebWeaver failed.";

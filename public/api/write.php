@@ -34,10 +34,12 @@ function write(string $path, object $body)
             // create a directory with new access policy
             mkdir($local_path);
             $access = $body->access;
+            $parent_access = readAccessFile($path);
             replaceFileExclusive("{$data_directory}$path/access.json", (object)[
                 "admin_key" => requestKey(),
                 "write_key" => property_exists($access, "write_key") ? $access->write_key : requestAdditionalKey(),
                 "read_key" => property_exists($access, "read_key") ? $access->read_key : NULL,
+                "webweaverUrl" => property_exists($parent_access, "webweaverUrl") ? $parent_access->webweaverUrl : NULL,
             ]);
         } else {
             // write contents to a file and print new hash
