@@ -66,6 +66,11 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
         .flatMap(card => card.groups[groupPath.length])),
     ).sort((a, b) => a.localeCompare(b));
     const superGroup = groupPath.length > 0 ? groupPath.slice(0, groupPath.length - 1) : undefined;
+    const addButton = create && <Tooltip title="Neue Karte anlegen">
+        <IconButton onClick={() => create(groupPath)}>
+            <AddBox/>
+        </IconButton>
+    </Tooltip>;
     return (
         <>
             <Grid container spacing={2}>
@@ -93,11 +98,7 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
                                     <Typography color="textPrimary">{groupPath[groupPath.length - 1]}</Typography>
                                 </Breadcrumbs>
                             </Box></>}
-                        {create && <Tooltip title="Neue Karte anlegen">
-                            <IconButton onClick={() => create(groupPath)}>
-                                <AddBox/>
-                            </IconButton>
-                        </Tooltip>}
+                        {addButton}
                         <Box flexGrow={1}>
                             <TextField variant="outlined"
                                        fullWidth
@@ -144,6 +145,12 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
                                onClick={() => onClick(card)}/>
                     </Grid>
                 ))}
+                {subgroups.length === 0 && groupCards.length === 0 && (
+                    <Grid item xs={12} key="none">
+                        <Typography align="center" style={{marginTop: 100}}>Keine Karten gefunden.
+                            {create && <>Mit dem {addButton} Button neben dem Suchfeld eine neue anlegen.</>}</Typography>
+                    </Grid>
+                )}
             </Grid>
         </>);
 }

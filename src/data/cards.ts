@@ -1,6 +1,7 @@
 import {houseSVG} from "../img/svgs";
 import {v5 as uuidv5} from 'uuid';
 import {sha256} from "js-sha256";
+import additionalCards from "./additionalCards.json";
 
 type ImageParameters = {
     [seletector: string]: string | { [attribute: string]: string }
@@ -15,6 +16,8 @@ export interface Image {
     parameters?: ImageParameters;
 }
 
+type InputType = "text" | "number" | "number_or_nan" | "select" | undefined;
+
 export interface IndexCard {
     id: string;
     question?: string;
@@ -24,7 +27,7 @@ export interface IndexCard {
     answerImage?: Image;
     time_s: number;
     groups: string[];
-    inputType?: "text" | "number" | "number_or_nan" | "select";
+    inputType?: InputType;
     inputOptions?: string[];
     owner: string | undefined;
 }
@@ -148,5 +151,8 @@ for (let x = 0; x <= 10; x++) {
         }
     });
 });
+
+additionalCards.content.cards.forEach(additionalCard =>
+    predefinedCards.push(Object.assign({}, additionalCard, {inputType: additionalCard.inputType as InputType}, {owner: officialOwner})));
 
 export const predefinedCardsHash = sha256(JSON.stringify(predefinedCards));

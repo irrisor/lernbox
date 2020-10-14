@@ -10,7 +10,6 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import {positiveSVGs} from "../img/svgs";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import moment from "moment";
@@ -161,7 +160,7 @@ export function Overview() {
                                 <TableRow key={slot}>
                                     <TableCell component="th" scope="row">
                                         Fach {slot + 1}
-                                        <span style={{paddingLeft: 32}}>
+                                        {/*<span style={{paddingLeft: 32}}>
                                                 {slot > 1 ? [...Array(slot - 1)].map((dummy2, i) =>
                                                         <img src={positiveSVGs[0]} height={16} alt="star"
                                                              key={slot + "-" + i} style={{
@@ -169,7 +168,7 @@ export function Overview() {
                                                             marginBottom: -3,
                                                         }}/>)
                                                     : null}
-                                                </span>
+                                                </span>*/}
                                     </TableCell>
                                     <TableCell align="right">
                                         {pupil.instances.filter(instance => (instance.slot || 0) === slot).length}

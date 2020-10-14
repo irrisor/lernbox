@@ -33,12 +33,16 @@ import {makeStyles} from "@material-ui/core/styles";
 
 export const fieldBreakpoints = {xs: 12 as 12, lg: 6 as 6};
 
+function wikimediaFileNameOf(image: string) {
+    const match = image?.match(
+        /^(https:\/\/commons.wikimedia.org\/wiki.*\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*)|.*commons.wikimedia.org%2Fwiki%2FFile%3A([^/&]*)&.*|([^/]*))$/);
+    return match ? match[2] || match[3] || match[4] || match[5] : undefined;
+}
+
 export async function lookupImage(imageDataset: Image | undefined, set: (newImage: Image) => void) {
     const image = imageDataset?.image;
     if (image && !imageDataset?.url) {
-        const match = image?.match(
-            /^(https:\/\/commons.wikimedia.org\/wiki.*\/File:([^/]*)|https:\/\/upload.wikimedia.org\/.*\/([^/]*)|.*commons.wikimedia.org%2Fwiki%2FFile%3A([^/&]*)&.*|([^/]*))$/);
-        const wikiMediaFileName = match ? match[2] || match[3] || match[4] || match[5] : undefined;
+        const wikiMediaFileName = wikimediaFileNameOf(image);
         if (wikiMediaFileName) {
             const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${
                 wikiMediaFileName
@@ -54,31 +58,33 @@ export async function lookupImage(imageDataset: Image | undefined, set: (newImag
                     image: wikiMediaFileName, url: imageinfo.url, infoURL: imageinfo.descriptionurl,
                     parameters: imageDataset?.parameters,
                 });
-            } else {
+            } else if ( wikiMediaFileName !== image ) {
                 set({
                     image: wikiMediaFileName, url: undefined, infoURL: undefined,
                     parameters: imageDataset?.parameters,
                 });
             }
             return () => controller.abort();
-        } else if (image?.match(/[./].*/)) {
-            set({image: image, url: image, infoURL: undefined, parameters: imageDataset?.parameters});
         }
     }
 }
 
 function lookupImageSync(imageDataset: Image | undefined, set: (newImage: Image) => void) {
     return () => {
-        lookupImage(imageDataset, set).catch(e => console.error("looking up image failed", e));
+        if (!imageDataset?.url && imageDataset?.image?.match(/[./].*/) && !wikimediaFileNameOf(imageDataset?.image) ) {
+            set({image: imageDataset.image, url: imageDataset.image, infoURL: undefined, parameters: imageDataset?.parameters});
+        } else {
+            lookupImage(imageDataset, set).catch(e => console.error("looking up image failed", e));
+        }
     };
 }
 
-function ImageParametersField({image, set}: { image: Image | undefined, set: (newImage: Partial<Image>) => void }) {
+function ImageParametersField({image, set, label}: { image: Image | undefined, set: (newImage: Partial<Image>) => void, label: string }) {
     const [temporaryImageParameters, setTemporaryImageParameters] = React.useState<string>(JSON.stringify(image?.parameters));
     const [temporaryImageParametersError, setTemporaryImageParametersError] = React.useState<string>("");
     return (
         <TextField
-            label="Bild Parameter Vorderseite (JSON)"
+            label={label + " (JSON)"}
             value={temporaryImageParameters}
             onChange={event => {
                 const newValue = event.target.value;
@@ -127,11 +133,13 @@ function ImageField({label, image, set, setGroupPath, ...passthroughProps}: {
     return <Box display="flex" alignItems="flex-end">
         <Box flexGrow={1}><TextField
             label={label}
-            value={image ? image.image || "" : ""}
-            onChange={async event => {
-                set(Object.assign(image || {},
+            value={image ? image.image || image.url || "" : ""}
+            onChange={event => {
+                set(Object.assign({}, image || {},
                     {image: event.target.value, url: undefined, infoURL: undefined}));
             }}
+            error={!!image?.image && !image?.url}
+            helperText={image?.image && !image?.url ? "Unbekannter Bildname" : undefined}
             fullWidth
         /></Box><Box>
         <IconButton style={{marginBottom: -14}} onClick={() => setOpen(true)}>
@@ -180,7 +188,7 @@ export function EditCard() {
             answers: [""],
             groups: groups,
             time_s: 15,
-            owner: undefined,
+            owner: isCreate ? context.teacherId : undefined,
         };
         return Object.assign({}, originalCard);
     });
@@ -246,7 +254,10 @@ export function EditCard() {
                                     {...{groupPath, setGroupPath, searchText, setSearchText}}/>
                             </Grid>
                             {advancedMode && <Grid item {...fieldBreakpoints}>
-                                <ImageParametersField image={card.questionImage} set={newImage => {
+                                <ImageParametersField
+                                    label="Bild Parameter Vorderseite"
+                                    image={card.questionImage}
+                                    set={newImage => {
                                     setCard(Object.assign({}, card,
                                         {questionImage: newImage}));
                                 }}/>
@@ -303,7 +314,10 @@ export function EditCard() {
                                     {...{groupPath, setGroupPath, searchText, setSearchText}}/>
                             </Grid>
                             {advancedMode && <Grid item {...fieldBreakpoints}>
-                                <ImageParametersField image={card.answerImage} set={newImage => {
+                                <ImageParametersField
+                                    label="Bild Parameter Rückseite"
+                                    image={card.answerImage}
+                                    set={newImage => {
                                     setCard(Object.assign({}, card,
                                         {answerImage: newImage}));
                                 }}/>

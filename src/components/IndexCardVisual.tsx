@@ -73,57 +73,68 @@ export function IndexCardVisual(props:
     const svg = React.useMemo(() => {
         return (s: Snap.Paper, svgElement: SVGElement) => {
             if (url) {
-                if (url.match(/.*\.svg/)) {
+                if (url.match(/.*\.svg$/)) {
                     Snap.load(url
                         , data => {
-                            const group = s.g();
                             const dataElement = data as Snap.Element;
-                            group.append(dataElement);
-                            const loadedSVG = group.select("svg");
-                            if (loadedSVG !== null) {
-                                const width = convertUnit(loadedSVG.attr("width"));
-                                const height = convertUnit(loadedSVG.attr("height"));
-                                loadedSVG.node.removeAttribute("width");
-                                loadedSVG.node.removeAttribute("height");
-                                if (!loadedSVG.attr("viewBox") && width && height) {
-                                    loadedSVG.node.setAttribute("viewBox",
-                                        `${0} ${0} ${width} ${height}`);
-                                }
-                                if (parameters) {
-                                    for (const selector of Object.keys(parameters)) {
-                                        const value = parameters[selector];
-                                        try {
-                                            if (typeof value === "string") {
-                                                const elements = loadedSVG.selectAll(selector + " tspan");
-                                                if (elements) {
-                                                    elements.forEach(element => {
-                                                        element.node.textContent = value;
-                                                    });
+                            if (dataElement?.node?.nodeName === "svg") {
+                                const group = s.g();
+                                group.append(dataElement);
+                                const loadedSVG = group.select("svg");
+                                if (loadedSVG !== null) {
+                                    const width = convertUnit(loadedSVG.attr("width"));
+                                    const height = convertUnit(loadedSVG.attr("height"));
+                                    loadedSVG.node.removeAttribute("width");
+                                    loadedSVG.node.removeAttribute("height");
+                                    if (!loadedSVG.attr("viewBox") && width && height) {
+                                        loadedSVG.node.setAttribute("viewBox",
+                                            `${0} ${0} ${width} ${height}`);
+                                    }
+                                    if (parameters) {
+                                        for (const selector of Object.keys(parameters)) {
+                                            const value = parameters[selector];
+                                            try {
+                                                if (typeof value === "string") {
+                                                    const elements = loadedSVG.selectAll(selector + " tspan");
+                                                    if (elements) {
+                                                        elements.forEach(element => {
+                                                            element.node.textContent = value;
+                                                        });
+                                                    } else {
+                                                        const texts = loadedSVG.selectAll(selector);
+                                                        if (texts) {
+                                                            texts.attr({text: value});
+                                                        }
+                                                    }
                                                 } else {
-                                                    const texts = loadedSVG.selectAll(selector);
-                                                    if (texts) {
-                                                        texts.attr({text: value});
+                                                    const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
+                                                    if (element) {
+                                                        element.attr(value);
                                                     }
                                                 }
-                                            } else {
-                                                const element = selector === "svg" ? loadedSVG : loadedSVG.selectAll(selector);
-                                                if (element) {
-                                                    element.attr(value);
-                                                }
+                                            } catch (e) {
+                                                console.error("Error aplying imageParameter", selector, parameters, e);
                                             }
-                                        } catch (e) {
-                                            console.error("Error aplying imageParameter", selector, parameters, e);
                                         }
                                     }
                                 }
+                            } else {
+                                console.error("Loading " + url + " did not retrieve an svg, but ", data);
+                                s.text(0, 20, "Fehler beim Laden von " + url).attr({style: "fill: red;"});
                             }
                         });
-                } else if (url.match(/.*\.(jpg|png)/)) {
+                } else if (url.match(/.*\.(jpg|png)$/)) {
                     const image = s.image(url, 0, 0, undefined as unknown as number, undefined as unknown as number);
                     image.node.onload = () => {
                         const bBox = image.getBBox();
                         svgElement.setAttribute("viewBox", `0 0 ${bBox.width} ${bBox.height}`)
                     };
+                    image.node.onerror = error => {
+                        console.error("Loading " + url + " failed!", error);
+                        s.text(0, 20, "Fehler beim Laden von " + url).attr({style: "fill: red;"});
+                    }
+                } else {
+                    s.text(0, 20, "Unbekannte Bildart: " + url).attr({style: "fill: red;"});
                 }
             }
         };
