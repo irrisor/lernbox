@@ -22,6 +22,15 @@ interface TeacherData {
     readPasswordHash: string;
 }
 
+type GroupsData = Array<{
+    group_id: string,
+    group_name: string,
+    pupils: Array<{
+        user_id: string,
+        user_name: string,
+    }>,
+}>;
+
 export const DEFAULT_TEACHER_ID = "default-teacher";
 export const DEFAULT_SCHOOL_ID = "-";
 const DEFAULT_TEACHER_PASSWORD_HASH = "acb61a083d4a0c6d7c5ab47f21155903741be5769658b310da9c2a5155bb4d2e";
@@ -40,6 +49,7 @@ export class Context {
     private supersededAt?: Error;
     private persistentCards: PersistentObject<CardsData>;
     private persistentTeacher: PersistentObject<TeacherData>;
+    private persistentGroups: PersistentObject<GroupsData>;
     private persistentLocal: PersistentObject<LocalData>;
     private persistentPupils: PersistentObject<Pupil>[] = [];
     private _currentPupilId?: string;
@@ -54,6 +64,7 @@ export class Context {
             this._synchronizationInfo = originalContext._synchronizationInfo;
             this.persistentCards = originalContext.persistentCards;
             this.persistentTeacher = originalContext.persistentTeacher;
+            this.persistentGroups = originalContext.persistentGroups;
             this.persistentLocal = originalContext.persistentLocal;
             for (const propertyName of Object.keys(originalContext)) {
                 const propertyDescriptor = Object.getOwnPropertyDescriptor(
@@ -86,6 +97,7 @@ export class Context {
             );
             const teacherId = this.persistentLocal.content.teacherId;
             this.persistentTeacher = this.initializeTeacherObject(teacherId);
+            this.persistentGroups = this.initializeGroupsObject(teacherId);
             this.persistentCards = this.initializeCardsObject(teacherId);
             this.persistentPupils = this.initializePupilObjects();
         }
@@ -118,6 +130,10 @@ export class Context {
         this.setPersistentObjectListeners();
     }
 
+    public get pupilGroups(): Readonly<GroupsData> {
+        return this.persistentGroups.content;
+    }
+
     public get readPasswordHash(): string {
         return this.persistentTeacher.content.readPasswordHash;
     }
@@ -148,7 +164,7 @@ export class Context {
                     console.log("Initializing single pupil data")
                     const newPersistentPupil = this.newPersistentPupil(value);
                     context.persistentPupils = [newPersistentPupil];
-                    context.persistentTeacher.content =  Object.assign({}, context.persistentTeacher.content, {
+                    context.persistentTeacher.content = Object.assign({}, context.persistentTeacher.content, {
                         pupilIds: context.persistentTeacher.content.pupilIds.concat(value),
                     })
                     context.setPersistentObjectListeners();
@@ -243,6 +259,8 @@ export class Context {
                     context.persistentPupils.forEach(pupilObject => pupilObject.delete(false));
                     context.persistentTeacher.delete(false);
                     context.persistentTeacher = context.initializeTeacherObject(value);
+                    context.persistentGroups.delete(false);
+                    context.persistentGroups = context.initializeGroupsObject(value);
                     context.persistentCards.delete(false);
                     context.persistentCards = context.initializeCardsObject(value);
                     context.persistentPupils = context.initializePupilObjects();
@@ -368,9 +386,9 @@ export class Context {
         this.history.push("/");
     }
 
-    createPupil(name: string, password: string) {
+    createPupil(name: string, password: string, id = uuidv4()) {
         const newPupil: Pupil = {
-            id: uuidv4(),
+            id,
             teacherId: this.persistentTeacher.content.id,
             name,
             password,
@@ -532,8 +550,10 @@ export class Context {
     private setPersistentObjectListeners() {
         this.synchronizationInfo.objects().forEach(object => object.onStateChange =
             object => this.onPersistentObjectChange(object));
-        this.persistentTeacher.authKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
+        const teacherAuthKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
             this.currentPasswordHash : undefined;
+        this.persistentTeacher.authKey = teacherAuthKey;
+        this.persistentGroups.authKey = teacherAuthKey;
         this.persistentCards.authKey = () => this.isTeacher && this.currentPasswordHash !== DEFAULT_TEACHER_PASSWORD_HASH ?
             this.currentPasswordHash : this.persistentTeacher.content.readPasswordHash;
         this.persistentPupils.forEach(object => object.authKey = () => this.currentPasswordHash ? (
@@ -561,6 +581,14 @@ export class Context {
             this.apiFileNameTeacherData(teacherId),
             this.synchronizationInfo,
             () => "Lehrerdaten",
+        );
+    }
+
+    private initializeGroupsObject(teacherId: string) {
+        return new PersistentObject<GroupsData>([],
+            `${this.schoolId}/${teacherId}/groups.json`,
+            this.synchronizationInfo,
+            () => "Gruppeninformation mit Schülerliste",
         );
     }
 

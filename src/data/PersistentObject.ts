@@ -130,11 +130,16 @@ export class PersistentObject<T = unknown> {
             if (this.meta.remoteHash) {
                 headers["If-None-Match"] = this.meta.remoteHash;
             }
-            const response = await fetch(`/api/${this.meta.key}`,
-                {
-                    method: "GET",
-                    headers,
-                });
+            let response: Response;
+            try {
+                response = await fetch(`/api/${this.meta.key}`,
+                    {
+                        method: "GET",
+                        headers,
+                    });
+            } catch (error) {
+                response = error;
+            }
             switch (response.status) {
                 case 304: // Not Modified
                     // ok, everything is fine, we don't need to download it
@@ -174,7 +179,8 @@ export class PersistentObject<T = unknown> {
                     this.meta.remoteState = RemoteState.ERROR;
                     console.debug("download failed", this.meta.key, ":", response);
                     this.onStateChange && this.onStateChange(this);
-                    throw response;
+                    this.storeMetaLocally();
+                    return;
             }
             this.storeMetaLocally();
             this.scheduleLoadRemote();
@@ -263,12 +269,17 @@ export class PersistentObject<T = unknown> {
                 console.debug("uploading first version of ", this.meta.key);
             }
             this.meta.localState = LocalState.UPLOADING;
-            const response = await fetch(`/api/${this.meta.key}`,
-                {
-                    method: "PUT",
-                    headers,
-                    body: JSON.stringify(this.content),
-                });
+            let response: Response;
+            try {
+                response = await fetch(`/api/${this.meta.key}`,
+                    {
+                        method: "PUT",
+                        headers,
+                        body: JSON.stringify(this.content),
+                    });
+            } catch ( error ) {
+                response = error;
+            }
             switch (response.status) {
                 case 412: // Precondition Failed
                 case 409: // Conflict
@@ -292,7 +303,8 @@ export class PersistentObject<T = unknown> {
                     this.meta.remoteState = RemoteState.ERROR;
                     console.debug("upload failed", this.meta.key, ":", response);
                     this.onStateChange && this.onStateChange(this);
-                    throw response;
+                    this.storeMetaLocally();
+                    return;
             }
             this.storeMetaLocally();
             this.onStateChange && this.onStateChange(this);

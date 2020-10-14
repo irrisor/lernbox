@@ -8,27 +8,30 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {Box, Button, Chip, Grid, Link, TextField, Tooltip} from "@material-ui/core";
-import {onEnterPressed} from "./Question";
 import {Pupil} from "../data/Pupil";
-import {Lock, LockOpen, Refresh} from "@material-ui/icons";
+import {Group, Lock, LockOpen, PersonAdd, Refresh} from "@material-ui/icons";
 import {randomFrom} from "../img/svgs";
 import {words} from "../data/words";
 import {sha256} from "js-sha256";
+import {useParams} from "react-router";
+import {onEnterPressed} from "./Question";
 
 function randomPupilPassword() {
     return randomFrom(words).toLowerCase() + Math.floor(Math.random() * 90 + 10);
 }
 
-export function PupilList() {
+export function PupilList(props: { create?: boolean }) {
     const context = React.useContext(reactContext);
+    const {pupilGroupName} = useParams();
+    const pupilGroup = context.pupilGroups.find(group => group.group_id === pupilGroupName);
     React.useEffect(() => context.currentPupilId = undefined, [context.currentPupilId]);
     const [newName, setNewName] = React.useState("");
-    const [password, setPassword] = React.useState(randomPupilPassword());
-    const createPupil = () => {
-        if (newName !== "") {
-            context.createPupil(newName, password);
+    const [newPassword, setNewPassword] = React.useState(randomPupilPassword());
+    const createPupil = (name: string, password: string, id?: string) => {
+        if (name !== "") {
+            context.createPupil(name, password, id);
             setNewName("");
-            setPassword(randomPupilPassword());
+            setNewPassword(randomPupilPassword());
         }
     };
     let onPasswordChip = false;
@@ -70,37 +73,89 @@ export function PupilList() {
                             />
                         </ListItem>
                     ))}
-                    {context.isTeacher &&
-                    <ListItem button key="new">
+                    {context.isTeacher && props.create && !pupilGroup && context.pupilGroups.map(group => (
+                        <ListItem button
+                                  key={group.group_id}
+                                  onClick={() => context.history.push("/pupils/create/" + group.group_id)}
+                        >
+                            <ListItemIcon>
+                                <Group/>
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={group.group_name}
+                            />
+                        </ListItem>
+                    ))}
+                    {context.isTeacher && props.create && pupilGroup && pupilGroup.pupils.filter(pupil =>
+                        !context.pupilsList.find(existingPupil => existingPupil.id === pupil.user_id),
+                    ).map(pupil => (
+                        <ListItem
+                            key={pupil.user_id}
+                        >
+                            <ListItemIcon>
+                                <PersonAdd/>
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={
+                                    <Grid container>
+                                        <Grid item xs={8} style={{alignSelf: "center"}}>
+                                            {pupil.user_name}
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Button
+                                                variant="contained"
+                                                fullWidth
+                                                onClick={() => createPupil(pupil.user_name, newPassword, pupil.user_id)}
+                                            >
+                                                Anlegen
+                                            </Button>
+                                        </Grid>
+                                    </Grid>}
+                            />
+                        </ListItem>
+                    ))}
+                    {context.isTeacher && props.create &&
+                    <ListItem key="new">
                         <ListItemIcon>
-                            <AccountCircle/>
+                            <PersonAdd/>
                         </ListItemIcon>
                         <ListItemText
                             primary={<Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <TextField label={"neuen Namen eingeben"}
+                                <Grid item xs={4}>
+                                    <TextField label={"neuer Name"}
                                                value={newName}
                                                onChange={event => setNewName(event.target.value)}
-                                               onKeyPress={onEnterPressed(createPupil)}
+                                               onKeyPress={onEnterPressed(() => createPupil(newName, newPassword))}
                                                fullWidth/>
                                 </Grid>
-                                <Grid item xs={6}>
+                                <Grid item xs={4}>
                                     <TextField label={"Passwort"}
-                                               value={password}
-                                               onChange={event => setPassword(event.target.value)}
-                                               onKeyPress={onEnterPressed(createPupil)}
+                                               value={newPassword}
+                                               onChange={event => setNewPassword(event.target.value)}
+                                               onKeyPress={onEnterPressed(() => createPupil(newName, newPassword))}
                                                fullWidth
                                                InputProps={{
                                                    endAdornment: (
                                                        <Tooltip title="Neues Passwort generieren">
                                                            <Refresh
-                                                               onClick={() => setPassword(randomPupilPassword())}
+                                                               onClick={() => setNewPassword(randomPupilPassword())}
                                                                style={{cursor: "pointer"}}
                                                            />
                                                        </Tooltip>
                                                    ),
                                                }}
                                     />
+                                </Grid>
+                                <Grid item xs={4} style={{display: "flex", flexDirection: "column"}}>
+                                    <Box flexGrow={1}/>
+                                    <Button
+                                        disabled={!newName}
+                                        variant="contained"
+                                        fullWidth
+                                        onClick={() => createPupil(newName, newPassword)}
+                                    >
+                                        Anlegen
+                                    </Button>
                                 </Grid>
                             </Grid>}/>
                     </ListItem>}
@@ -109,7 +164,7 @@ export function PupilList() {
                 </div>
             </Main>
             <BottomGridContainer>
-                {!context.isTeacher &&
+                {!props.create && !context.isTeacher &&
                 <Grid item xs={12}>
                     <Button
                         variant="contained"
@@ -120,14 +175,25 @@ export function PupilList() {
                     </Button>
                 </Grid>
                 }
-                {context.isTeacher &&
+                {!props.create && context.isTeacher &&
                 <Grid item xs={12}>
-                    <Button disabled={newName === ""}
-                            variant="contained"
-                            fullWidth
-                            onClick={createPupil}
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => context.history.push("/pupils/create")}
                     >
                         Neu anlegen
+                    </Button>
+                </Grid>
+                }
+                {props.create && context.isTeacher &&
+                <Grid item xs={12}>
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => context.history.push("/")}
+                    >
+                        Fertig
                     </Button>
                 </Grid>
                 }

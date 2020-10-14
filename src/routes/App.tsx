@@ -59,6 +59,14 @@ export default function App() {
                             <Yay/>
                         </ScreenBox>
                     </Route>
+                    <Route path={[
+                        "/pupils/create/:pupilGroupName",
+                        "/pupils/create",
+                    ]}>
+                        <ScreenBox>
+                            <PupilList create/>
+                        </ScreenBox>
+                    </Route>
                     <Route path="/">
                         <ScreenBox>
                             <PupilList/>
