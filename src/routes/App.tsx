@@ -1,4 +1,4 @@
-import {Context, reactContext} from "../data/Context";
+import {Context, DEFAULT_PUPIL_ID, reactContext} from "../data/Context";
 import {Route, Switch, useHistory} from "react-router";
 import * as React from "react";
 import {ErrorBoundary} from "../util/ErrorBoundary";
@@ -20,12 +20,11 @@ export default function App() {
                 context.setContext = setContext;
                 const newContext = new Context(history, context);
                 setContext(newContext);
-                // if (history.location.pathname === "/" &&
-                //     context.currentPupilId === undefined &&
-                //     context.pupilsList.length === 1 &&
-                //     context.pupilsList[0].name === "default") {
-                //     context.history.push(`/pupil/default/${context.pupilsList[0].id}`)
-                // }
+                if (history.location.pathname === "/test" &&
+                    context.currentPupilId === undefined &&
+                    context.pupilsList.length === 0) {
+                    context.history.push(`/pupil/default/${DEFAULT_PUPIL_ID}`)
+                }
             }
         })();
     });

@@ -3,11 +3,23 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import * as React from "react";
-import {reactContext} from "../data/Context";
+import {MouseEvent} from "react";
+import {Context, DEFAULT_TEACHER_ID, reactContext} from "../data/Context";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
-import {Box, Button, Chip, Grid, Link, TextField, Tooltip} from "@material-ui/core";
+import {
+    Box,
+    Button,
+    Chip,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    Link,
+    TextField,
+    Tooltip,
+} from "@material-ui/core";
 import {Pupil} from "../data/Pupil";
 import {Group, Lock, LockOpen, PersonAdd, Refresh} from "@material-ui/icons";
 import {randomFrom} from "../img/svgs";
@@ -15,9 +27,15 @@ import {words} from "../data/words";
 import {sha256} from "js-sha256";
 import {useParams} from "react-router";
 import {onEnterPressed} from "./Question";
+import Dialog from "@material-ui/core/Dialog";
 
 function randomPupilPassword() {
     return randomFrom(words).toLowerCase() + Math.floor(Math.random() * 90 + 10);
+}
+
+function accessLink(context: Context, pupil?: Pupil) {
+    return new URL(`/login/${context.schoolId}/${context.teacherId}/${
+        context.readPasswordHash}/${pupil?.id}/${sha256(pupil?.password || "")}`, document.location.href).href;
 }
 
 export function PupilList(props: { create?: boolean }) {
@@ -35,9 +53,31 @@ export function PupilList(props: { create?: boolean }) {
         }
     };
     let onPasswordChip = false;
+    const [accessLinkPupil, setAccessLinkPupil] = React.useState<Pupil | undefined>();
     return (
         <>
             <Main>
+                <Dialog onClose={() => setAccessLinkPupil(undefined)}
+                        aria-labelledby="dialog-title"
+                        open={!!accessLinkPupil}
+                        maxWidth={false}
+                >
+                    <DialogTitle id="dialog-title">Zugangslink für {accessLinkPupil?.name}</DialogTitle>
+                    <DialogContent style={{paddingTop: 0}}>
+                        {accessLink(context, accessLinkPupil)}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => {
+                            setAccessLinkPupil(undefined);
+                        }}>Abbrechen</Button>
+                        <Button
+                            color="primary"
+                            onClick={() => {
+                                navigator.clipboard.writeText(accessLink(context, accessLinkPupil));
+                                setAccessLinkPupil(undefined);
+                            }}>Kopieren</Button>
+                    </DialogActions>
+                </Dialog>
                 <List component="nav" aria-label="main mailbox folders" style={{width: "100%"}}>
                     {context.pupilsList.map((pupil: Pupil) => (
                         <ListItem button key={pupil.id}
@@ -53,8 +93,13 @@ export function PupilList(props: { create?: boolean }) {
                                     flexGrow={1}/>
                                     {context.isTeacher && (pupil.password ?
                                             <>
-                                                <Link href={`/login/${context.schoolId}/${context.teacherId}/${
-                                                    context.readPasswordHash}/${pupil.id}/${sha256(pupil.password)}`}>
+                                                <Link href={accessLink(context, pupil)}
+                                                      onClick={(event: MouseEvent) => {
+                                                          event.preventDefault();
+                                                          event.stopPropagation();
+                                                          setAccessLinkPupil(pupil);
+                                                      }}
+                                                >
                                                     Zugangslink&nbsp;
                                                 </Link>
                                                 <Chip
@@ -73,6 +118,17 @@ export function PupilList(props: { create?: boolean }) {
                             />
                         </ListItem>
                     ))}
+                    {context.pupilsList.length === 0 && <ListItem key="no-pupils">
+
+                        <ListItemText
+                            primary={<Box style={{textAlign: "center"}}>Es sind keine Schüler angelegt.
+                                {context.teacherId === DEFAULT_TEACHER_ID && `    
+                                Als Schüler brauchst du einen Link von deinem Lehrer.
+                                Als Lehrer erhälst du den Link vom Lernbox-Administrator.
+                                `}
+                            </Box>}
+                        />
+                    </ListItem>}
                     {context.isTeacher && props.create && !pupilGroup && context.pupilGroups.map(group => (
                         <ListItem button
                                   key={group.group_id}
@@ -82,7 +138,7 @@ export function PupilList(props: { create?: boolean }) {
                                 <Group/>
                             </ListItemIcon>
                             <ListItemText
-                                primary={group.group_name}
+                                primary={"aus WebWeaver: " + group.group_name}
                             />
                         </ListItem>
                     ))}

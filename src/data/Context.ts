@@ -8,7 +8,7 @@ import {LocalState, RemoteState, SynchronizationInfo} from "../sync/Synchronizat
 import {PersistentObject} from "./PersistentObject";
 import _ from "lodash";
 
-const defaultPupilId = "default-pupil";
+export const DEFAULT_PUPIL_ID = "default-pupil";
 
 interface CardsData {
     predefinedCardsHash: string;
@@ -574,7 +574,7 @@ export class Context {
     private initializeTeacherObject(teacherId: string) {
         return new PersistentObject<TeacherData>({
                 teacherPasswordHash: DEFAULT_TEACHER_PASSWORD_HASH,
-                pupilIds: [defaultPupilId],
+                pupilIds: [],
                 id: teacherId,
                 readPasswordHash: "",
             },

@@ -21,6 +21,9 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import {VirtualizedTable} from "../components/VirtualizedTable";
 import {IndexCardInstance} from "../data/Pupil";
+import Tooltip from "@material-ui/core/Tooltip";
+import {Front} from "../components/Front";
+import withStyles from "@material-ui/core/styles/withStyles";
 
 moment.locale("de");
 
@@ -33,6 +36,11 @@ const useStyles = makeStyles({
         marginLeft: "auto",
     },
 });
+const StyledTooltip = withStyles((theme) => ({
+    tooltip: {
+        maxWidth: 600,
+    },
+}))(Tooltip);
 
 export function Overview() {
     const context = React.useContext(reactContext);
@@ -52,13 +60,13 @@ export function Overview() {
     const instancesAndCards = React.useMemo(() => (pupil?.instances.map(instance => [instance, context.getCard(instance)])
         .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
         .sort(([a, aCard], [b, bCard]) => {
+            const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
+            if (activeOrder !== 0) {
+                return -activeOrder;
+            }
             const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
             if (slotOrder !== 0) {
                 return slotOrder;
-            }
-            const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
-            if (activeOrder !== 0) {
-                return activeOrder;
             }
             return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
         }), [pupil, context]);
@@ -192,7 +200,7 @@ export function Overview() {
                             dataKey: "selected",
                         },
                         {
-                            width: 400,
+                            width: 290,
                             label: "Karte",
                             dataKey: "text",
                         },
@@ -200,6 +208,12 @@ export function Overview() {
                             width: 64,
                             label: "Fach",
                             dataKey: "slot",
+                            numeric: true,
+                        },
+                        {
+                            width: 100,
+                            label: "Bearbeitet",
+                            dataKey: "slotChanged",
                             numeric: true,
                         },
                         {
@@ -212,6 +226,12 @@ export function Overview() {
                     rowGetter={({index}) => {
                         const [instance, card] = instancesAndCards[index];
                         const nextTryDate = Context.getNextTryDate(instance);
+                        const today = moment().startOf('day')
+                        const yesterday = moment().add(-1, 'day').startOf('day')
+                        const slotChangedMoment = moment(instance.slotChanged);
+                        const slotChanged = instance.slotChanged ?
+                            (today < slotChangedMoment ? "heute" : (yesterday < slotChangedMoment ? "gestern" : slotChangedMoment.fromNow()))
+                            : "nie";
                         return {
                             selected: <Checkbox
                                 checked={selectedInstances.indexOf(instance.id) >= 0}
@@ -224,11 +244,20 @@ export function Overview() {
                                     }
                                 }}
                             />,
-                            text: <Box display="flex" width={1}>
-                                <Box flexGrow={1}>{card.question || JSON.stringify(card.questionImage?.parameters)
-                                    ?.replace(/[{}"#]/g, "")
-                                    ?.replace(/:/g, " ")}
-                                </Box>
+                            text: <Box display="flex" width={290 - 32} style={{
+                                minWidth: 0,
+                            }}>
+                                <StyledTooltip title={<Front card={card}/>}>
+                                    <Box flexGrow={1} style={{
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                    }}>
+                                        {card.question ||
+                                        Object.entries(card.questionImage?.parameters || {}).map(entry => entry[1]).join(" ") ||
+                                        card.answers[0]}
+                                    </Box>
+                                </StyledTooltip>
                                 <Typography
                                     className={classes.groups}
                                     color="textSecondary"
@@ -237,6 +266,7 @@ export function Overview() {
                             </Box>,
                             slot: instance.slot !== undefined ? instance.slot + 1 : "-",
                             active: Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie",
+                            slotChanged,
                         };
                     }}
                     height={maxHeight}

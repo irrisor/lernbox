@@ -1,5 +1,5 @@
 import * as React from "react";
-import {reactContext} from "../data/Context";
+import {DEFAULT_TEACHER_ID, reactContext} from "../data/Context";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {Box, Button, Grid, TextField, Typography} from "@material-ui/core";
@@ -80,12 +80,12 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
                                                       autoComplete="new-password"
                         /></Grid>
                         {!override && <Grid item xs={12}><TextField label={`Neues ${passwordName} wiederholt`}
-                                                      type="password"
-                                                      value={confirmedPassword}
-                                                      onChange={event => setConfirmedPassword(event.target.value)}
-                                                      onKeyPress={onEnterPressed(okPressed)}
-                                                      fullWidth
-                                                      autoComplete="confirmed-password"
+                                                                    type="password"
+                                                                    value={confirmedPassword}
+                                                                    onChange={event => setConfirmedPassword(event.target.value)}
+                                                                    onKeyPress={onEnterPressed(okPressed)}
+                                                                    fullWidth
+                                                                    autoComplete="confirmed-password"
                         /></Grid>}
                     </>
                     }
@@ -128,7 +128,8 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
 export function TeacherPasswordView() {
     const context = React.useContext(reactContext);
     return <PasswordView
-        passwordName="Lehrerpasswort"
+        passwordName={"Lehrerpasswort" +
+        (context.teacherId !== DEFAULT_TEACHER_ID ? ` (von ${context.teacherId})` : "")}
         currentPasswordHash={context.teacherPasswordHash}
         apply={newPassword => {
             context.update(newContext => {
@@ -162,4 +163,5 @@ export function PupilPasswordView() {
         who={context.pupil?.name || "der Schüler"}
         override={context.isTeacher}
     />;
-};
+}
+

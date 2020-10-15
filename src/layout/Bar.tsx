@@ -12,7 +12,6 @@ import {Badge, useMediaQuery} from "@material-ui/core";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import ListIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
-import SyncIcon from "@material-ui/icons/Sync";
 import LogoffIcon from "@material-ui/icons/ExitToApp";
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -111,11 +110,11 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemIcon><FullscreenIcon/></ListItemIcon>
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
-                <ListItem button
+                {/*<ListItem button
                           onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
-                </ListItem>
+                </ListItem>*/}
                 <ListItem button
                           disabled={context.currentPupilId === undefined}
                           onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
@@ -131,7 +130,7 @@ const Menu = (props: { onClick: () => true }) => {
                           })}
                 >
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
-                    <ListItemText primary="Nutzer wechseln"/>
+                    <ListItemText primary="Abmelden"/>
                 </ListItem>
             </List>
         </div>

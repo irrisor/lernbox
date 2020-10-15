@@ -77,7 +77,7 @@ export function IndexCardVisual(props:
                     Snap.load(url
                         , data => {
                             const dataElement = data as Snap.Element;
-                            if (dataElement?.node?.nodeName === "svg") {
+                            if (dataElement?.node?.nodeName === "svg" || dataElement?.node?.children?.[0]?.nodeName === "svg") {
                                 const group = s.g();
                                 group.append(dataElement);
                                 const loadedSVG = group.select("svg");

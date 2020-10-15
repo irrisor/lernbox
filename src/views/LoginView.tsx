@@ -141,7 +141,7 @@ export function LoginView() {
         return (<>
             <Main>
                 {header}
-                <p>Gib bitte deinen WebWeaver Benutzernamen sowie dein Passwort dazu ein, um dich einzuloggen bzw. ein
+                <p>Gib bitte deinen WebWeaver Benutzernamen sowie dein WebWeaver Passwort ein, um dich einzuloggen bzw. ein
                     Konto
                     zu erstellen.</p>
 
