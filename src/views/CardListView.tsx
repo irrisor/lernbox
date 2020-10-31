@@ -60,7 +60,9 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
         card.answers.join("; "),
         card.description,
     )) : cardsBelowGroupPath;
-    const groupCards = !searchText || soughtCards.length > 6 ? soughtCards.filter(card => groupMatches(card.groups, groupPath, false)) : soughtCards;
+    const groupCards = (!searchText || soughtCards.length > 6 ? soughtCards
+        .filter(card => groupMatches(card.groups, groupPath, false)) : soughtCards)
+        .sort((a, b) => (a.description || "").localeCompare(b.description || ""));
     context.lastShownList = groupCards;
     const subgroups = Array.from(new Set(soughtCards.filter(card => card.groups.length > groupPath.length)
         .flatMap(card => card.groups[groupPath.length])),
@@ -71,6 +73,7 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
             <AddBox/>
         </IconButton>
     </Tooltip>;
+    React.useEffect(() => context.currentPupilId = undefined, [context.currentPupilId]);
     return (
         <>
             <Grid container spacing={2}>
@@ -148,7 +151,8 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
                 {subgroups.length === 0 && groupCards.length === 0 && (
                     <Grid item xs={12} key="none">
                         <Typography align="center" style={{marginTop: 100}}>Keine Karten gefunden.
-                            {create && <>Mit dem {addButton} Button neben dem Suchfeld eine neue anlegen.</>}</Typography>
+                            {create && <>Mit dem {addButton} Button neben dem Suchfeld eine neue
+                                anlegen.</>}</Typography>
                     </Grid>
                 )}
             </Grid>

@@ -89,7 +89,10 @@ export function PupilList(props: { create?: boolean }) {
                             </ListItemIcon>
                             <ListItemText
                                 primary={<Box display="flex"
-                                              alignItems="center">{pupil.name !== "default" ? pupil.name : "Standardschüler"}<Box
+                                              alignItems="center">
+                                    {pupil.name !== "default" ? pupil.name : "Standardschüler"}
+                                    {context.isTeacher && ` (${pupil.instances.length} Karten)`}
+                                    <Box
                                     flexGrow={1}/>
                                     {context.isTeacher && (pupil.password ?
                                             <>

@@ -94,6 +94,7 @@ export function Question() {
     const checkIfInputOrNoWait = () => {
         if (secondsPassed >= minWaitSeconds || input) check();
     };
+    const toBeFocused = React.useRef<HTMLElement>(null);
     return (
         <>
             <Main>
@@ -105,14 +106,36 @@ export function Question() {
                         <Typography variant="h5"> </Typography>
                         {inputType === "select" ?
                             <RadioGroup aria-label="answer" name="answer" value={input}
-                                        onChange={event => setInput(event.target.value)}>
-                                {card?.inputOptions?.map(option =>
+                                        onChange={event => setInput(event.target.value)}
+                                        style={{marginLeft: 16}}
+                                        ref={toBeFocused}
+                            >
+                                {card?.inputOptions?.map((option, index) =>
                                     <FormControlLabel value={option}
                                                       key={option}
                                                       control={<Radio/>}
                                                       label={option}
                                                       onDoubleClick={() => check()}
+                                                      onKeyPress={onEnterPressed(checkIfInputOrNoWait)}
+                                                      onFocus={() => setInput(option)}
                                     />)}
+                                <div>
+                                    {/*focus first element on key down*/}
+                                    <input autoFocus
+                                           onKeyDown={() => {
+                                               console.log(toBeFocused.current?.children.item(0));
+                                               (toBeFocused.current?.children.item(0) as HTMLElement)?.focus();
+                                           }}
+                                           style={{
+                                               maxWidth: 0,
+                                               maxHeight: 0,
+                                               border: "none",
+                                               background: "transparent",
+                                               color: "transparent",
+                                               outline: "none",
+                                           }}
+                                    />
+                                </div>
                             </RadioGroup>
                             :
                             <TextField

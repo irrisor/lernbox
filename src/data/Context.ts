@@ -42,6 +42,19 @@ interface LocalData {
     teacherId: string;
 }
 
+export function getCard(cards: Readonly<Array<IndexCard>>, idCardOrInstance: string | IndexCardInstance | IndexCard | undefined) {
+    if (!idCardOrInstance) return undefined;
+    if (typeof idCardOrInstance === "object" && "groups" in idCardOrInstance) {
+        return idCardOrInstance;
+    }
+    return cards.find(card =>
+        card.id === (typeof idCardOrInstance === "string" ? idCardOrInstance : idCardOrInstance.id));
+}
+
+export function getQuestionCards(cards: Readonly<Array<IndexCard>>) {
+    return cards.filter(card => card.answers?.length > 0 && card.answers.join("") !== "");
+}
+
 export class Context {
     public lastShownList: IndexCard[] = [];
     public touched: boolean = false;
@@ -392,7 +405,7 @@ export class Context {
             teacherId: this.persistentTeacher.content.id,
             name,
             password,
-            instances: this.getQuestionCardIds().map(id => ({id})),
+            instances: this.getQuestionCards().map(card => ({id: card.id})),
         };
         this.setPupil(newPupil.id, newPupil);
     }
@@ -436,13 +449,11 @@ export class Context {
         this.history.push(`/pupil/${this.pupil?.name || "-"}/${this.currentPupilId}/${nextInstances.length > 0 ? "question" : ""}`);
     };
 
-    public getCard(idOrInstance: string | IndexCardInstance | undefined): IndexCard | undefined {
-        if (!idOrInstance) return undefined;
-        return this.cards.find(card =>
-            card.id === (typeof idOrInstance === "string" ? idOrInstance : idOrInstance.id));
+    public getCard(idCardOrInstance: string | IndexCardInstance | IndexCard | undefined): IndexCard | undefined {
+        return getCard(this.cards, idCardOrInstance);
     }
 
-    public groups(topLevel?: boolean, instances?: (IndexCardInstance | IndexCard)[]) {
+    public groups(topLevel?: boolean, instances?: Readonly<Array<IndexCardInstance | IndexCard>>) {
         return Array.from(new Set(
             instances ?
                 instances.flatMap(card => ("groups" in card ? card : this.getCard(card.id))?.groups
@@ -467,35 +478,6 @@ export class Context {
             updateFunction && updateFunction(this);
             return this;
         }
-    }
-
-    convertPupilCardsToInstances(pupil: Pupil) {
-        const anyPupil: any = pupil;
-        if (anyPupil.cards) {
-            // old data we need to convert
-            pupil.instances = anyPupil.cards.map((old: any): IndexCardInstance => {
-                const candidates = this.cards.filter(card =>
-                    card.question === old.question);
-                let id;
-                if (candidates.length === 1) {
-                    id = candidates[0].id;
-                } else if (candidates.length > 1) {
-                    id = candidates.find(card => card.groups[0] === (old.groups && old.groups.length && old.groups[0]))?.id
-                        || candidates[0].id;
-                } else {
-                    console.error("Error converting old data: No canditate found for card ", old);
-                    id = "";
-                }
-                return {
-                    id,
-                    slot: old.slot,
-                    previousSlot: old.previousSlot,
-                    slotChanged: old.slotChanged,
-                };
-            }).filter((instance: IndexCardInstance) => instance.id);
-            delete anyPupil.cards;
-        }
-        return pupil;
     }
 
     setPupil(id: string, newPupilContent: Pupil) {
@@ -523,24 +505,36 @@ export class Context {
         return `${this.schoolId}/${teacherId}/teacher.json`;
     }
 
-    public modifyPupilsCardInstance(instanceId: string, modify: (instance: IndexCardInstance) => IndexCardInstance) {
+    public modifyPupilsCardInstance(instanceId: string,
+                                    modify: (instance: IndexCardInstance) => IndexCardInstance | null = instance => instance) {
         this.update(context => {
             const persistentPupil = context.persistentPupils.find(object => object.content.id === context.currentPupilId);
             if (!persistentPupil) {
                 throw new Error("Cannot modify card instances when no peristent pupil is active");
             }
-            let modifiedInstance: IndexCardInstance | undefined;
-            const instances = persistentPupil.content.instances.map(instance => instance.id === instanceId ?
-                modifiedInstance = modify(Object.assign({}, instance)) : instance);
+            let modifiedInstance: IndexCardInstance | undefined | null;
+            let instances = persistentPupil.content.instances.map(instance =>
+                instance.id === instanceId ? (modifiedInstance = modify(Object.assign({}, instance))) : instance)
+                .filter(instance => instance != null);
+            if (modifiedInstance === undefined) {
+                modifiedInstance = modify({id: instanceId});
+                if (modifiedInstance) {
+                    instances = instances.concat(modifiedInstance);
+                }
+            }
             persistentPupil.content = Object.assign({}, persistentPupil.content, {instances});
             if (modifiedInstance) {
                 const modifiedInstanceNotUndefined = modifiedInstance;
                 context.currentInstances = context.currentInstances.map(instance => instance.id === instanceId ?
                     modifiedInstanceNotUndefined : instance)
-            } else {
-                throw new Error("Instance was not found in pupil's card instances");
+            } else if (modifiedInstance === null) {
+                context.currentInstances = context.currentInstances.filter(instance => instance.id !== instanceId);
             }
         });
+    }
+
+    public getQuestionCards() {
+        return getQuestionCards(this.cards);
     }
 
     private initializePupilObjects() {
@@ -625,7 +619,7 @@ export class Context {
                 teacherId,
                 name: "default",
                 password: "",
-                instances: this.getQuestionCardIds().map(cardId => ({id: cardId})),
+                instances: this.getQuestionCards().map(card => ({id: card.id})),
             },
             `${this.persistentLocal.content.schoolId}/${teacherId}/${id}/pupil.json`,
             this.synchronizationInfo,
@@ -638,10 +632,6 @@ export class Context {
     private _setContext: (newContext: Context) => void = () => {
         throw new Error("setContext not initialized");
     };
-
-    private getQuestionCardIds() {
-        return this.cards.filter(card => card.answers?.length > 0 && card.answers.join("") !== "").map(card => card.id);
-    }
 
     private groupCards(...groups: string[]) {
         const currentGroups = groups.length > 0 ? groups : this.currentGroups;

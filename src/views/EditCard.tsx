@@ -334,7 +334,7 @@ export function EditCard() {
                                     >
                                         <MenuItem value="text">Texteingabe</MenuItem>
                                         <MenuItem value="number">Zahleneingabe</MenuItem>
-                                        <MenuItem value="number_or_nan">Zahleneingabe oder NaN (Geht nicht)</MenuItem>
+                                        <MenuItem value="number_or_nan">Zahleneingabe oder 'Geht nicht'</MenuItem>
                                         <MenuItem value="select">Auswahl</MenuItem>
                                     </Select>
                                 </FormControl>
