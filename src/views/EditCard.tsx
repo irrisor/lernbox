@@ -21,7 +21,7 @@ import {
 } from "@material-ui/core";
 import {createStyles} from "@material-ui/styles";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
-import {Image, IndexCard, officialOwner} from "../data/cards";
+import {Image, IndexCard} from "../data/cards";
 import {Front} from "../components/Front";
 import {useLocation, useParams, useRouteMatch} from "react-router";
 import {reactContext} from "../data/Context";
@@ -213,7 +213,7 @@ export function EditCard() {
     }), [card.answerImage?.image]);
     const [groupPath, setGroupPath] = React.useState<string[]>(["Bilder"]);
     const [searchText, setSearchText] = React.useState("");
-    const isPredefinedCard = card.owner === officialOwner;
+    const isForeignCard = card.owner !== undefined && card.owner !== context.teacherId;
     return (
         <>
             <Main>
@@ -377,11 +377,11 @@ export function EditCard() {
                         Zurück
                     </Button>
                 </Grid>
-                <Tooltip title={isPredefinedCard ?
-                    "Diese Karte kann nicht gelöscht werden, da sie mit dem Programm geliefert wurde" : ""}>
+                <Tooltip title={isForeignCard ?
+                    "Diese Karte kann nicht gelöscht werden, da sie nicht von dir erstellt wurde" : ""}>
                     <Grid item xs={12} md={4}>
                         <Button
-                            disabled={isPredefinedCard}
+                            disabled={isForeignCard}
                             fullWidth
                             color="secondary"
                             onClick={() => {
@@ -393,13 +393,13 @@ export function EditCard() {
                         </Button>
                     </Grid>
                 </Tooltip>
-                <Tooltip title={isPredefinedCard ?
-                    "Diese Karte kann nicht bearbeitet werden, da sie mit dem Programm geliefert wurde" :
+                <Tooltip title={isForeignCard ?
+                    "Diese Karte kann nicht bearbeitet werden, da sie nicht von dir erstellt wurde" :
                     "Die Karte braucht mindestens Frage und Antwort sowie eine Gruppe."}>
                     <Grid item xs={12} md={4}>
                         <Button variant="contained" color="primary"
                                 fullWidth
-                                disabled={isPredefinedCard || !(card.question || card.questionImage?.url) ||
+                                disabled={isForeignCard || !(card.question || card.questionImage?.url) ||
                                 card.answers.length === 0 ||
                                 card.groups.length === 0}
                                 onClick={() => {
