@@ -1,7 +1,6 @@
 import {houseSVG} from "../img/svgs";
 import {v5 as uuidv5} from 'uuid';
 import {sha256} from "js-sha256";
-import additionalCards from "./additionalCards.json";
 
 type ImageParameters = {
     [seletector: string]: string | { [attribute: string]: string }
@@ -107,7 +106,7 @@ for (let x = 0; x <= 10; x++) {
     }
 }
 
-/** Artikel **/
+/** Artikel *
 ([{
     group: "Pflanzen",
     words: [
@@ -150,9 +149,9 @@ for (let x = 0; x <= 10; x++) {
             predefinedCards.push(card);
         }
     });
-});
+});*/
 
-additionalCards.content.cards.forEach(additionalCard =>
-    predefinedCards.push(Object.assign({}, additionalCard, {inputType: additionalCard.inputType as InputType}, {owner: "sonsch2"})));
+// additionalCards.content.cards.forEach(additionalCard =>
+//     predefinedCards.push(Object.assign({}, additionalCard, {inputType: additionalCard.inputType as InputType}, {owner: "sonsch2"})));
 
 export const predefinedCardsHash = sha256(JSON.stringify(predefinedCards));
