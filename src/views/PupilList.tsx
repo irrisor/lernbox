@@ -5,12 +5,12 @@ import ListItemText from "@material-ui/core/ListItemText";
 import * as React from "react";
 import {MouseEvent} from "react";
 import {Context, DEFAULT_TEACHER_ID, reactContext} from "../data/Context";
-import AccountCircle from "@material-ui/icons/AccountCircle";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {
     Box,
     Button,
+    Checkbox,
     Chip,
     DialogActions,
     DialogContent,
@@ -21,7 +21,7 @@ import {
     Tooltip,
 } from "@material-ui/core";
 import {Pupil} from "../data/Pupil";
-import {Group, Lock, LockOpen, PersonAdd, Refresh} from "@material-ui/icons";
+import {AccountCircle, Group, Lock, LockOpen, PersonAdd, Refresh} from "@material-ui/icons";
 import {randomFrom} from "../img/svgs";
 import {words} from "../data/words";
 import {sha256} from "js-sha256";
@@ -54,6 +54,10 @@ export function PupilList(props: { create?: boolean }) {
     };
     let onPasswordChip = false;
     const [accessLinkPupil, setAccessLinkPupil] = React.useState<Pupil | undefined>();
+    const [selectedPupilIds, setSelectedPupilIds] = React.useState<string[]>([]);
+    const [copiedCardIds, setCopiedCardIds] = React.useState<string[]>();
+    console.log(selectedPupilIds);
+    const testNamePrefix = "Testschüler ";
     return (
         <>
             <Main>
@@ -85,7 +89,18 @@ export function PupilList(props: { create?: boolean }) {
                                       if (!onPasswordChip) context.history.push(`/pupil/${pupil.name}/${pupil.id}`);
                                   }}>
                             <ListItemIcon>
-                                <AccountCircle/>
+                                {props.create ?
+                                    <AccountCircle/>
+                                    :
+                                    <Checkbox
+                                        checked={selectedPupilIds.indexOf(pupil.id) !== -1}
+                                        onChange={(event, checked) => setSelectedPupilIds(selectedPupilIds.filter(selectedPupilId => selectedPupilId !== pupil.id).concat(
+                                            checked ? [pupil.id] : [],
+                                            ),
+                                        )}
+                                        onClick={event => event.stopPropagation()}
+                                    />
+                                }
                             </ListItemIcon>
                             <ListItemText
                                 primary={<Box display="flex"
@@ -93,8 +108,8 @@ export function PupilList(props: { create?: boolean }) {
                                     {pupil.name !== "default" ? pupil.name : "Standardschüler"}
                                     {context.isTeacher && ` (${pupil.instances.length} Karten)`}
                                     <Box
-                                    flexGrow={1}/>
-                                    {context.isTeacher && (pupil.password ?
+                                        flexGrow={1}/>
+                                    {context.isTeacher && pupil.instances.length > 0 && (pupil.password ?
                                             <>
                                                 <Link href={accessLink(context, pupil)}
                                                       onClick={(event: MouseEvent) => {
@@ -117,7 +132,14 @@ export function PupilList(props: { create?: boolean }) {
                                                 onMouseEnter={() => onPasswordChip = true}
                                                 onMouseLeave={() => onPasswordChip = false}
                                                 icon={<LockOpen/>} label="kein Passwort"/>
-                                    )}</Box>}
+                                    )}
+                                    {context.isTeacher && pupil.instances.length === 0 &&
+                                    <Button
+                                        variant="contained"
+                                    >
+                                        Karten zuordnen
+                                    </Button>
+                                    }</Box>}
                             />
                         </ListItem>
                     ))}
@@ -223,7 +245,7 @@ export function PupilList(props: { create?: boolean }) {
                 </div>
             </Main>
             <BottomGridContainer>
-                {!props.create && !context.isTeacher &&
+                {!context.isTeacher &&
                 <Grid item xs={12}>
                     <Button
                         variant="contained"
@@ -232,6 +254,49 @@ export function PupilList(props: { create?: boolean }) {
                     >
                         Lehrermodus
                     </Button>
+                </Grid>
+                }
+                {!props.create && !copiedCardIds &&
+                <Grid item xs={12}>
+                    <Tooltip title="Wenn genau ein Schüler selektiert ist, der bereits Karten zugeordnet hat,
+                    kannst du seine Kartenzuordnung kopieren,
+                    um sie später mehreren anderen Schülern zuzuordnen.">
+                        <Box width={1}>
+                            <Button
+                                fullWidth
+                                disabled={selectedPupilIds.length !== 1 || context.pupilById(selectedPupilIds[0])?.instances.length === 0}
+                                onClick={() => {
+                                    setCopiedCardIds(context.pupilById(selectedPupilIds[0])?.instances.map(instance => instance.id));
+                                    setSelectedPupilIds([]);
+                                }}
+                            >
+                                Kartenzuordnung kopieren
+                            </Button>
+                        </Box>
+                    </Tooltip>
+                </Grid>
+                }
+                {!props.create && copiedCardIds &&
+                <Grid item xs={12}>
+                    <Tooltip title={"Du hast die Zuordnung von " + copiedCardIds.length + " Karten kopiert. " +
+                    "Mit diesem Button kannst du sie den oben selektierten Schülern zuweisen."}>
+                        <Box width={1}>
+                            <Button
+                                fullWidth
+                                disabled={selectedPupilIds.length === 0}
+                                onClick={() => {
+                                    context.update(context => {
+                                        selectedPupilIds.forEach(pupilId => copiedCardIds?.forEach(cardId =>
+                                            context.modifyPupilsCardInstance(cardId, undefined, pupilId)))
+                                    });
+                                    setCopiedCardIds(undefined);
+                                    setSelectedPupilIds([]);
+                                }}
+                            >
+                                Kartenzuordnung einfügen
+                            </Button>
+                        </Box>
+                    </Tooltip>
                 </Grid>
                 }
                 {!props.create && context.isTeacher &&
@@ -249,6 +314,20 @@ export function PupilList(props: { create?: boolean }) {
                 <Grid item xs={12}>
                     <Button
                         variant="contained"
+                        fullWidth
+                        onClick={() => createPupil(testNamePrefix + (context.pupilsList.filter(
+                            existingPupil => existingPupil.name.substring(0, testNamePrefix.length) === testNamePrefix,
+                        ).length + 1), "")}
+                    >
+                        Testschüler anlegen
+                    </Button>
+                </Grid>
+                }
+                {props.create && context.isTeacher &&
+                <Grid item xs={12}>
+                    <Button
+                        variant="contained"
+                        color="primary"
                         fullWidth
                         onClick={() => context.history.push("/")}
                     >

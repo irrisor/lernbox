@@ -2,6 +2,7 @@ import * as React from "react";
 import {reactContext} from "../data/Context";
 import {Route, Switch, useParams, useRouteMatch} from "react-router";
 import {Right} from "../views/Right";
+import {Finished} from "../views/Finished";
 import {Wrong} from "../views/Wrong";
 import {Late} from "../views/Late";
 import {Question} from "../views/Question";
@@ -35,6 +36,9 @@ export function PupilRoute() {
             </Route>
             <Route path={`${path}/question`}>
                 <Question/>
+            </Route>
+            <Route path={`${path}/finished`}>
+                <Finished/>
             </Route>
             <Route path={`${path}/delete`}>
                 <PupilDelete/>

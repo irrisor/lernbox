@@ -376,6 +376,8 @@ export class Context {
             (slotProperties.durationInDays - 0.5) * 1000 * 60 * 60 * 24;
     }
 
+    public pupilById = (id: string) => this.pupilsList.find(pupil => pupil.id === id);
+
     public passwordHash(value?: string) {
         return value !== undefined ? sha256(value) : "";
     }
@@ -405,7 +407,7 @@ export class Context {
             teacherId: this.persistentTeacher.content.id,
             name,
             password,
-            instances: this.getQuestionCards().map(card => ({id: card.id})),
+            instances: [],
         };
         this.setPupil(newPupil.id, newPupil);
     }
@@ -446,7 +448,23 @@ export class Context {
             context._currentGroups = currentGroups;
             context._currentInstances = nextInstances;
         });
-        this.history.push(`/pupil/${this.pupil?.name || "-"}/${this.currentPupilId}/${nextInstances.length > 0 ? "question" : ""}`);
+        const pupilPath = `/pupil/${this.pupil?.name || "-"}/${this.currentPupilId}/`;
+        if (nextInstances.length > 0) {
+            const path = pupilPath + "question";
+            const currentPath = this.history.location.pathname;
+            switch (currentPath.substring(currentPath.lastIndexOf("/") + 1)) {
+                case "question":
+                case "late":
+                case "wrong":
+                    this.history.replace(path);
+                    break;
+                default:
+                    this.history.push(path);
+                    break;
+            }
+        } else {
+            this.history.push(pupilPath + "finished");
+        }
     };
 
     public getCard(idCardOrInstance: string | IndexCardInstance | IndexCard | undefined): IndexCard | undefined {
@@ -506,11 +524,13 @@ export class Context {
     }
 
     public modifyPupilsCardInstance(instanceId: string,
-                                    modify: (instance: IndexCardInstance) => IndexCardInstance | null = instance => instance) {
+                                    modify: (instance: IndexCardInstance) => IndexCardInstance | null = instance => instance,
+                                    pupilId = this.currentPupilId,
+    ) {
         this.update(context => {
-            const persistentPupil = context.persistentPupils.find(object => object.content.id === context.currentPupilId);
+            const persistentPupil = context.persistentPupils.find(object => object.content.id === pupilId);
             if (!persistentPupil) {
-                throw new Error("Cannot modify card instances when no peristent pupil is active");
+                throw new Error("Cannot modify card instances when no persistent pupil is active");
             }
             let modifiedInstance: IndexCardInstance | undefined | null;
             let instances = persistentPupil.content.instances.map(instance =>
@@ -535,6 +555,12 @@ export class Context {
 
     public getQuestionCards() {
         return getQuestionCards(this.cards);
+    }
+
+    clearCard() {
+        if (this.currentInstances.length > 0) {
+            this.currentInstances = [];
+        }
     }
 
     private initializePupilObjects() {

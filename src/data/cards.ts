@@ -60,26 +60,48 @@ export const predefinedCards: IndexCard[] = [];
 /** 1-mal-1 */
 for (let x = 0; x <= 10; x++) {
     for (let y = 0; y <= 10; y++) {
-        predefinedCards.push({
+        const multiplyCard: IndexCard = {
             id: uuidv5(`${x}*${y}`, uuidNamespace),
             question: `${x} • ${y}`,
             description: "Wie lautet das Ergebnis?",
             answers: [`${x} • ${y} = ${x * y}`, `${x * y}`],
             time_s: 4,
-            groups: ["1•1", `1•1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1x1 Kern"] : []),
+            groups: ["1•1 Reihen", `1•1 Reihe ${y}`],
             inputType: "number_or_nan",
             owner: officialOwner,
-        });
-        predefinedCards.push({
+        };
+        predefinedCards.push(multiplyCard);
+        predefinedCards.push(Object.assign({}, multiplyCard, {
+            id: uuidv5(`${x}*${y}-all`, uuidNamespace),
+            groups: ["1•1"]
+        }));
+        if ( [1, 2, 5, 10].indexOf(y) >= 0 ) {
+            predefinedCards.push(Object.assign({}, multiplyCard, {
+                id: uuidv5(`${x}*${y}-core`, uuidNamespace),
+                groups: ["1•1 Kern"]
+            }));
+        }
+        const divideCard: IndexCard = {
             id: uuidv5(`${x}:${y}`, uuidNamespace),
             question: `${y !== 0 ? x * y : x} : ${y}`,
             description: "Wie lautet das Ergebnis?",
-            answers: [`${y !== 0 ? x * y : x} : ${y} = ${x}`, y !== 0 ? `${x}` : "NaN"],
+            answers: [`${y !== 0 ? x * y : x} : ${y} ${y !== 0 ? "= "+x : "geht nicht" }`, y !== 0 ? `${x}` : "NaN"],
             time_s: 4,
-            groups: ["1:1", `1:1 Reihe ${y}`].concat([1, 2, 5, 10].indexOf(y) >= 0 ? ["1:1 Kern"] : []),
+            groups: ["1:1 Reihen", `1:1 Reihe ${y}`],
             inputType: "number_or_nan",
             owner: officialOwner,
-        });
+        };
+        predefinedCards.push(divideCard);
+        predefinedCards.push(Object.assign({}, divideCard, {
+            id: uuidv5(`${x}:${y}-all`, uuidNamespace),
+            groups: ["1:1"]
+        }));
+        if ( [1, 2, 5, 10].indexOf(y) >= 0 ) {
+            predefinedCards.push(Object.assign({}, divideCard, {
+                id: uuidv5(`${x}:${y}-core`, uuidNamespace),
+                groups: ["1:1 Kern"]
+            }));
+        }
     }
 }
 

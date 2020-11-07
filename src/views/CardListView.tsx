@@ -59,6 +59,7 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
         card.groups.join("; "),
         card.answers.join("; "),
         card.description,
+        card.owner,
     )) : cardsBelowGroupPath;
     const groupCards = (!searchText || soughtCards.length > 6 ? soughtCards
         .filter(card => groupMatches(card.groups, groupPath, false)) : soughtCards)
@@ -145,7 +146,9 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
                 {groupCards.map(card => (
                     <Grid item {...cardBreakpoints} key={card.id}>
                         <Front card={card}
-                               onClick={() => onClick(card)}/>
+                               onClick={() => onClick(card)}
+                               showAuthor
+                        />
                     </Grid>
                 ))}
                 {subgroups.length === 0 && groupCards.length === 0 && (

@@ -32,7 +32,7 @@ export function Wrong({text = "Das ist leider nicht richtig. Lerne noch einmal v
                     {text}
                 </Grid>
                 <Grid item xs={12}>
-                    <img src={svg} height={64} alt="negative" style={{
+                    <img src={svg} height={64} alt="negatives Bild" style={{
                         margin: "auto",
                         paddingTop: 8,
                         paddingBottom: 8,

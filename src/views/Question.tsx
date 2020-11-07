@@ -69,16 +69,16 @@ export function Question() {
                 if (maxPassSeconds >= secondsPassed) {
                     instance.slot = (instance.slot || 0) + 1;
                     addActivity(instance, Activity.RIGHT);
-                    history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/right`);
+                    history.replace(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/right`);
                 } else {
                     instance.slot = 0;
                     addActivity(instance, Activity.LATE);
-                    history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/late`);
+                    history.replace(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/late`);
                 }
             } else {
                 instance.slot = 0;
                 addActivity(instance, Activity.WRONG);
-                history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/wrong`);
+                history.replace(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/wrong`);
             }
             return instance;
         });

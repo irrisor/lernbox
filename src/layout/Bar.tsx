@@ -93,10 +93,10 @@ const Menu = (props: { onClick: () => true }) => {
             <div className={classes.toolbar}/>
             <Divider/>
             <List>
-                <ListItem button onClick={() => props.onClick() && context.back()}>
+                {!context.isTeacher && <ListItem button onClick={() => props.onClick() && context.back()}>
                     <ListItemIcon><Logo/></ListItemIcon>
                     <ListItemText primary="Lernen"/>
-                </ListItem>
+                </ListItem>}
                 <ListItem button onClick={() => props.onClick() && context.history.push("/")}>
                     <ListItemIcon><AccountCircle/></ListItemIcon>
                     <ListItemText primary="Schülerliste"/>
@@ -115,12 +115,12 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemIcon><SyncIcon/></ListItemIcon>
                     <ListItemText primary="Synchronisieren"/>
                 </ListItem>*/}
-                <ListItem button
+                {context.isTeacher && <ListItem button
                           disabled={context.currentPupilId === undefined}
                           onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Schüler löschen"/>
-                </ListItem>
+                </ListItem>}
                 <ListItem button
                           disabled={context.currentPupilId === undefined && !context.isTeacher}
                           onClick={() => props.onClick() && context.update(newContext => {

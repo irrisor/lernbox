@@ -136,6 +136,9 @@ export function Overview() {
         [selectedGroups, instances, questionCards],
     );
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    React.useEffect(() => context.clearCard(), [context.currentInstances.length]);
+
     if (!pupil) return <>Schüler mit der ID "{context.currentPupilId}" fehlt.</>;
 
 
@@ -320,7 +323,7 @@ export function Overview() {
                     />
                 </Grid>
                 }
-                {activeTab === 2 && selectedInstances.length > 0 &&
+                {/*activeTab === 2 && selectedInstances.length > 0 &&
                 <Grid item xs={6}>
                     <Button
                         variant="contained"
@@ -345,7 +348,7 @@ export function Overview() {
                     >
                         Fach ändern
                     </Button>
-                </Grid>}
+                </Grid>*/}
                 {context.isTeacher && activeTab === 0 &&
                 <Grid item xs={12}>
                     <Button
@@ -387,15 +390,17 @@ export function Overview() {
                         Entfernen
                     </Button>
                 </Grid>}
-                {activeTab === 0 && <Grid item xs={12}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => context.next(...selectedGroups.map(group => group[group.length - 1]))}
-                        fullWidth
-                    >
-                        Lernen
-                    </Button>
+                {activeTab === 0 && (!context.isTeacher || !pupil.password) && <Grid item xs={12}>
+                    <Box width={1}>
+                        <Button
+                            variant="contained"
+                            color={!context.isTeacher ? "primary" : undefined}
+                            onClick={() => context.next(...selectedGroups.map(group => group[group.length - 1]))}
+                            fullWidth
+                        >
+                            Lernen
+                        </Button>
+                    </Box>
                 </Grid>}
                 {!context.isTeacher &&
                 <Grid item xs={12}>
