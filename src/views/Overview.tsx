@@ -139,8 +139,8 @@ export function Overview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     React.useEffect(() => context.clearCard(), [context.currentInstances.length]);
 
+    React.useEffect(() => context.loadNewRelease());
     if (!pupil) return <>Schüler mit der ID "{context.currentPupilId}" fehlt.</>;
-
 
     return (
         <>

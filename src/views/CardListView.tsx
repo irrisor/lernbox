@@ -75,6 +75,7 @@ export function CardList({onClick, imagesOnly, groupPath, navigate, create, sear
         </IconButton>
     </Tooltip>;
     React.useEffect(() => context.currentPupilId = undefined, [context.currentPupilId]);
+    React.useEffect(() => context.loadNewRelease());
     return (
         <>
             <Grid container spacing={2}>

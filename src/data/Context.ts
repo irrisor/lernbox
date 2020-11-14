@@ -7,6 +7,7 @@ import {v4 as uuidv4} from 'uuid';
 import {LocalState, RemoteState, SynchronizationInfo} from "../sync/SynchronizationInfo";
 import {PersistentObject} from "./PersistentObject";
 import _ from "lodash";
+import version from "../version.json";
 
 export const DEFAULT_PUPIL_ID = "default-pupil";
 
@@ -55,6 +56,8 @@ export function getQuestionCards(cards: Readonly<Array<IndexCard>>) {
     return cards.filter(card => card.answers?.length > 0 && card.answers.join("") !== "");
 }
 
+const appStartTime = Date.now();
+
 export class Context {
     public lastShownList: IndexCard[] = [];
     public touched: boolean = false;
@@ -65,6 +68,7 @@ export class Context {
     private persistentGroups: PersistentObject<GroupsData>;
     private persistentLocal: PersistentObject<LocalData>;
     private persistentPupils: PersistentObject<Pupil>[] = [];
+    private persistentVersion: PersistentObject<typeof version>;
     private _currentPupilId?: string;
     private _currentGroups: string[] = [];
     private _currentInstances: IndexCardInstance[] = [];
@@ -79,6 +83,7 @@ export class Context {
             this.persistentTeacher = originalContext.persistentTeacher;
             this.persistentGroups = originalContext.persistentGroups;
             this.persistentLocal = originalContext.persistentLocal;
+            this.persistentVersion = originalContext.persistentVersion;
             for (const propertyName of Object.keys(originalContext)) {
                 const propertyDescriptor = Object.getOwnPropertyDescriptor(
                     originalContext,
@@ -113,6 +118,12 @@ export class Context {
             this.persistentGroups = this.initializeGroupsObject(teacherId);
             this.persistentCards = this.initializeCardsObject(teacherId);
             this.persistentPupils = this.initializePupilObjects();
+            this.persistentVersion = new PersistentObject<typeof version>(version,
+                "../version.json",
+                this.synchronizationInfo,
+                () => "Versionsinformation",
+            );
+            this.persistentVersion.authKey = () => "none required";
         }
 
         this.persistentCards.onChange = (object, value) => {
@@ -560,6 +571,32 @@ export class Context {
     clearCard() {
         if (this.currentInstances.length > 0) {
             this.currentInstances = [];
+        }
+    }
+
+    public loadNewRelease() {
+        try {
+            if (version.version !== this.persistentVersion.content.version) {
+                const myRelease = version.version.split("-")[0].split(".");
+                const serverRelease = this.persistentVersion.content.version.split("-")[0].split(".");
+                for (let i = 0; i < myRelease.length; i++) {
+                    if ( myRelease[i] < serverRelease[i] ) {
+                        if ( appStartTime < Date.now() - 1000*60*60) {
+                            console.error("reloading application because the server version is higher");
+                            window.location.reload();
+                        } else {
+                            console.log("server version is higher, but the app runs less than an hour");
+                        }
+                        return;
+                    }
+                    if ( myRelease[i] > serverRelease[i] ) {
+                        // we are higher?!?
+                        return;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("failed to check version", e);
         }
     }
 
