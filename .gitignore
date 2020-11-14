@@ -93,3 +93,4 @@ typings/
 /data/
 /public/webweaver.php
 /doc/WebWeaver API.pdf
+/public/version.json

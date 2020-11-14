@@ -20,6 +20,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import version from "../version.json";
 
 const drawerWidth = 220;
 
@@ -116,8 +117,8 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Synchronisieren"/>
                 </ListItem>*/}
                 {context.isTeacher && <ListItem button
-                          disabled={context.currentPupilId === undefined}
-                          onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
+                                                disabled={context.currentPupilId === undefined}
+                                                onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>}
@@ -166,6 +167,9 @@ export function Bar(props: { children: React.ReactNode }) {
                     <Typography variant="h6" className={classes.title}>
                         <Logo
                             style={{marginBottom: "-4px"}}/> Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
+                    </Typography>
+                    <Typography variant="subtitle1" style={{fontSize: "0.5rem"}}>
+                        version {version.version}
                     </Typography>
                     <IconButton
                         color="inherit"

@@ -58,7 +58,7 @@ export class PersistentObject<T = unknown> {
     public onChange?: (object: PersistentObject<T>, newValue: Readonly<T>) => Readonly<T>;
     public afterChange?: (object: PersistentObject<T>, newValue: Readonly<T>) => void;
     public onStateChange?: (object: PersistentObject<T>) => void;
-    public authKey?: (object: PersistentObject<T>) => string | undefined;
+    private _authKey?: (object: PersistentObject<T>) => string | undefined;
     private synchronizationInfo: SynchronizationInfo;
     private _content: Readonly<T>;
     private readonly _description: (object: PersistentObject<T>) => string;
@@ -76,6 +76,15 @@ export class PersistentObject<T = unknown> {
         this.loadLocally();
         synchronizationInfo.add(this);
         this.scheduleLoadRemote();
+    }
+
+    get authKey(): ((object: PersistentObject<T>) => string | undefined) | undefined {
+        return this._authKey;
+    }
+
+    set authKey(value: ((object: PersistentObject<T>) => string | undefined) | undefined) {
+        this._authKey = value;
+        this.scheduleLoadRemote(true)
     }
 
     public get description(): string {
@@ -117,9 +126,9 @@ export class PersistentObject<T = unknown> {
     }
 
     public async loadRemote(authKeyValue?: string) {
-        if (!this.authKey) return;
+        if (!this._authKey) return;
         if (!authKeyValue) {
-            authKeyValue = this.authKey(this);
+            authKeyValue = this._authKey(this);
         }
         if (!authKeyValue) return;
         this.remoteStoreState.perform(async () => {
@@ -235,9 +244,12 @@ export class PersistentObject<T = unknown> {
         localStorage.setItem(META_PREFIX + this.meta.key, JSON.stringify(this.meta));
     }
 
-    private scheduleLoadRemote() {
-        if (this.meta.remoteState === RemoteState.IN_SYNC || this.meta.remoteState === RemoteState.MODIFIED) {
-            this.remoteLoadState.schedule(() => this.loadRemote(), 60000);
+    private scheduleLoadRemote(now?: boolean) {
+        if (this.meta.remoteState === RemoteState.IN_SYNC
+            || this.meta.remoteState === RemoteState.MODIFIED
+            || this.meta.remoteState === RemoteState.NON_EXISTENT
+        ) {
+            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000);
         }
     }
 
@@ -249,11 +261,11 @@ export class PersistentObject<T = unknown> {
     }
 
     private async storeRemote() {
-        if (!this.authKey) {
+        if (!this._authKey) {
             console.debug("not uploading because we have no authKey function", this.meta.key);
             return;
         }
-        const authKeyValue = this.authKey(this);
+        const authKeyValue = this._authKey(this);
         if (!authKeyValue) {
             console.debug("not uploading because we have no authKey", this.meta.key);
             return;
@@ -277,7 +289,7 @@ export class PersistentObject<T = unknown> {
                         headers,
                         body: JSON.stringify(this.content),
                     });
-            } catch ( error ) {
+            } catch (error) {
                 response = error;
             }
             switch (response.status) {
