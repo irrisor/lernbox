@@ -56,7 +56,6 @@ export function PupilList(props: { create?: boolean }) {
     const [accessLinkPupil, setAccessLinkPupil] = React.useState<Pupil | undefined>();
     const [selectedPupilIds, setSelectedPupilIds] = React.useState<string[]>([]);
     const [copiedCardIds, setCopiedCardIds] = React.useState<string[]>();
-    console.log(selectedPupilIds);
     const testNamePrefix = "Testschüler ";
     return (
         <>

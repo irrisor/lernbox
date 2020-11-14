@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Context, getCard, getQuestionCards, reactContext} from "../data/Context";
-import {Box, Button, Checkbox, Grid, IconButton, Link, TextField} from "@material-ui/core";
+import {Box, Button, Checkbox, Grid, IconButton, Link} from "@material-ui/core";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
 import Table from '@material-ui/core/Table';
@@ -52,6 +52,10 @@ function groupMatches(group: string[], groups?: string[]): boolean {
     }
 }
 
+export function isNotUndefined<T>(value?: T): value is T {
+    return value !== undefined;
+}
+
 export function Overview() {
     const context = React.useContext(reactContext);
     const pupil = context.pupil;
@@ -65,26 +69,33 @@ export function Overview() {
     const groups = context.groups(true, context.isTeacher ? cards : instances);
     const [selectedGroups, setSelectedGroups] = React.useState<string[][]>([]);
     const [selectedInstances, setSelectedInstances] = React.useState<string[]>([]);
-    const [slotInput, setSlotInput] = React.useState<number | undefined>(1);
+    const [selectedNonInstances, setSelectedNonInstances] = React.useState<string[]>([]);
+    // const [slotInput, setSlotInput] = React.useState<number | undefined>(1);
 
     const activeInstances = context.activeInstances;
-    const maxHeight = 500;
+    const maxHeight = 480;
 
-    // noinspection JSUnusedLocalSymbols
-    const instancesAndCards = React.useMemo(() => (instances?.map(instance => [instance, context.getCard(instance)])
-        .filter(([instance, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
-        .sort(([a, aCard], [b, bCard]) => {
-            const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
-            if (activeOrder !== 0) {
-                return -activeOrder;
-            }
-            const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
-            if (slotOrder !== 0) {
-                return slotOrder;
-            }
-            return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }), [pupil, instances]);
+    const instancesAndCards = React.useMemo(() => {
+        const instancesOrMissingCards: Array<[IndexCardInstance | undefined, IndexCard]> =
+            (instances?.map(instance => [instance, context.getCard(instance)])
+                .filter(([, card]) => card !== undefined) as [IndexCardInstance, IndexCard][])
+                .filter(([, card]) => selectedGroups.length === 0 || cardSelectedViaGroups(card))
+                .sort(([a, aCard], [b, bCard]) => {
+                    const activeOrder = Math.ceil(((a.slotChanged || 0) - (b.slotChanged || 0)) / 60 / 60 / 1000);
+                    if (activeOrder !== 0) {
+                        return -activeOrder;
+                    }
+                    const slotOrder = ((a.slot as number + 1) || 0) - ((b.slot as number + 1) || 0);
+                    if (slotOrder !== 0) {
+                        return slotOrder;
+                    }
+                    return (aCard.question || aCard.questionImage?.image || "").localeCompare(bCard.question || bCard.questionImage?.image || "");
+                });
+        return instancesOrMissingCards.concat(questionCards.filter(cardSelectedViaGroups)
+            .filter(card => !instancesOrMissingCards.find(([, existingCard]) => card === existingCard))
+            .map(card => [undefined, card]));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pupil, instances, selectedGroups, questionCards]);
 
 
     function tableRowForGroup(group: string[], subgroups: string[], activeCount: number, assignedCount: number, count: number) {
@@ -116,8 +127,13 @@ export function Overview() {
             </TableCell>
             <TableCell component="th" scope="row" padding="none" id={groupName}>
                 {group.length === 1 ? <span style={{paddingLeft: 20}}/> : null}
-                {activeCount ? <Link style={{cursor: "pointer"}} onClick={() => {
-                    context.next(groupName);
+                {activeCount || context.isTeacher ? <Link style={{cursor: "pointer"}} onClick={() => {
+                    if (context.isTeacher) {
+                        setSelectedGroups([group]);
+                        setActiveTab(2);
+                    } else {
+                        context.next(groupName);
+                    }
                 }}>{groupName.trim()}</Link> : groupName}
             </TableCell>
             <TableCell align="right">{assignedCount} / {count}</TableCell>
@@ -125,16 +141,9 @@ export function Overview() {
         </TableRow>;
     }
 
-    const newInstances = React.useMemo(() => selectedGroups.length > 0 ? questionCards.filter(
-        card => !!selectedGroups.find(selectedGroup => groupMatches(selectedGroup, getCard(questionCards, card)?.groups)))
-            .filter(card => !instances.find(instance => instance.id === card.id)) : [],
-        [selectedGroups, instances, questionCards],
-    );
-    const groupSelectedInstances = React.useMemo(() => selectedGroups.length > 0 ? instances.filter(
-        card => !!selectedGroups.find(selectedGroup => groupMatches(selectedGroup, getCard(questionCards, card)?.groups)))
-        : [],
-        [selectedGroups, instances, questionCards],
-    );
+    function cardSelectedViaGroups(card: IndexCard) {
+        return !!selectedGroups.find(selectedGroup => groupMatches(selectedGroup, getCard(questionCards, card)?.groups));
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     React.useEffect(() => context.clearCard(), [context.currentInstances.length]);
@@ -142,6 +151,7 @@ export function Overview() {
     React.useEffect(() => context.loadNewRelease());
     if (!pupil) return <>Schüler mit der ID "{context.currentPupilId}" fehlt.</>;
 
+    const allCheckBoxChecked = (selectedInstances.length + selectedNonInstances.length) > 0;
     return (
         <>
             <Main>
@@ -236,7 +246,23 @@ export function Overview() {
                     columns={[
                         {
                             width: 64,
-                            label: "",
+                            label: <Checkbox
+                                checked={allCheckBoxChecked}
+                                indeterminate={allCheckBoxChecked && (selectedInstances.length + selectedNonInstances.length) < instancesAndCards.length}
+                                onChange={(event, checked) => {
+                                    if (checked) {
+                                        setSelectedInstances(instancesAndCards
+                                            .map(([instance]) => instance?.id)
+                                            .filter(isNotUndefined));
+                                        setSelectedNonInstances(instancesAndCards
+                                            .map(([instance, card]) => !instance ? card.id : undefined)
+                                            .filter(isNotUndefined));
+                                    } else {
+                                        setSelectedInstances([]);
+                                        setSelectedNonInstances([]);
+                                    }
+                                }}
+                            />,
                             dataKey: "selected",
                         },
                         {
@@ -265,22 +291,31 @@ export function Overview() {
                     ]}
                     rowGetter={({index}) => {
                         const [instance, card] = instancesAndCards[index];
-                        const nextTryDate = Context.getNextTryDate(instance);
+                        const nextTryDate = instance && Context.getNextTryDate(instance);
                         const today = moment().startOf('day')
                         const yesterday = moment().add(-1, 'day').startOf('day')
-                        const slotChangedMoment = moment(instance.slotChanged);
-                        const slotChanged = instance.slotChanged ?
+                        const slotChangedMoment = instance && moment(instance.slotChanged);
+                        const slotChanged = instance && (slotChangedMoment && instance.slotChanged ?
                             (today < slotChangedMoment ? "heute" : (yesterday < slotChangedMoment ? "gestern" : slotChangedMoment.fromNow()))
-                            : "nie";
+                            : "nie");
+                        const id = (instance || card).id;
                         return {
                             selected: <Checkbox
-                                checked={selectedInstances.indexOf(instance.id) >= 0}
-                                inputProps={{'aria-labelledby': instance.id}}
+                                checked={instance ? selectedInstances.indexOf(id) >= 0 : selectedNonInstances.indexOf(id) >= 0}
+                                inputProps={{'aria-labelledby': id}}
                                 onChange={(event, checked) => {
-                                    if (checked) {
-                                        setSelectedInstances(selectedInstances.concat(instance.id));
+                                    if (instance) {
+                                        if (checked) {
+                                            setSelectedInstances(selectedInstances.concat(id));
+                                        } else {
+                                            setSelectedInstances(selectedInstances.filter(selectedInstance => selectedInstance !== id));
+                                        }
                                     } else {
-                                        setSelectedInstances(selectedInstances.filter(selectedInstance => selectedInstance !== instance.id));
+                                        if (checked) {
+                                            setSelectedNonInstances(selectedNonInstances.concat(id));
+                                        } else {
+                                            setSelectedNonInstances(selectedNonInstances.filter(selectedInstance => selectedInstance !== id));
+                                        }
                                     }
                                 }}
                             />,
@@ -304,8 +339,9 @@ export function Overview() {
                                     gutterBottom
                                 >{card.groups.join(", ")}</Typography>
                             </Box>,
-                            slot: instance.slot !== undefined ? instance.slot + 1 : "-",
-                            active: Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie",
+                            slot: instance ? (instance.slot !== undefined ? instance.slot + 1 : "-") :
+                                <Tooltip title="nicht zugeordnet"><span>nz</span></Tooltip>,
+                            active: instance && (Context.isCardActive(instance) ? "Ja" : nextTryDate ? moment(nextTryDate).fromNow() : "nie"),
                             slotChanged,
                         };
                     }}
@@ -313,7 +349,7 @@ export function Overview() {
                 />}
             </Main>
             <BottomGridContainer>
-                {activeTab === 2 && selectedInstances.length > 0 &&
+                {/*activeTab === 2 && selectedInstances.length > 0 &&
                 <Grid item xs={6}>
                     <TextField
                         type="number"
@@ -323,7 +359,7 @@ export function Overview() {
                     />
                 </Grid>
                 }
-                {/*activeTab === 2 && selectedInstances.length > 0 &&
+                {activeTab === 2 && selectedInstances.length > 0 &&
                 <Grid item xs={6}>
                     <Button
                         variant="contained"
@@ -352,28 +388,27 @@ export function Overview() {
                 {context.isTeacher && activeTab === 0 &&
                 <Grid item xs={12}>
                     <Button
-                        disabled={newInstances.length === 0}
-                        onClick={() => context.update(newContext => {
-                            newInstances.forEach(instance => newContext.modifyPupilsCardInstance(instance.id));
-                            setSelectedGroups([]);
-                        })}
+                        disabled={selectedGroups.length === 0}
+                        onClick={() => setActiveTab(2)}
+                        variant="contained"
+                        color="primary"
                         fullWidth
                     >
-                        Zuweisen
+                        Karten anzeigen
                     </Button>
                 </Grid>}
-                {context.isTeacher && activeTab === 0 &&
+                {context.isTeacher && activeTab === 2 &&
                 <Grid item xs={12}>
                     <Button
-                        disabled={groupSelectedInstances.length === 0}
+                        disabled={selectedNonInstances.length === 0}
                         onClick={() => context.update(newContext => {
-                            groupSelectedInstances.forEach(instance => newContext.modifyPupilsCardInstance(instance.id, () => null));
-                            setSelectedGroups([]);
+                            selectedNonInstances.forEach(instanceId => newContext.modifyPupilsCardInstance(instanceId));
+                            setSelectedNonInstances([]);
                         })}
                         fullWidth
-                        color="secondary"
+                        variant="contained"
                     >
-                        Entfernen
+                        Zuweisen
                     </Button>
                 </Grid>}
                 {context.isTeacher && activeTab === 2 &&

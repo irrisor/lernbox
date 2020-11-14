@@ -47,7 +47,7 @@ const styles = (theme: Theme) =>
 
 interface ColumnData<Data> {
     dataKey: keyof Data;
-    label: string;
+    label: string|React.ReactElement;
     numeric?: boolean;
     width: number;
 }
