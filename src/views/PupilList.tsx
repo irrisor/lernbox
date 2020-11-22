@@ -45,9 +45,10 @@ export function PupilList(props: { create?: boolean }) {
     React.useEffect(() => context.currentPupilId = undefined, [context.currentPupilId]);
     const [newName, setNewName] = React.useState("");
     const [newPassword, setNewPassword] = React.useState(randomPupilPassword());
+    const [newPupil, setNewPupil] = React.useState<Pupil | null>(null);
     const createPupil = (name: string, password: string, id?: string) => {
         if (name !== "") {
-            context.createPupil(name, password, id);
+            setNewPupil(context.createPupil(name, password, id));
             setNewName("");
             setNewPassword(randomPupilPassword());
         }
@@ -57,6 +58,7 @@ export function PupilList(props: { create?: boolean }) {
     const [selectedPupilIds, setSelectedPupilIds] = React.useState<string[]>([]);
     const [copiedCardIds, setCopiedCardIds] = React.useState<string[]>();
     const testNamePrefix = "Testschüler ";
+    React.useLayoutEffect(() => setNewPupil(null), [newPupil]);
     return (
         <>
             <Main>
@@ -86,7 +88,9 @@ export function PupilList(props: { create?: boolean }) {
                         <ListItem button key={pupil.id}
                                   onClick={() => {
                                       if (!onPasswordChip) context.history.push(`/pupil/${pupil.name}/${pupil.id}`);
-                                  }}>
+                                  }}
+                                  autoFocus={newPupil?.id === pupil.id}
+                        >
                             <ListItemIcon>
                                 {props.create ?
                                     <AccountCircle/>
@@ -108,7 +112,7 @@ export function PupilList(props: { create?: boolean }) {
                                     {context.isTeacher && ` (${pupil.instances.length} Karten)`}
                                     <Box
                                         flexGrow={1}/>
-                                    {context.isTeacher && pupil.instances.length > 0 && (pupil.password ?
+                                    {context.isTeacher && pupil.instances.length > 0 && !props.create && (pupil.password ?
                                             <>
                                                 <Link href={accessLink(context, pupil)}
                                                       onClick={(event: MouseEvent) => {
@@ -132,12 +136,16 @@ export function PupilList(props: { create?: boolean }) {
                                                 onMouseLeave={() => onPasswordChip = false}
                                                 icon={<LockOpen/>} label="kein Passwort"/>
                                     )}
-                                    {context.isTeacher && pupil.instances.length === 0 &&
-                                    <Button
-                                        variant="contained"
+                                    {context.isTeacher && pupil.instances.length === 0 && !props.create &&
+                                    <Tooltip
+                                        title="Bitte auf den Schülernamen klicken um Karten zuzuordnen. Alternativ
+                                        können auch Zuordnungen von einem markierten Schüler in dieser Liste
+                                        kopiert werden."
                                     >
-                                        Karten zuordnen
-                                    </Button>
+                                        <span>
+                                            bitte Karten zuordnen
+                                        </span>
+                                    </Tooltip>
                                     }</Box>}
                             />
                         </ListItem>

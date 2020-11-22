@@ -421,6 +421,8 @@ export function EditCard() {
                                         time_s: card.time_s,
                                         description: card.description,
                                         owner: card.owner,
+                                        inputType: card.inputType,
+                                        inputOptions: card.inputOptions && [...card.inputOptions],
                                     });
                                 }}
                         >

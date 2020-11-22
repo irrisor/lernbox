@@ -6,12 +6,14 @@ import {BottomGridContainer} from "../layout/BottomGridContainer";
 import {reactContext} from "../data/Context";
 import {SnapSVG} from "../components/SnapSVG";
 import Snap, {sin} from "snapsvg-cjs";
+import { useHistory } from "react-router-dom";
 
 export function Finished() {
     const context = React.useContext(reactContext);
     const day = new Date().getDay();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const svg = React.useMemo(() => randomPositiveSVG(), [day]);
+    const history = useHistory();
     return (<>
         <SnapSVG width="100%" height="100%">
             {(s, svgElement) => {
@@ -49,8 +51,8 @@ export function Finished() {
         </Main>
         <BottomGridContainer>
             <Grid item xs={12}>
-                <Button variant="contained" color="primary" onClick={() => context.next()} fullWidth autoFocus>
-                    Weiter
+                <Button variant="contained" color="primary" onClick={() => history.replace("/")} fullWidth autoFocus>
+                    Fertig
                 </Button>
             </Grid>
         </BottomGridContainer>

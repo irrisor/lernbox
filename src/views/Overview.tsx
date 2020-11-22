@@ -431,6 +431,7 @@ export function Overview() {
                             variant="contained"
                             color={!context.isTeacher ? "primary" : undefined}
                             onClick={() => context.next(...selectedGroups.map(group => group[group.length - 1]))}
+                            disabled={instances.length === 0}
                             fullWidth
                         >
                             Lernen

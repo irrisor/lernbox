@@ -421,6 +421,7 @@ export class Context {
             instances: [],
         };
         this.setPupil(newPupil.id, newPupil);
+        return newPupil;
     }
 
     back() {
