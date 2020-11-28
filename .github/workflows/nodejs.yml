@@ -56,10 +56,10 @@ jobs:
         # Remote directory
         remoteDir: ./web/
     - name: Deploy to other
-      uses: wlixcc/SFTP-Deploy-Action@1.1
+      uses: wangyucode/sftp-upload-action@v1.1
       with:
         username: ${{ secrets.SFTP_USER }}
-        server: ${{ secrets.SFTP_SERVER }}
+        host: ${{ secrets.SFTP_SERVER }}
         password: ${{ secrets.SFTP_PASSWORD }}
-        local_path: "build/"
-        remote_path: "web/"
+        localDir: "build/"
+        remoteDir: "web/"
