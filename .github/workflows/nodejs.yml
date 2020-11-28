@@ -40,7 +40,7 @@ jobs:
         name: build
         # Directory containing files to upload
         path: build
-    - name: Deploy
+    - name: Deploy to irrisor.net
       uses: sebastianpopp/ftp-action@v2.0.0
       with:
         # FTP host
@@ -55,3 +55,9 @@ jobs:
         localDir: build/
         # Remote directory
         remoteDir: ./web/
+     - name: Deploy to other
+         uses: SamKirkland/FTP-Deploy-Action@4.0.0
+         with:
+           server: ${{ secrets.SFTP_SERVER }}
+           username: ${{ secrets.SFTP_USER }}
+           password: ${{ secrets.STFP_PASSWORD }}
