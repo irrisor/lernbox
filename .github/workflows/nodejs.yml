@@ -56,12 +56,10 @@ jobs:
         # Remote directory
         remoteDir: ./web/
     - name: Deploy to other
-      uses: appleboy/scp-action@master
+      uses: wlixcc/SFTP-Deploy-Action@1.1
       with:
-        host: ${{ secrets.SFTP_SERVER }}
         username: ${{ secrets.SFTP_USER }}
+        server: ${{ secrets.SFTP_SERVER }}
         password: ${{ secrets.SFTP_PASSWORD }}
-        port: 22
-        source: "build/*"
-        strip_components: 1
-        target: "web/"
+        local_path: "build/"
+        remote_path: "web/"
