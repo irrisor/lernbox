@@ -55,9 +55,9 @@ jobs:
         localDir: build/
         # Remote directory
         remoteDir: ./web/
-     - name: Deploy to other
-         uses: Automattic/FTP-Deploy-Action@3.0.1
-         with:
-           server: sftp://${{ secrets.SFTP_SERVER }}
-           username: ${{ secrets.SFTP_USER }}
-           password: ${{ secrets.STFP_PASSWORD }}
+    - name: Deploy to other
+        uses: Automattic/FTP-Deploy-Action@3.0.1
+        with:
+          server: sftp://${{ secrets.SFTP_SERVER }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.STFP_PASSWORD }}
