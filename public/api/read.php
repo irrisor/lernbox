@@ -29,11 +29,4 @@ function read(string $path)
     }
 }
 
-function header_value($name): ?string
-{
-    $name = strtolower($name);
-    $headers = array_change_key_case(getallheaders());
-    return array_key_exists($name, $headers) ? $headers[$name] : NULL;
-}
-
 ?>

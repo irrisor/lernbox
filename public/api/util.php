@@ -20,6 +20,18 @@ class TagDoesNotMatchException extends Exception
 }
 
 /**
+ * Get value from all header in a case insensitive way.
+ * @param $name string header key
+ * @return string|null header value
+ */
+function header_value($name): ?string
+{
+    $name = strtolower($name);
+    $headers = array_change_key_case(getallheaders());
+    return array_key_exists($name, $headers) ? $headers[$name] : NULL;
+}
+
+/**
  * Replace contents of a file and return the previous contents.
  * @param $filename string short file name
  * @param $content object|array content to be json encoded
