@@ -58,6 +58,7 @@ jobs:
     - name: Deploy to other
       uses: Automattic/FTP-Deploy-Action@3.0.1
       with:
-        server: sftp://${{ secrets.SFTP_SERVER }}
-        username: ${{ secrets.SFTP_USER }}
-        password: ${{ secrets.STFP_PASSWORD }}
+        ftp-server: sftp://${{ secrets.SFTP_SERVER }}/web/
+        ftp-username: ${{ secrets.SFTP_USER }}
+        ftp-password: ${{ secrets.STFP_PASSWORD }}
+        local-dir: build/
