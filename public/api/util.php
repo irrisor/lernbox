@@ -41,7 +41,7 @@ function replaceFileExclusive(string $filename, $content, bool $with_metadata = 
             try {
                 $previous_body = json_decode(fread($handle, MAX_FILE_SIZE));
                 if ($with_metadata && $previous_body !== NULL) {
-                    $expected_tag = array_key_exists('If-Match', getallheaders()) ? getallheaders()['If-Match'] : NULL;
+                    $expected_tag = header_value('If-Match');
                     header("ETag: $previous_body->tag");
                     if ($expected_tag === NULL) {
                         throw new MissingETagButExistentFileException("Can only replace content if If-Match header is given.");
@@ -152,7 +152,7 @@ function requestBasicAuth()
  */
 function getAuthorizationHeaderExploded(): array
 {
-    $authorization = array_key_exists('Authorization', getallheaders()) ? getallheaders()['Authorization'] : NULL;
+    $authorization = header_value('Authorization');
     if ($authorization === NULL) {
         header("HTTP/1.1 401 Unauthorized");
         print "No Authorization header found to check access to this file.";

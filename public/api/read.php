@@ -14,7 +14,7 @@ function read(string $path)
             print "Cannot access '$path'";
         } else if (is_object($file_object) && property_exists($file_object, "content")) {
             header("ETag: $file_object->tag");
-            $expected_tag = array_key_exists('If-None-Match', getallheaders()) ? getallheaders()['If-None-Match'] : NULL;
+            $expected_tag = header_value('If-None-Match');
             if ($expected_tag == $file_object->tag) {
                 header("HTTP/1.1 304 Not Modified");
             } else {
@@ -27,6 +27,13 @@ function read(string $path)
         header("HTTP/1.1 404 Not Found");
         print "Cannot find '$path'";
     }
+}
+
+function header_value($name): ?string
+{
+    $name = strtolower($name);
+    $headers = array_change_key_case(getallheaders());
+    return array_key_exists($name, $headers) ? $headers[$name] : NULL;
 }
 
 ?>
