@@ -25,14 +25,19 @@ class Remote {
     private lastTimestamp?: number;
     private running: boolean = false;
 
-    public schedule(operation: () => void, timeInMS: number, minTimeInMS?: number) {
+    public schedule(operation: () => void, timeInMS: number, maxTimeInMS?: number, minTimeInMS?: number) {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;
         }
-        this.timer = setTimeout(operation, timeInMS);
-        if ((this.lastTimestamp || 0) + (minTimeInMS || timeInMS) < Date.now()) {
+        const nextMinTime = (this.lastTimestamp || 0) + (minTimeInMS || 0);
+        if (nextMinTime > Date.now()) {
+            timeInMS = nextMinTime - Date.now();
+        }
+        if ((this.lastTimestamp || 0) + (maxTimeInMS || timeInMS) < Date.now()) {
             operation();
+        } else {
+            this.timer = setTimeout(operation, timeInMS);
         }
     }
 
@@ -131,7 +136,7 @@ export class PersistentObject<T = unknown> {
             authKeyValue = this._authKey(this);
         }
         if (!authKeyValue) return;
-        this.remoteStoreState.perform(async () => {
+        await this.remoteStoreState.perform(async () => {
             console.debug("checking remote of", this.meta.key);
             const headers: HeadersInit = {
                 "Authorization": "Bearer " + authKeyValue,
@@ -249,7 +254,7 @@ export class PersistentObject<T = unknown> {
             || this.meta.remoteState === RemoteState.MODIFIED
             || this.meta.remoteState === RemoteState.NON_EXISTENT
         ) {
-            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000, 60000);
+            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000, undefined, 60000);
         }
     }
 
@@ -270,7 +275,7 @@ export class PersistentObject<T = unknown> {
             console.debug("not uploading because we have no authKey", this.meta.key);
             return;
         }
-        this.remoteStoreState.perform(async () => {
+        await this.remoteStoreState.perform(async () => {
             const headers: HeadersInit = {
                 "Authorization": "Bearer " + authKeyValue,
             };
