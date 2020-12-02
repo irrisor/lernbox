@@ -3,6 +3,8 @@
   RewriteEngine On
   RewriteBase /
 
+  SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
   RewriteRule "^api/.*$" "api/api.php" [L]
 
   RewriteRule ^index\.html$ - [L]

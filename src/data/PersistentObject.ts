@@ -25,13 +25,13 @@ class Remote {
     private lastTimestamp?: number;
     private running: boolean = false;
 
-    public schedule(operation: () => void, timeInMS: number, maxTimeInMS?: number) {
+    public schedule(operation: () => void, timeInMS: number, minTimeInMS?: number) {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;
         }
         this.timer = setTimeout(operation, timeInMS);
-        if ((this.lastTimestamp || 0) + (maxTimeInMS || timeInMS) < Date.now()) {
+        if ((this.lastTimestamp || 0) + (minTimeInMS || timeInMS) < Date.now()) {
             operation();
         }
     }
@@ -249,7 +249,7 @@ export class PersistentObject<T = unknown> {
             || this.meta.remoteState === RemoteState.MODIFIED
             || this.meta.remoteState === RemoteState.NON_EXISTENT
         ) {
-            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000);
+            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000, 60000);
         }
     }
 
