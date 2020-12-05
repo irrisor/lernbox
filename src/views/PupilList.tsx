@@ -46,9 +46,9 @@ export function PupilList(props: { create?: boolean }) {
     const [newName, setNewName] = React.useState("");
     const [newPassword, setNewPassword] = React.useState(randomPupilPassword());
     const [newPupil, setNewPupil] = React.useState<Pupil | null>(null);
-    const createPupil = (name: string, password: string, id?: string) => {
+    const createPupil = (name: string, password: string, id?: string, newContext = context) => {
         if (name !== "") {
-            setNewPupil(context.createPupil(name, password, id));
+            setNewPupil(newContext.createPupil(name, password, id));
             setNewName("");
             setNewPassword(randomPupilPassword());
         }
@@ -59,6 +59,9 @@ export function PupilList(props: { create?: boolean }) {
     const [copiedCardIds, setCopiedCardIds] = React.useState<string[]>();
     const testNamePrefix = "Testschüler ";
     React.useLayoutEffect(() => setNewPupil(null), [newPupil]);
+    const newPupilsFromPupilGroup = pupilGroup ? pupilGroup.pupils.filter(pupil =>
+        !context.pupilsList.find(existingPupil => existingPupil.id === pupil.user_id),
+    ) : [];
     return (
         <>
             <Main>
@@ -174,9 +177,7 @@ export function PupilList(props: { create?: boolean }) {
                             />
                         </ListItem>
                     ))}
-                    {context.isTeacher && props.create && pupilGroup && pupilGroup.pupils.filter(pupil =>
-                        !context.pupilsList.find(existingPupil => existingPupil.id === pupil.user_id),
-                    ).map(pupil => (
+                    {context.isTeacher && props.create && newPupilsFromPupilGroup.map(pupil => (
                         <ListItem
                             key={pupil.user_id}
                         >
@@ -317,7 +318,7 @@ export function PupilList(props: { create?: boolean }) {
                     </Button>
                 </Grid>
                 }
-                {props.create && context.isTeacher &&
+                {props.create && context.isTeacher && !pupilGroup &&
                 <Grid item xs={12}>
                     <Button
                         variant="contained"
@@ -327,6 +328,22 @@ export function PupilList(props: { create?: boolean }) {
                         ).length + 1), "")}
                     >
                         Testschüler anlegen
+                    </Button>
+                </Grid>
+                }
+                {props.create && context.isTeacher && !!pupilGroup &&
+                <Grid item xs={12}>
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        disabled={newPupilsFromPupilGroup.length === 0}
+                        onClick={() => {
+                            context.update(newContext => newPupilsFromPupilGroup.forEach(
+                                pupil => createPupil(pupil.user_name, newPassword, pupil.user_id, newContext)));
+                            context.history.push("/pupils/create/");
+                        }}
+                    >
+                        komplette Gruppe anlegen
                     </Button>
                 </Grid>
                 }
