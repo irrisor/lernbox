@@ -8,6 +8,13 @@ import {TeacherRoute} from "./TeacherRoute";
 import {Yay} from "../views/Yay";
 import {PupilList} from "../views/PupilList";
 import {LoginView} from "../views/LoginView";
+import {createMuiTheme, MuiThemeProvider} from '@material-ui/core/styles';
+
+const theme = createMuiTheme({
+    typography: {
+        fontFamily: "roboto, arial, sans-serif",
+    },
+});
 
 export default function App() {
     const ContextProvider = reactContext.Provider;
@@ -31,48 +38,50 @@ export default function App() {
     if (!context.initialized) return <span style={{display: "none"}}>context not initialized</span>;
     return (
         <ErrorBoundary>
-            <ContextProvider value={context}>
-                <Switch>
-                    <Route path={[
-                        `/login/:schoolId/none/:key`,
-                        `/login/:schoolId/:teacherId/:readKey/:pupilId/:key`,
-                        `/login/:schoolId/:teacherId/:key`,
-                        `/login/:schoolId/:teacherId`,
-                        `/login/:schoolId/`,
-                        `/login`,
-                    ]}>
-                        <ScreenBox>
-                            <LoginView/>
-                        </ScreenBox>
-                    </Route>
-                    <Route path="/pupil/:pupilName/:pupilId">
-                        <ScreenBox>
-                            <PupilRoute/>
-                        </ScreenBox>
-                    </Route>
-                    <Route path="/teacher">
-                        <TeacherRoute/>
-                    </Route>
-                    <Route path="/yay">
-                        <ScreenBox fullScreen>
-                            <Yay/>
-                        </ScreenBox>
-                    </Route>
-                    <Route path={[
-                        "/pupils/create/:pupilGroupName",
-                        "/pupils/create",
-                    ]}>
-                        <ScreenBox>
-                            <PupilList create/>
-                        </ScreenBox>
-                    </Route>
-                    <Route path="/">
-                        <ScreenBox>
-                            <PupilList/>
-                        </ScreenBox>
-                    </Route>
-                </Switch>
-            </ContextProvider>
+            <MuiThemeProvider theme={theme}>
+                <ContextProvider value={context}>
+                    <Switch>
+                        <Route path={[
+                            `/login/:schoolId/none/:key`,
+                            `/login/:schoolId/:teacherId/:readKey/:pupilId/:key`,
+                            `/login/:schoolId/:teacherId/:key`,
+                            `/login/:schoolId/:teacherId`,
+                            `/login/:schoolId/`,
+                            `/login`,
+                        ]}>
+                            <ScreenBox>
+                                <LoginView/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path="/pupil/:pupilName/:pupilId">
+                            <ScreenBox>
+                                <PupilRoute/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path="/teacher">
+                            <TeacherRoute/>
+                        </Route>
+                        <Route path="/yay">
+                            <ScreenBox fullScreen>
+                                <Yay/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path={[
+                            "/pupils/create/:pupilGroupName",
+                            "/pupils/create",
+                        ]}>
+                            <ScreenBox>
+                                <PupilList create/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path="/">
+                            <ScreenBox>
+                                <PupilList/>
+                            </ScreenBox>
+                        </Route>
+                    </Switch>
+                </ContextProvider>
+            </MuiThemeProvider>
         </ErrorBoundary>
     );
 }

@@ -8,6 +8,8 @@ import {SnapSVG} from "./SnapSVG";
 import Snap from "snapsvg-cjs";
 import {Image} from "../data/cards";
 
+const cardFont = "roboto";
+
 const useStyles = makeStyles({
     root: {
         minWidth: 350,
@@ -24,6 +26,13 @@ const useStyles = makeStyles({
     title: {
         fontSize: 14,
         textAlign: "right",
+    },
+    text: {
+        fontFamily: cardFont + ", arial, sans-serif",
+    },
+    description: {
+        fontFamily: cardFont + ", arial, sans-serif",
+        fontSize: 16,
     },
     imageDescription: {
         fontSize: 10,
@@ -194,7 +203,7 @@ export function IndexCardVisual(props:
                                                   display: "flex",
                                                   flexDirection: "column",
                                               }}>
-                                        <Typography variant="h5" component="h2">
+                                        <Typography variant="h5" component="h2" className={classes.text}>
                                             {text}
                                         </Typography>
                                     </Grid> :
@@ -210,7 +219,7 @@ export function IndexCardVisual(props:
                             </Grid>}
                             {(text || description) ? <Grid item xs={imageInfoLink ? 8 : 12}
                                                            className={classes.centerVertically}>
-                                    <Typography variant="body2" component="p">
+                                    <Typography variant="body2" component="p" className={classes.description}>
                                         {description}
                                     </Typography>
                                 </Grid> :
