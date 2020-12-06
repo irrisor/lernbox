@@ -9,6 +9,8 @@ import {Yay} from "../views/Yay";
 import {PupilList} from "../views/PupilList";
 import {LoginView} from "../views/LoginView";
 import {createMuiTheme, MuiThemeProvider} from '@material-ui/core/styles';
+import {AboutView} from "../views/AboutView";
+import {HelpView} from "../views/HelpView";
 
 const theme = createMuiTheme({
     typography: {
@@ -72,6 +74,16 @@ export default function App() {
                         ]}>
                             <ScreenBox>
                                 <PupilList create/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path="/about">
+                            <ScreenBox fullScreen>
+                                <AboutView/>
+                            </ScreenBox>
+                        </Route>
+                        <Route path="/help">
+                            <ScreenBox fullScreen>
+                                <HelpView/>
                             </ScreenBox>
                         </Route>
                         <Route path="/">

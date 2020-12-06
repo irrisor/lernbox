@@ -21,6 +21,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import version from "../version.json";
+import {Help, Info} from "@material-ui/icons";
 
 const drawerWidth = 220;
 
@@ -132,6 +133,22 @@ const Menu = (props: { onClick: () => true }) => {
                 >
                     <ListItemIcon><LogoffIcon/></ListItemIcon>
                     <ListItemText primary="Abmelden"/>
+                </ListItem>
+                <ListItem button
+                          onClick={() => {
+                              context.history.push("/help");
+                          }}
+                >
+                    <ListItemIcon><Help/></ListItemIcon>
+                    <ListItemText primary="Anleitung"/>
+                </ListItem>
+                <ListItem button
+                          onClick={() => {
+                              context.history.push("/about");
+                          }}
+                >
+                    <ListItemIcon><Info/></ListItemIcon>
+                    <ListItemText primary="Über Lernbox"/>
                 </ListItem>
             </List>
         </div>
