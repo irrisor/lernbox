@@ -264,7 +264,7 @@ export function EditCard() {
                             </Grid>}
                             <Grid item {...fieldBreakpoints}>
                                 <TextField
-                                    label="Gruppen (mit ; getrennt)"
+                                    label="Themen (mit ; getrennt)"
                                     value={(card.groups || []).join("; ")}
                                     onChange={event => setCard(Object.assign({}, card,
                                         {
@@ -350,7 +350,7 @@ export function EditCard() {
                             </Grid>
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Auswahloptionen (mit ; getrennt)"
+                                    label="Multiple-Choice-Auswahl (mit ; getrennt)"
                                     value={(card.inputOptions || []).join("; ")}
                                     disabled={card.inputType !== "select"}
                                     onChange={event => setCard(Object.assign({}, card,
@@ -395,7 +395,7 @@ export function EditCard() {
                 </Tooltip>
                 <Tooltip title={isForeignCard ?
                     "Diese Karte kann nicht bearbeitet werden, da sie nicht von dir erstellt wurde" :
-                    "Die Karte braucht mindestens Frage und Antwort sowie eine Gruppe."}>
+                    "Die Karte braucht mindestens Frage und Antwort sowie ein Thema."}>
                     <Grid item xs={12} md={4}>
                         <Button variant="contained" color="primary"
                                 fullWidth

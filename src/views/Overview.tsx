@@ -201,7 +201,7 @@ export function Overview() {
                       variant="scrollable"
                       scrollButtons="auto"
                 >
-                    <Tab label="Gruppen" id="groups-tab" aria-label="nach Gruppen"/>
+                    <Tab label="Themen" id="groups-tab" aria-label="nach Themen"/>
                     <Tab label="Fächer" id="slots-tab" aria-label="nach Fach"/>
                     {context.isTeacher && <Tab label="Karten" id="cards-tab" aria-label="Kartenliste"/>}
                 </Tabs>
@@ -209,12 +209,12 @@ export function Overview() {
                     maxHeight: maxHeight + "px",
                     display: activeTab === 0 ? undefined : "none",
                 }}>
-                    <Table aria-label="Gruppen" stickyHeader>
+                    <Table aria-label="Themen" stickyHeader>
                         <TableHead>
                             <TableRow>
                                 <TableCell/>
                                 <TableCell/>
-                                <TableCell>Gruppe</TableCell>
+                                <TableCell>Thema</TableCell>
                                 <TableCell align="right">Zugewiesen</TableCell>
                                 <TableCell align="right">Aktive Karten</TableCell>
                             </TableRow>
