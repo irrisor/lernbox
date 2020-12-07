@@ -95,28 +95,18 @@ const Menu = (props: { onClick: () => true }) => {
             <div className={classes.toolbar}/>
             <Divider/>
             <List>
-                {!context.isTeacher && <ListItem button onClick={() => props.onClick() && context.back()}>
-                    <ListItemIcon><Logo/></ListItemIcon>
-                    <ListItemText primary="Lernen"/>
-                </ListItem>}
-                <ListItem button onClick={() => props.onClick() && context.history.push("/")}>
-                    <ListItemIcon><AccountCircle/></ListItemIcon>
-                    <ListItemText primary="Schülerliste"/>
-                </ListItem>
-                <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
-                    <ListItemIcon><ListIcon/></ListItemIcon>
-                    <ListItemText primary="Karten bearbeiten"/>
-                </ListItem>
                 <ListItem button onClick={() => props.onClick() && toggleFullScreen()}>
                     <ListItemIcon><FullscreenIcon/></ListItemIcon>
                     <ListItemText primary="Vollbild"/>
                 </ListItem>
-                {/*<ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
-                    <ListItemIcon><SyncIcon/></ListItemIcon>
-                    <ListItemText primary="Synchronisieren"/>
-                </ListItem>*/}
+                <ListItem button onClick={() => props.onClick() && context.history.push("/")}>
+                    <ListItemIcon><AccountCircle/></ListItemIcon>
+                    <ListItemText primary="Schülerliste"/>
+                </ListItem>
+                {!context.isTeacher && <ListItem button onClick={() => props.onClick() && context.back()}>
+                    <ListItemIcon><Logo/></ListItemIcon>
+                    <ListItemText primary="Lernen"/>
+                </ListItem>}
                 {context.isTeacher && <ListItem button
                                                 disabled={context.currentPupilId === undefined}
                                                 onClick={() => props.onClick() && context.history.push(`/pupil/${context.pupil?.name || "-"}/${context.currentPupilId}/delete`)}>
@@ -124,16 +114,15 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>}
                 <ListItem button
-                          disabled={context.currentPupilId === undefined && !context.isTeacher}
-                          onClick={() => props.onClick() && context.update(newContext => {
-                              newContext.currentPasswordHash = "";
-                              newContext.currentPupilId = undefined;
-                              newContext.history.push("/");
-                          })}
-                >
-                    <ListItemIcon><LogoffIcon/></ListItemIcon>
-                    <ListItemText primary="Abmelden"/>
+                          onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
+                    <ListItemIcon><ListIcon/></ListItemIcon>
+                    <ListItemText primary="Karten bearbeiten"/>
                 </ListItem>
+                {/*<ListItem button
+                          onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
+                    <ListItemIcon><SyncIcon/></ListItemIcon>
+                    <ListItemText primary="Synchronisieren"/>
+                </ListItem>*/}
                 <ListItem button
                           onClick={() => {
                               context.history.push("/help");
@@ -149,6 +138,17 @@ const Menu = (props: { onClick: () => true }) => {
                 >
                     <ListItemIcon><Info/></ListItemIcon>
                     <ListItemText primary="Über Lernbox"/>
+                </ListItem>
+                <ListItem button
+                          disabled={context.currentPupilId === undefined && !context.isTeacher}
+                          onClick={() => props.onClick() && context.update(newContext => {
+                              newContext.currentPasswordHash = "";
+                              newContext.currentPupilId = undefined;
+                              newContext.history.push("/");
+                          })}
+                >
+                    <ListItemIcon><LogoffIcon/></ListItemIcon>
+                    <ListItemText primary="Abmelden"/>
                 </ListItem>
             </List>
         </div>
