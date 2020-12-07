@@ -113,11 +113,11 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemIcon><DeleteIcon/></ListItemIcon>
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>}
-                <ListItem button
+                {context.isTeacher && <ListItem button
                           onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
                     <ListItemIcon><ListIcon/></ListItemIcon>
                     <ListItemText primary="Karten bearbeiten"/>
-                </ListItem>
+                </ListItem>}
                 {/*<ListItem button
                           onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
                     <ListItemIcon><SyncIcon/></ListItemIcon>
