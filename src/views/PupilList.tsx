@@ -95,7 +95,7 @@ export function PupilList(props: { create?: boolean }) {
                                   autoFocus={newPupil?.id === pupil.id}
                         >
                             <ListItemIcon>
-                                {props.create ?
+                                {props.create || !context.isTeacher ?
                                     <AccountCircle/>
                                     :
                                     <Checkbox
@@ -264,7 +264,7 @@ export function PupilList(props: { create?: boolean }) {
                     </Button>
                 </Grid>
                 }
-                {!props.create && !copiedCardIds &&
+                {context.isTeacher && !props.create && !copiedCardIds &&
                 <Grid item xs={12}>
                     <Tooltip title="Wenn genau ein Schüler selektiert ist, der bereits Karten zugeordnet hat,
                     kannst du seine Kartenzuordnung kopieren,

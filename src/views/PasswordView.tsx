@@ -47,7 +47,9 @@ export function PasswordView({passwordName, currentPasswordHash, apply, who, ove
             <Box height="10em">
                 <Typography variant="h4">Passwortschutz</Typography>
                 {change ?
-                    <p>Setze ein neues Passwort, das nur {who} kennt.</p>
+                    <p>Setze ein neues Passwort, das nur {who} kennt.
+                        Achtung, Lehrer können die Passworte der Schüler einsehen!
+                    </p>
                     :
                     <p>Für diese Funktion ist das {passwordName} erforderlich.</p>
                 }
