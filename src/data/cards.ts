@@ -174,7 +174,7 @@ for (let x = 0; x <= 10; x++) {
     });
 });*/
 
-additionalCards.content.cards.forEach(additionalCard =>
+additionalCards.cards.forEach(additionalCard =>
     predefinedCards.push(Object.assign({}, additionalCard, {inputType: additionalCard.inputType as InputType})));
 
 export const predefinedCardsHash = sha256(JSON.stringify(predefinedCards));
