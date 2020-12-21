@@ -81,7 +81,10 @@ export default function App() {
                                 <AboutView/>
                             </ScreenBox>
                         </Route>
-                        <Route path="/help">
+                        <Route path={[
+                            "/help/:mode",
+                            "/help",
+                        ]}>
                             <ScreenBox fullScreen>
                                 <HelpView/>
                             </ScreenBox>

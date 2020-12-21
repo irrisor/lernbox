@@ -131,6 +131,14 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemIcon><Help/></ListItemIcon>
                     <ListItemText primary="Anleitung"/>
                 </ListItem>
+                {context.isTeacher && <ListItem button
+                          onClick={() => {
+                              context.history.push("/help/short");
+                          }}
+                >
+                    <ListItemIcon><Help/></ListItemIcon>
+                    <ListItemText primary="Kurzanleitung"/>
+                </ListItem>}
                 <ListItem button
                           onClick={() => {
                               context.history.push("/about");
