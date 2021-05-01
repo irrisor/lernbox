@@ -236,7 +236,7 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
 
                     $session_id = $result[1]['session_id'];
                     $group_ids = array_map(fn($member) => $member['login'], array_filter($result[0]['member'],
-                        fn($member) => $member['type'] == 18));
+                        fn($member) => $member['type'] == 18 || $member['type'] == 19));
 
 //                    error_log("Requesting group member of $username: " . json_encode($group_ids));
                     $result = $client->request(array_merge([
