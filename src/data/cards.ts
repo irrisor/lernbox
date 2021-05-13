@@ -122,7 +122,7 @@ for (let x = 0; x <= 10; x++) {
             description: "Was fehlt?",
             answers: ["", "" + (x - y)],
             time_s: 6,
-            groups: ["Zahlzerlegung"],
+            groups: ["Zahlzerlegung 🏠"],
             inputType: "number",
             owner: officialOwner,
         });
