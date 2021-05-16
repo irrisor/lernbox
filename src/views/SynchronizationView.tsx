@@ -64,7 +64,8 @@ export function SynchronizationView() {
                             <Button fullWidth onClick={() => {
                                 context.synchronizationInfo.objects().forEach(object => {
                                     object.meta.remoteState = RemoteState.IN_SYNC;
-                                    object.content = object.content;
+                                    const previousContent = object.content;
+                                    object.content = previousContent;
                                 });
                             }
                             }>
