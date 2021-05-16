@@ -4,6 +4,7 @@ import {reactContext} from "../data/Context";
 import {Main} from "../layout/Main";
 import {VirtualizedTable} from "../components/VirtualizedTable";
 import moment from "moment";
+import {RemoteState} from "../sync/SynchronizationInfo";
 
 export function SynchronizationView() {
     const context = React.useContext(reactContext);
@@ -61,8 +62,14 @@ export function SynchronizationView() {
                         <Grid item xs={12}>
                             Synchronisation ist aktiv.
                             <Button fullWidth onClick={() => {
+                                context.synchronizationInfo.objects().forEach(object => {
+                                    object.meta.remoteState = RemoteState.IN_SYNC;
+                                    object.content = object.content;
+                                });
                             }
-                            }>Jetzt ausführen</Button>
+                            }>
+                                Hochladen forcieren
+                            </Button>
                         </Grid>
                     </Grid>
                 </div>
