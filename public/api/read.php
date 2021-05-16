@@ -14,6 +14,7 @@ function read(string $path)
             print "Cannot access '$path'";
         } else if (is_object($file_object) && property_exists($file_object, "content")) {
             header("ETag: $file_object->tag");
+            header("X-ETag: $file_object->tag");
             $expected_tag = header_value('If-None-Match');
             if ($expected_tag == $file_object->tag) {
                 header("HTTP/1.1 304 Not Modified");

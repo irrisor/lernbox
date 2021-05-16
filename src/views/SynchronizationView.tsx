@@ -65,6 +65,9 @@ export function SynchronizationView() {
                                 context.synchronizationInfo.objects().forEach(object => {
                                     object.meta.remoteState = RemoteState.IN_SYNC;
                                     const previousContent = object.content;
+                                    if (object.meta.remoteConflictHash) {
+                                        object.meta.remoteHash = object.meta.remoteConflictHash;
+                                    }
                                     object.content = previousContent;
                                 });
                             }

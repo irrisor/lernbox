@@ -161,7 +161,7 @@ export class PersistentObject<T = unknown> {
                     break;
                 case 200: // OK
                     // we've found new content
-                    const hash = response.headers.get("ETag") || undefined;
+                    const hash = response.headers.get("ETag") || response.headers.get("X-ETag") || undefined;
                     if (this.meta.remoteState !== RemoteState.CONFLICT) {
                         switch (this.meta.localState) {
                             case LocalState.ERROR:
@@ -301,13 +301,13 @@ export class PersistentObject<T = unknown> {
                 case 412: // Precondition Failed
                 case 409: // Conflict
                     this.meta.remoteState = RemoteState.CONFLICT;
-                    this.meta.remoteConflictHash = response.headers.get("ETag") || undefined;
+                    this.meta.remoteConflictHash = response.headers.get("ETag") || response.headers.get("X-ETag") || undefined;
                     console.debug("conflict detected for ", this.meta.key, ": ", this.meta.remoteConflictHash);
                     break;
                 case 200: // OK
                 case 201: // Created
                     this.meta.remoteState = RemoteState.IN_SYNC;
-                    this.meta.remoteHash = response.headers.get("ETag") || undefined;
+                    this.meta.remoteHash = response.headers.get("ETag") || response.headers.get("X-ETag") || undefined;
                     if (this.meta.localState === LocalState.UPLOADING) {
                         this.meta.localState = LocalState.IN_SYNC;
                         console.debug("uploaded ", this.meta.key, ": ", this.meta.remoteHash);

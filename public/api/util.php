@@ -58,6 +58,7 @@ function replaceFileExclusive(string $filename, $content, bool $with_metadata = 
                 if ($with_metadata && $previous_body !== NULL) {
                     $expected_tag = header_value('If-Match');
                     header("ETag: $previous_body->tag");
+                    header("X-ETag: $previous_body->tag");
                     if ($expected_tag === NULL) {
                         throw new MissingETagButExistentFileException("Can only replace content if If-Match header is given.");
                     }
@@ -70,6 +71,7 @@ function replaceFileExclusive(string $filename, $content, bool $with_metadata = 
                 if ($with_metadata) {
                     $etag = hash("sha256", json_encode($content));
                     header("ETag: $etag");
+                    header("X-ETag: $etag");
                     fwrite($handle, json_encode((object)[
                         "tag" => $etag,
                         "content" => $content]));
