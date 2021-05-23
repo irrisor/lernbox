@@ -74,6 +74,9 @@ export class Context {
     private _currentInstances: IndexCardInstance[] = [];
     private _initialized: boolean = false;
     private _synchronizationInfo: SynchronizationInfo;
+    public get isPupilCardsLoading(): boolean {
+        return !this.isTeacher && this.persistentCards.meta.remoteState === RemoteState.NON_EXISTENT;
+    }
 
     constructor(history: History<LocationState>, originalContext?: Context, init?: boolean) {
         this.history = history;
@@ -581,8 +584,8 @@ export class Context {
                 const myRelease = version.version.split("-")[0].split(".");
                 const serverRelease = this.persistentVersion.content.version.split("-")[0].split(".");
                 for (let i = 0; i < myRelease.length; i++) {
-                    if ( myRelease[i] < serverRelease[i] ) {
-                        if ( appStartTime < Date.now() - 1000*60*60) {
+                    if (myRelease[i] < serverRelease[i]) {
+                        if (appStartTime < Date.now() - 1000 * 60 * 60) {
                             console.error("reloading application because the server version is higher");
                             window.location.reload();
                         } else {
@@ -590,7 +593,7 @@ export class Context {
                         }
                         return;
                     }
-                    if ( myRelease[i] > serverRelease[i] ) {
+                    if (myRelease[i] > serverRelease[i]) {
                         // we are higher?!?
                         return;
                     }
@@ -619,7 +622,7 @@ export class Context {
     }
 
     private initializeCardsObject(teacherId: string) {
-        return new PersistentObject<CardsData>({
+        const cardsObject = new PersistentObject<CardsData>({
                 predefinedCardsHash,
                 cards: predefinedCards,
             },
@@ -627,6 +630,29 @@ export class Context {
             this.synchronizationInfo,
             () => "Kartendefinitionen",
         );
+        cardsObject.onConflict = object => {
+            if (object.remoteContent) {
+                const mergedCards = [...object.content.cards];
+                object.remoteContent?.cards.forEach(remoteCard => {
+                    const cardIndex = mergedCards.findIndex(card => card.id === remoteCard.id);
+                    if (cardIndex >= 0) {
+                        mergedCards[cardIndex] = remoteCard;
+                    } else {
+                        mergedCards.push(remoteCard);
+                    }
+                });
+                object.content = {
+                    cards: mergedCards,
+                    predefinedCardsHash: object.content.predefinedCardsHash,
+                }
+                object.meta.remoteHash = object.meta.remoteConflictHash;
+                object.meta.remoteState = RemoteState.IN_SYNC;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return cardsObject;
     }
 
     private initializeTeacherObject(teacherId: string) {
@@ -677,7 +703,7 @@ export class Context {
 
     private newPersistentPupil(id: string) {
         const teacherId = this.persistentTeacher.content.id;
-        return new PersistentObject<Pupil>(
+        const pupilObject = new PersistentObject<Pupil>(
             {
                 id,
                 teacherId,
@@ -691,6 +717,40 @@ export class Context {
                 return object.content.name === "default" ? "Standardschülerdaten" : "Schülerdaten von " + object.content.name
             },
         );
+        pupilObject.onConflict = object => {
+            if (object.remoteContent) {
+                const mergedInstances = [...object.content.instances];
+                object.remoteContent?.instances.forEach(remoteInstance => {
+                    const instanceIndex = mergedInstances.findIndex(instance => instance.id === remoteInstance.id);
+                    if (instanceIndex >= 0) {
+                        const localInstance = mergedInstances[instanceIndex];
+                        mergedInstances[instanceIndex] = {
+                            id: localInstance.id,
+                            slotChanged: Math.max(localInstance.slotChanged || 0, remoteInstance.slotChanged || 0) || undefined,
+                            activityEntries:
+                                (localInstance.activityEntries?.length || 0) > (remoteInstance.activityEntries?.length || 0) ?
+                                    localInstance.activityEntries : remoteInstance.activityEntries,
+                            previousSlot: Math.max(localInstance.previousSlot || 0, remoteInstance.previousSlot || 0) || undefined,
+                            slot: Math.max(localInstance.slot || 0, remoteInstance.slot || 0) || undefined,
+                        };
+                    } else {
+                        if (!this.isTeacher) {
+                            mergedInstances.push(remoteInstance);
+                        }
+                    }
+                });
+                object.content = {
+                    instances: mergedInstances,
+                    ...object.content,
+                }
+                object.meta.remoteHash = object.meta.remoteConflictHash;
+                object.meta.remoteState = RemoteState.IN_SYNC;
+                return true;
+            } else {
+                return false;
+            }
+        };
+        return pupilObject;
     }
 
     private _setContext: (newContext: Context) => void = () => {

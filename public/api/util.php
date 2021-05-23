@@ -1,6 +1,6 @@
 <?php
 
-define('MAX_FILE_SIZE', 1024 * 1024);
+define('MAX_FILE_SIZE', 1024 * 1024 * 10 /*10 MB*/);
 $data_directory = "../../data";
 
 class MissingETagButExistentFileException extends Exception

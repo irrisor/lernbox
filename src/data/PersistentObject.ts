@@ -35,10 +35,9 @@ class Remote {
             timeInMS = nextMinTime - Date.now();
         }
         if ((this.lastTimestamp || 0) + (maxTimeInMS || timeInMS) < Date.now()) {
-            operation();
-        } else {
-            this.timer = setTimeout(operation, timeInMS);
+            timeInMS = 0;
         }
+        this.timer = setTimeout(operation, timeInMS);
     }
 
     public async perform(operation: () => Promise<void>) {
@@ -63,6 +62,7 @@ export class PersistentObject<T = unknown> {
     public onChange?: (object: PersistentObject<T>, newValue: Readonly<T>) => Readonly<T>;
     public afterChange?: (object: PersistentObject<T>, newValue: Readonly<T>) => void;
     public onStateChange?: (object: PersistentObject<T>) => void;
+    public onConflict?: (object: PersistentObject<T>) => boolean;
     private _authKey?: (object: PersistentObject<T>) => string | undefined;
     private synchronizationInfo: SynchronizationInfo;
     private _content: Readonly<T>;
@@ -136,7 +136,8 @@ export class PersistentObject<T = unknown> {
             authKeyValue = this._authKey(this);
         }
         if (!authKeyValue) return;
-        await this.remoteStoreState.perform(async () => {
+
+        await this.remoteLoadState.perform(async () => {
             console.debug("checking remote of", this.meta.key);
             const headers: HeadersInit = {
                 "Authorization": "Bearer " + authKeyValue,
@@ -159,6 +160,9 @@ export class PersistentObject<T = unknown> {
                 case 304: // Not Modified
                     // ok, everything is fine, we don't need to download it
                     console.debug("no new content for", this.meta.key);
+                    if ( this.meta.remoteState === RemoteState.ERROR ) {
+                        this.meta.remoteState = RemoteState.IN_SYNC;
+                    }
                     break;
                 case 200: // OK
                     // we've found new content
@@ -180,9 +184,15 @@ export class PersistentObject<T = unknown> {
                         console.debug("found still conflicting content for", this.meta.key, ":", hash);
                     }
                     this.meta.remoteTimestamp = Date.now();
-                    this.meta.remoteHash = hash;
                     this.remoteContent = await response.json();
+                    if (this.meta.remoteState === RemoteState.CONFLICT) {
+                        this.meta.remoteConflictHash = hash;
+                        this.onConflict && this.onConflict(this) && this.scheduleStoreRemote();
+                    } else {
+                        this.meta.remoteHash = hash;
+                    }
                     this.onStateChange && this.onStateChange(this);
+
                     break;
                 case 404:
                     if (this.meta.remoteState === RemoteState.NON_EXISTENT) {
@@ -198,7 +208,13 @@ export class PersistentObject<T = unknown> {
                     return;
             }
             this.storeMetaLocally();
-            this.scheduleLoadRemote();
+
+            if (this.meta.localState === LocalState.MODIFIED) {
+                this.scheduleStoreRemote();
+                return;
+            } else {
+                this.scheduleLoadRemote();
+            }
         });
     }
 
@@ -251,12 +267,7 @@ export class PersistentObject<T = unknown> {
     }
 
     private scheduleLoadRemote(now?: boolean) {
-        if (this.meta.remoteState === RemoteState.IN_SYNC
-            || this.meta.remoteState === RemoteState.MODIFIED
-            || this.meta.remoteState === RemoteState.NON_EXISTENT
-        ) {
-            this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000, undefined, 60000);
-        }
+        this.remoteLoadState.schedule(() => this.loadRemote(), now ? 100 : 60000, undefined, 60000);
     }
 
     private scheduleStoreRemote() {
@@ -305,6 +316,7 @@ export class PersistentObject<T = unknown> {
                     this.meta.remoteState = RemoteState.CONFLICT;
                     this.meta.remoteConflictHash = response.headers.get("ETag") || response.headers.get("X-ETag") || undefined;
                     console.debug("conflict detected for ", this.meta.key, ": ", this.meta.remoteConflictHash);
+                    this.scheduleLoadRemote(true);
                     break;
                 case 200: // OK
                 case 201: // Created

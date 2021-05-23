@@ -220,7 +220,10 @@ export function Overview() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {groups.flatMap(group => {
+                            {context.isPupilCardsLoading ?
+                                "noch keine Karten geladen"
+                                :
+                            groups.flatMap(group => {
                                 const groupInstances = activeInstances.filter(instance => groupMatches([group], context.getCard(instance)?.groups));
                                 const activeCount = groupInstances.length;
                                 const assignedCount = instances.filter(instance => groupMatches([group], context.getCard(instance)?.groups)).length;
