@@ -21,7 +21,8 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import version from "../version.json";
-import {Help, Info} from "@material-ui/icons";
+import {Help, Info, Sync} from "@material-ui/icons";
+import {LocalState, RemoteState} from "../sync/SynchronizationInfo";
 
 const drawerWidth = 220;
 
@@ -114,7 +115,7 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Schüler löschen"/>
                 </ListItem>}
                 {context.isTeacher && <ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
+                                                onClick={() => props.onClick() && context.history.push(`/teacher/list`)}>
                     <ListItemIcon><ListIcon/></ListItemIcon>
                     <ListItemText primary="Karten bearbeiten"/>
                 </ListItem>}
@@ -132,9 +133,9 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Anleitung"/>
                 </ListItem>
                 {context.isTeacher && <ListItem button
-                          onClick={() => {
-                              context.history.push("/help/short");
-                          }}
+                                                onClick={() => {
+                                                    context.history.push("/help/short");
+                                                }}
                 >
                     <ListItemIcon><Help/></ListItemIcon>
                     <ListItemText primary="Kurzanleitung"/>
@@ -196,6 +197,22 @@ export function Bar(props: { children: React.ReactNode }) {
                     <Typography variant="subtitle1" style={{fontSize: "0.5rem"}}>
                         version {version.version}
                     </Typography>
+                    <IconButton
+                        color="inherit"
+                        aria-label="synchronization"
+                        onClick={() => context.history.push("/teacher/sync")}
+                    >
+                        <Badge
+                            badgeContent={("" + (context.synchronizationInfo.objects().filter(object =>
+                                (object.meta.localState === LocalState.ERROR) ||
+                                (object.meta.remoteState === RemoteState.CONFLICT) ||
+                                (object.meta.remoteState === RemoteState.ERROR),
+                            ).length || "")) || undefined}
+                            color="secondary"
+                        >
+                            <Sync/>
+                        </Badge>
+                    </IconButton>
                     <IconButton
                         color="inherit"
                         aria-label="fullscreen"

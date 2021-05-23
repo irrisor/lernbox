@@ -143,6 +143,7 @@ export class PersistentObject<T = unknown> {
             };
             if (this.meta.remoteHash) {
                 headers["If-None-Match"] = this.meta.remoteHash;
+                headers["X-If-None-Match"] = this.meta.remoteHash;
             }
             let response: Response;
             try {
@@ -282,6 +283,7 @@ export class PersistentObject<T = unknown> {
             if (this.meta.remoteHash) {
                 console.debug("uploading new version of ", this.meta.key);
                 headers["If-Match"] = this.meta.remoteHash;
+                headers["X-If-Match"] = this.meta.remoteHash;
             } else {
                 console.debug("uploading first version of ", this.meta.key);
             }

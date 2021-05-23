@@ -29,9 +29,10 @@ function header_value($name): ?string
     $name = strtolower($name);
     $headers = array_change_key_case(getallheaders());
     $server_key = "REDIRECT_HTTP_" . str_replace("-", "_", strtoupper($name));
+    $x_key = "x-" . $name;
     return array_key_exists($name, $headers) ? $headers[$name] : (
     array_key_exists($server_key, $_SERVER) ? $_SERVER[$server_key] :
-        NULL);
+        (array_key_exists($x_key, $headers) ? $headers[$x_key] : NULL));
 }
 
 /**
