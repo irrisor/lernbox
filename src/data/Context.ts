@@ -74,9 +74,6 @@ export class Context {
     private _currentInstances: IndexCardInstance[] = [];
     private _initialized: boolean = false;
     private _synchronizationInfo: SynchronizationInfo;
-    public get isPupilCardsLoading(): boolean {
-        return !this.isTeacher && this.persistentCards.meta.remoteState === RemoteState.NON_EXISTENT;
-    }
 
     constructor(history: History<LocationState>, originalContext?: Context, init?: boolean) {
         this.history = history;
@@ -155,6 +152,10 @@ export class Context {
         };
         this.persistentCards.afterChange = () => this.update();
         this.setPersistentObjectListeners();
+    }
+
+    public get isPupilCardsLoading(): boolean {
+        return !this.isTeacher && this.persistentCards.meta.remoteState === RemoteState.NON_EXISTENT;
     }
 
     public get pupilGroups(): Readonly<GroupsData> {
@@ -730,8 +731,10 @@ export class Context {
                             activityEntries:
                                 (localInstance.activityEntries?.length || 0) > (remoteInstance.activityEntries?.length || 0) ?
                                     localInstance.activityEntries : remoteInstance.activityEntries,
-                            previousSlot: Math.max(localInstance.previousSlot || 0, remoteInstance.previousSlot || 0) || undefined,
-                            slot: Math.max(localInstance.slot || 0, remoteInstance.slot || 0) || undefined,
+                            previousSlot: (localInstance.slotChanged || 0) > (remoteInstance.slotChanged || 0) ?
+                                localInstance.previousSlot : remoteInstance.previousSlot,
+                            slot: (localInstance.slotChanged || 0) > (remoteInstance.slotChanged || 0) ?
+                                localInstance.slot : remoteInstance.slot,
                         };
                     } else {
                         if (!this.isTeacher) {
@@ -740,8 +743,8 @@ export class Context {
                     }
                 });
                 object.content = {
-                    instances: mergedInstances,
                     ...object.content,
+                    instances: mergedInstances,
                 }
                 object.meta.remoteHash = object.meta.remoteConflictHash;
                 object.meta.remoteState = RemoteState.IN_SYNC;
