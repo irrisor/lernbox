@@ -20,7 +20,6 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import version from "../version.json";
 import {Help, Info, Sync} from "@material-ui/icons";
 import {LocalState, RemoteState} from "../sync/SynchronizationInfo";
 
@@ -105,7 +104,11 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemText primary="Schülerliste"/>
                 </ListItem>
                 {!context.isTeacher && <ListItem button onClick={() => props.onClick() && context.back()}>
-                    <ListItemIcon><Logo/></ListItemIcon>
+                    <ListItemIcon>
+                        <Badge badgeContent={context.cardsLeft} color="secondary">
+                            <Logo/>
+                        </Badge>
+                    </ListItemIcon>
                     <ListItemText primary="Lernen"/>
                 </ListItem>}
                 {context.isTeacher && <ListItem button
@@ -119,11 +122,6 @@ const Menu = (props: { onClick: () => true }) => {
                     <ListItemIcon><ListIcon/></ListItemIcon>
                     <ListItemText primary="Karten bearbeiten"/>
                 </ListItem>}
-                {/*<ListItem button
-                          onClick={() => props.onClick() && context.history.push(`/teacher/sync`)}>
-                    <ListItemIcon><SyncIcon/></ListItemIcon>
-                    <ListItemText primary="Synchronisieren"/>
-                </ListItem>*/}
                 <ListItem button
                           onClick={() => {
                               context.history.push("/help");
@@ -147,6 +145,22 @@ const Menu = (props: { onClick: () => true }) => {
                 >
                     <ListItemIcon><Info/></ListItemIcon>
                     <ListItemText primary="Über Lernbox"/>
+                </ListItem>
+                <ListItem button
+                          onClick={() => props.onClick() && context.history.push(`/sync`)}>
+                    <ListItemIcon>
+                        <Badge
+                            badgeContent={("" + (context.synchronizationInfo.objects().filter(object =>
+                                (object.meta.localState === LocalState.ERROR) ||
+                                (object.meta.remoteState === RemoteState.CONFLICT) ||
+                                (object.meta.remoteState === RemoteState.ERROR),
+                            ).length || "")) || undefined}
+                            color="secondary"
+                        >
+                            <Sync/>
+                        </Badge>
+                    </ListItemIcon>
+                    <ListItemText primary="Synchronisieren"/>
                 </ListItem>
                 <ListItem button
                           disabled={context.currentPupilId === undefined && !context.isTeacher}
@@ -190,29 +204,10 @@ export function Bar(props: { children: React.ReactNode }) {
                     >
                         <MenuIcon/>
                     </IconButton>
-                    <Typography variant="h6" className={classes.title}>
-                        {/*<Logo
-                            style={{marginBottom: "-4px"}}/>*/} Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
+                    <Typography variant="h6" className={classes.title}
+                                style={{textOverflow: "ellipsis", whiteSpace: "nowrap", overflow: "hidden"}}>
+                        Lernbox{context.pupil && context.pupil.name !== "default" && ` von ${context.pupil.name}`}
                     </Typography>
-                    <Typography variant="subtitle1" style={{fontSize: "0.5rem"}}>
-                        version {version.version}
-                    </Typography>
-                    <IconButton
-                        color="inherit"
-                        aria-label="synchronization"
-                        onClick={() => context.history.push("/teacher/sync")}
-                    >
-                        <Badge
-                            badgeContent={("" + (context.synchronizationInfo.objects().filter(object =>
-                                (object.meta.localState === LocalState.ERROR) ||
-                                (object.meta.remoteState === RemoteState.CONFLICT) ||
-                                (object.meta.remoteState === RemoteState.ERROR),
-                            ).length || "")) || undefined}
-                            color="secondary"
-                        >
-                            <Sync/>
-                        </Badge>
-                    </IconButton>
                     <IconButton
                         color="inherit"
                         aria-label="fullscreen"
@@ -220,6 +215,7 @@ export function Bar(props: { children: React.ReactNode }) {
                     >
                         <FullscreenIcon/>
                     </IconButton>
+                    {isWideScreen &&
                     <IconButton
                         aria-label={`${context.cardsLeft} Karten`}
                         color="inherit"
@@ -230,7 +226,7 @@ export function Bar(props: { children: React.ReactNode }) {
                         <Badge badgeContent={context.cardsLeft} color="secondary">
                             <AccountCircle/>
                         </Badge>
-                    </IconButton>
+                    </IconButton>}
                 </Toolbar>
             </AppBar>
             <nav className={menuOpen ? classes.drawerOpen : classes.drawer} aria-label="mailbox folders">

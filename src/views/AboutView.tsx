@@ -1,6 +1,7 @@
 import * as React from "react";
 import {Main} from "../layout/Main";
 import {Grid, Link, Typography} from "@material-ui/core";
+import version from "../version.json";
 
 export function AboutView() {
     return (<>
@@ -10,6 +11,9 @@ export function AboutView() {
                     <Typography variant="h4">Über Lernbox</Typography>
                 </Grid>
                 <Grid item xs={12}>
+                    <Typography variant="subtitle1" style={{fontSize: "0.7rem"}}>
+                        Version {version.version}
+                    </Typography>
                     <Link href="https://github.com/irrisor/lernbox" target="_blank">Lernbox</Link> ist
                     proprietäre Software, darf aber frei von Schülern und Lehrern zu Bildungszwecken
                     verwendet werden.

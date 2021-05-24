@@ -12,7 +12,7 @@ const cardFont = "roboto";
 
 const useStyles = makeStyles({
     root: {
-        minWidth: 350,
+        minWidth: 300,
         maxWidth: 450,
         marginLeft: "auto",
         marginRight: "auto",
@@ -20,7 +20,7 @@ const useStyles = makeStyles({
         cursor: "pointer",
     },
     content: {
-        minHeight: 280,
+        minHeight: 200,
         display: "flex",
     },
     title: {

@@ -9,7 +9,7 @@ import {
     DialogTitle,
     Grid,
     IconButton,
-    Link,
+    Link, useMediaQuery,
 } from "@material-ui/core";
 import {Main} from "../layout/Main";
 import {BottomGridContainer} from "../layout/BottomGridContainer";
@@ -25,7 +25,7 @@ import Tab from '@material-ui/core/Tab';
 import moment from "moment";
 import "moment/locale/de";
 import Typography from "@material-ui/core/Typography";
-import {makeStyles} from "@material-ui/core/styles";
+import {makeStyles, useTheme} from "@material-ui/core/styles";
 import {IndexCard} from "../data/cards";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
@@ -117,7 +117,7 @@ export function Overview() {
     }, [pupil, instances, selectedGroups, questionCards]);
 
 
-    function tableRowForGroup(group: string[], subgroups: string[], activeCount: number, assignedCount: number, count: number) {
+    function tableRowForGroup(group: string[], subgroups: string[], activeCount: number, assignedCount: number, count: number, showAssigned: boolean) {
         const groupName = group[group.length - 1];
         return <TableRow key={group.join(";")}>
             <TableCell padding="checkbox">
@@ -155,7 +155,7 @@ export function Overview() {
                     }
                 }}>{groupName.trim()}</Link> : groupName}
             </TableCell>
-            <TableCell align="right">{assignedCount} / {count}</TableCell>
+            {showAssigned && <TableCell align="right">{assignedCount} / {count}</TableCell>}
             <TableCell align="right">{activeCount}</TableCell>
         </TableRow>;
     }
@@ -187,6 +187,8 @@ export function Overview() {
         });
     }
 
+    const theme = useTheme();
+    const isWideScreen = useMediaQuery(theme.breakpoints.up('sm'));
     if (!pupil) return <>Schüler mit der ID "{context.currentPupilId}" fehlt.</>;
 
     const allCheckBoxChecked = (selectedInstances.length + selectedNonInstances.length) > 0;
@@ -215,7 +217,7 @@ export function Overview() {
                                 <TableCell/>
                                 <TableCell/>
                                 <TableCell>Thema</TableCell>
-                                <TableCell align="right">Zugewiesen</TableCell>
+                                {isWideScreen && <TableCell align="right">Zugewiesen</TableCell>}
                                 <TableCell align="right">Aktive Karten</TableCell>
                             </TableRow>
                         </TableHead>
@@ -231,12 +233,13 @@ export function Overview() {
                                 const count = groupCards.length;
                                 const subgroups = context.groups(false,
                                     context.isTeacher ? groupCards : groupInstances).filter(subgroup => subgroup !== group);
-                                return [(tableRowForGroup([group], subgroups, activeCount, assignedCount, count)),
+                                return [(tableRowForGroup([group], subgroups, activeCount, assignedCount, count, isWideScreen)),
                                 ].concat(subgroups.length > 0 && expandedGroup === group ? subgroups.map(
                                     subgroup => tableRowForGroup([group, subgroup], [],
                                         activeInstances.filter(instance => groupMatches([group, subgroup], context.getCard(instance)?.groups)).length,
                                         instances.filter(instance => groupMatches([group, subgroup], context.getCard(instance)?.groups)).length,
                                         cards.filter(card => groupMatches([group, subgroup], context.getCard(card)?.groups)).length,
+                                        isWideScreen
                                     ),
                                 ) : []);
                             })}

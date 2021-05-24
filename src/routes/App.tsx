@@ -11,6 +11,7 @@ import {LoginView} from "../views/LoginView";
 import {createMuiTheme, MuiThemeProvider} from '@material-ui/core/styles';
 import {AboutView} from "../views/AboutView";
 import {HelpView} from "../views/HelpView";
+import {SynchronizationView} from "../views/SynchronizationView";
 
 const theme = createMuiTheme({
     typography: {
@@ -62,6 +63,11 @@ export default function App() {
                         </Route>
                         <Route path="/teacher">
                             <TeacherRoute/>
+                        </Route>
+                        <Route path={`/sync`}>
+                            <ScreenBox fullScreen>
+                                <SynchronizationView/>
+                            </ScreenBox>
                         </Route>
                         <Route path="/yay">
                             <ScreenBox fullScreen>

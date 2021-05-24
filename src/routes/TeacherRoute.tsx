@@ -14,11 +14,6 @@ export function TeacherRoute() {
     if (!context.isTeacher) return <ScreenBox><TeacherPasswordView/></ScreenBox>;
     return (
         <Switch>
-            <Route path={`${path}/sync`}>
-                <ScreenBox fullScreen>
-                    <SynchronizationView/>
-                </ScreenBox>
-            </Route>
             <Route path={[`${path}/edit/new`, `${path}/edit/:cardId`, `${path}/edit`]}>
                 <ScreenBox fullScreen>
                     <EditCard/>
