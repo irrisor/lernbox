@@ -2,7 +2,8 @@ import * as React from "react";
 import clsx from 'clsx';
 import {createStyles, Theme, withStyles, WithStyles} from '@material-ui/core/styles';
 import TableCell from '@material-ui/core/TableCell';
-import {AutoSizer, Column, Table, TableCellRenderer, TableHeaderProps} from 'react-virtualized';
+import {AutoSizer, Column, Index, Table, TableCellRenderer, TableHeaderProps} from 'react-virtualized';
+import {CSSProperties} from "react";
 
 declare module '@material-ui/core/styles/withStyles' {
     // Augment the BaseCSSProperties so that we can control jss-rtl
@@ -62,6 +63,7 @@ interface MuiVirtualizedTableProps<Data> extends WithStyles<typeof styles> {
     onRowClick?: () => void;
     rowCount: number;
     rowGetter: (row: Row) => Data;
+    rowStyle?: (info: Index) => CSSProperties;
     rowHeight?: number;
     height?: number;
 }

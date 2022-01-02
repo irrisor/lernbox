@@ -5,11 +5,24 @@ import {Main} from "../layout/Main";
 import {VirtualizedTable} from "../components/VirtualizedTable";
 import moment from "moment";
 import {RemoteState} from "../sync/SynchronizationInfo";
+import Tabs from '@material-ui/core/Tabs';
+import Tab from "@material-ui/core/Tab";
+
+const logs: Array<["log" | "error" | "debug" | "warn" | string, any[]]> = [];
+for (const func of ["log", "error", "debug", "warn"]) {
+    const originalFunc: typeof console.log = (console as any)[func];
+    (console as any)[func] = function (...args: any) {
+        originalFunc.apply(console, args);
+        if (logs.length > 100) logs.shift();
+        logs.push([func, args]);
+    };
+}
 
 export function SynchronizationView() {
     const context = React.useContext(reactContext);
 
     const key = "abc";
+    const [activeTab, setActiveTab] = React.useState(0);
 
     return (<>
         <Main>
@@ -78,13 +91,17 @@ export function SynchronizationView() {
                     </Grid>
                 </div>
             }
-            <Grid container spacing={2}>
-                <Grid item xs={12}/>
-                <Grid item xs={12}>
-                    <Typography variant="h6">Datenstatus</Typography>
-                </Grid>
-            </Grid>
-            <Box flexGrow={1}>
+            <Tabs value={activeTab}
+                  onChange={(event, newTab) => setActiveTab(newTab)}
+                  aria-label="tabs"
+                  style={{marginBottom: 8}}
+                  variant="scrollable"
+                  scrollButtons="auto"
+            >
+                <Tab label="Datenstatus" id="status-tab" aria-label="Datenstatus"/>
+                <Tab label="Protokoll" id="log-tab" aria-label="Protokoll"/>
+            </Tabs>
+            {activeTab === 0 && <Box flexGrow={1}>
                 <VirtualizedTable
                     rowCount={context.synchronizationInfo.objects().length}
                     rowGetter={row => {
@@ -128,7 +145,41 @@ export function SynchronizationView() {
                     ]}
 
                 />
-            </Box>
+            </Box>}
+            {activeTab === 1 && <Box flexGrow={1}>
+                <VirtualizedTable
+                    rowCount={logs.length}
+                    rowGetter={row => {
+                        const entry = logs[row.index];
+                        return {
+                            severity: entry[0],
+                            log: entry[1].join(" "),
+                        };
+                    }}
+                    rowStyle={(info) => {
+                        const entry = logs[info.index] || ["", ""];
+                        return ({
+                            background:
+                                entry[0] === "debug" ? "#D0D0D0" :
+                                    entry[0] === "warn" ? "#FFFFB0" :
+                                        entry[0] === "error" ? "#FFB0B0" :
+                                            "white",
+                        });
+                    }}
+                    columns={[
+                        {
+                            label: "Level",
+                            dataKey: "severity",
+                            width: 100,
+                        },
+                        {
+                            label: "Log",
+                            dataKey: "log",
+                            width: 600,
+                        },
+                    ]}
+                />
+            </Box>}
         </Main>
     </>);
 }
