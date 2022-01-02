@@ -114,6 +114,20 @@ export function SynchronizationView() {
                             localState: entry.localState,
                             remoteState: entry.remoteState,
                             description: object.description,
+                            action: (
+                                object.authKey ? <Button fullWidth onClick={() => {
+                                    object.meta.remoteState = RemoteState.IN_SYNC;
+                                    const previousContent = object.content;
+                                    if (object.meta.remoteConflictHash) {
+                                        object.meta.remoteHash = object.meta.remoteConflictHash;
+                                    }
+                                    object.content = previousContent;
+                                }}
+                                        disabled={object.meta.remoteState === RemoteState.IN_SYNC}
+                                >
+                                    Hochladen
+                                </Button> : null
+                            ),
                         };
                     }}
                     columns={[
@@ -125,22 +139,27 @@ export function SynchronizationView() {
                         {
                             label: "Lokal",
                             dataKey: "localDate",
-                            width: 200,
+                            width: 150,
                         },
                         {
                             label: "Status",
                             dataKey: "localState",
-                            width: 200,
+                            width: 100,
+                        },
+                        {
+                            label: "Aktion",
+                            dataKey: "action",
+                            width: 150,
                         },
                         {
                             label: "Remote",
                             dataKey: "remoteDate",
-                            width: 200,
+                            width: 150,
                         },
                         {
                             label: "Status",
                             dataKey: "remoteState",
-                            width: 200,
+                            width: 100,
                         },
                     ]}
 
