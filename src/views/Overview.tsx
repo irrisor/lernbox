@@ -47,6 +47,7 @@ const useStyles = makeStyles({
         marginLeft: "auto",
         whiteSpace: "nowrap",
         textOverflow: "ellipsis",
+        maxWidth: "50%",
     },
 });
 const StyledTooltip = withStyles(() => ({
@@ -386,11 +387,13 @@ export function Overview() {
                                             card.answers[0]}
                                         </Box>
                                     </StyledTooltip>
-                                    <Typography
-                                        className={classes.groups}
-                                        color="textSecondary"
-                                        gutterBottom
-                                    >{card.groups.join(", ")}</Typography>
+                                    <StyledTooltip title={<Front card={card}/>}>
+                                        <Typography
+                                            className={classes.groups}
+                                            color="textSecondary"
+                                            gutterBottom
+                                        >{card.groups.join(", ")}</Typography>
+                                    </StyledTooltip>
                                 </Box>,
                                 slot: instance ? (instance.slot !== undefined ? instance.slot + 1 : "-") :
                                     <Tooltip title="nicht zugeordnet"><span>nz</span></Tooltip>,

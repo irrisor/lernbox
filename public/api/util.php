@@ -312,10 +312,10 @@ function ensureAccessOrDie(string $path, bool $write = true, bool $delete = fals
             array_push($properties, 'read_key');
         }
     }
-    $access_key_matches = !array_reduce($properties, function (bool $previous, string $property) use ($access, $key): bool {
+    $access_key_unmatched = !array_reduce($properties, function (bool $previous, string $property) use ($access, $key): bool {
         return $previous || (property_exists($access, $property) && $key == $access->$property);
     }, false);
-    if ($access_key_matches) {
+    if ($access_key_unmatched) {
         header("HTTP/1.1 403 Access Denied");
         print "The key is not authorized to perform the operation on this file.";
         die(1);
